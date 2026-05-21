@@ -1,7 +1,6 @@
 <div align="center">
 
 ![Satset Banner](docs/assets/satset-banner.jpeg)
----
 
 # Sat·Set
 
