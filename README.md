@@ -1,5 +1,8 @@
 <div align="center">
 
+![Satset Banner](docs/assets/satset-banner.jpeg)
+---
+
 # Sat·Set
 
 ![CI](https://github.com/bookek/satset/actions/workflows/build.yml/badge.svg)
