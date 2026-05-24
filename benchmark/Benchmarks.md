@@ -1,8 +1,10 @@
 # [Satset](https://github.com/bookek/satset) Networking Benchmarks
 
-**Last Updated:** May 5, 2026 (Satset v0.2.0)
+**Last Updated:** May 24, 2026 (source alignment update; raw results from May 5, 2026)
 
 These benchmarks compare **Satset** against native Roblox remotes and popular community libraries. To ensure a fair comparison, all metrics are normalized to a 60 FPS baseline, even when a library causes the engine's framerate to drop.
+
+The benchmark runner fires 200 events per frame for each library. Payload descriptions below describe one event payload. A `120K / 120K` sent/received count means 120,000 events over the 10 second run.
 
 ---
 
@@ -10,7 +12,8 @@ These benchmarks compare **Satset** against native Roblox remotes and popular co
 
 ### 1.1 Vectors
 >
-> Sending 1,000 `Vector3` values per frame. Measures raw spatial data throughput.
+> Each event contains 100 `Vector3` values. Satset encodes them as `Vector3F16`.
+> Measures raw spatial data throughput.
 >
 > - **FPS:** Higher is better.
 > - **Bandwidth:** Lower is better.
@@ -44,12 +47,12 @@ These benchmarks compare **Satset** against native Roblox remotes and popular co
 
 ##### Vectors Breakdown
 
-- **Default Mode:** Satset shows a slight dip in minimum FPS (45) due to the 60KB chunking process distributing CPU load.
-- **Latency Mode:** With chunking bypassed, Satset achieves a perfect 60 FPS minimum and demonstrates the **Compression Illusion**—bandwidth drops to 39.2 B/s as Zstd dictionary resets are eliminated.
+- **Default Mode:** Satset shows a dip in minimum FPS (45) while using 60KB segmentation.
+- **Latency Mode:** With segmentation bypassed, Satset keeps a 60 FPS minimum and bandwidth drops to 39.2 KB/s as fewer Zstd dictionary resets occur.
 
 ### 1.2 Booleans
 >
-> Sending 1,000 `boolean` values per frame. Measures bit-packing efficiency.
+> Each event contains 1,000 `boolean` values. Measures bit-packing efficiency.
 >
 > - **FPS:** Higher is better.
 > - **Bandwidth:** Lower is better.
@@ -86,7 +89,7 @@ These benchmarks compare **Satset** against native Roblox remotes and popular co
 
 ### 1.3 Mixed Data
 >
-> Sending a table containing strings, numbers, and booleans. Measures general-purpose serialization.
+> Each event contains one table with strings, numbers, booleans, and vectors. Measures general-purpose serialization.
 >
 > - **Bandwidth:** Lower is better.
 > - **FPS:** Higher is better.
@@ -119,11 +122,11 @@ These benchmarks compare **Satset** against native Roblox remotes and popular co
 
 ##### Mixed Data Breakdown
 
-- Under mixed data structures, Satset maintains a perfect 60 FPS while keeping bandwidth usage competitive with high-end code-gen libraries like NetRay and Zap.
+- Under mixed data structures, Satset maintains 60 FPS and stays close to generated networking libraries like NetRay and Zap.
 
 ### 1.4 Entities (High Volume)
 >
-> Simulating 1,000 entity state updates per frame. Measures high-frequency bulk replication.
+> Each event contains 100 entity records, each with six `u8` fields. Measures high-frequency bulk replication.
 >
 > - **FPS:** Higher is better (Crucial for game feel).
 > - **Bandwidth:** Lower is better.
@@ -142,11 +145,9 @@ These benchmarks compare **Satset** against native Roblox remotes and popular co
 | **Satset** | **61 / 60 / 61** | **119.2 KB/s** | **119.2 KB/s** | **9.19ms** | **120K / 120K** | **0.0%** |
 
 > [!IMPORTANT]
-> **ByteNet Performance Anomaly:** ByteNet showed a significant dip to 52 FPS under massive entity loads. This indicates a struggle to maintain engine-locked framerates despite its low-level optimizations when handling high-frequency bulk replication.
+> **ByteNet Performance Anomaly:** ByteNet showed a significant dip to 52 FPS under the entity workload. This indicates difficulty maintaining engine-locked framerates in this benchmark case.
 
 #### Entities: Latency Mode (Bypass Chunking)
-
-| Library | FPS (p50/min/p95) | Bandwidth (p50) | Norm. BW (p50) | Drain Duration | Sent / Recv | Loss % |
 
 | Library | FPS (p50/min/p95) | Bandwidth (p50) | Norm. BW (p50) | Drain Duration | Sent / Recv | Loss % |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -161,11 +162,11 @@ These benchmarks compare **Satset** against native Roblox remotes and popular co
 
 ##### Entities Breakdown
 
-- Under massive entity loads, Satset is the only library to maintain a 61 FPS median with zero packet loss, proving that the chunking strategy is vital for engine stability.
+- Under the entity workload, Satset maintains a 61 FPS median with zero packet loss in Default Mode.
 
 ### 1.5 Strings
 >
-> Sending massive string arrays. Measures buffer handling and string intern pressure.
+> Each event contains 100 short strings, each 8-32 characters. Measures buffer handling and string transfer cost.
 >
 > - **FPS:** Higher is better.
 > - **Bandwidth:** Lower is better.
@@ -184,7 +185,7 @@ These benchmarks compare **Satset** against native Roblox remotes and popular co
 | **Satset** | **60 / 57 / 60** | **948.9 KB/s** | **948.9 KB/s** | **10.31ms** | **117.2K / 117.2K** | **0.0%** |
 
 > [!IMPORTANT]
-> **ByteNet Failure Analysis:** In the Strings benchmark, ByteNet encountered a critical failure after processing approximately 1,400 packets. This resulted in 0 recorded FPS/Bandwidth metrics. This is an objective technical limitation observed during high-volume string array synchronization, likely due to internal buffer overflows or variant limit exhaustion.
+> **ByteNet Failure Analysis:** In the Strings benchmark, ByteNet failed after processing approximately 1,400 packets. This resulted in 0 recorded FPS/Bandwidth metrics for that run.
 
 #### Strings: Latency Mode (Bypass Chunking)
 
@@ -201,8 +202,8 @@ These benchmarks compare **Satset** against native Roblox remotes and popular co
 
 ##### Strings Breakdown
 
-- **Saturation Success:** Satset matches high-end libraries like NetRay and Zap in string throughput when chunking is disabled, confirming that the higher bandwidth in Default Mode is purely an artifact of engine-level Zstd reset cycles.
-- **ByteNet Reliability:** ByteNet failed again in Latency Mode, stalling after 1,600 packets, confirming a consistent internal failure in its string handling logic.
+- **Latency Mode:** Satset is close to NetRay and Zap in string throughput when segmentation is disabled. This indicates that segmentation and compression reset behavior are major parts of the Default Mode bandwidth result.
+- **ByteNet Reliability:** ByteNet failed again in Latency Mode, stopping after 1,600 packets in this run.
 
 ### 1.6 SingleValue
 >
@@ -247,17 +248,17 @@ These benchmarks compare **Satset** against native Roblox remotes and popular co
 
 ### The "Compression Illusion"
 
- Roblox uses [Zstd](https://facebook.github.io/zstd/) compression on all network traffic. Libraries that dump massive identical payloads (1MB+) in a single frame allow Zstd to achieve artificial compression ratios that don't reflect real-world usage.
+Roblox uses [Zstd](https://facebook.github.io/zstd/) compression on network traffic. Sending repeated data in fewer buffers can produce lower reported bandwidth because compression has more context.
 
-- **The Proof:** In our **Vectors** benchmark, Satset's bandwidth dropped from **127.7 KB/s** (Default) to **39.2 KB/s** (Latency) simply by bypassing chunking. This confirms that the higher bandwidth in Default Mode is purely an artifact of engine-level Zstd reset cycles caused by Satset's proactive **60KB chunking** strategy, which is designed for stability rather than synthetic leaderboard scores.
+- **Example:** In the **Vectors** benchmark, Satset's normalized bandwidth dropped from **127.7 KB/s** (Default) to **39.2 KB/s** (Latency) when segmentation was bypassed. This shows that segmentation and compression reset behavior affect reported bandwidth.
 
 ### GC Pressure and Frame Drops
 
-The `Entities` test highlights the impact of Garbage Collection. Libraries that create thousands of individual remote calls or intermediate tables per frame (like Zap and Blink) see significant dips in their minimum framerate (p0). Satset’s unified batcher minimizes object creation, keeping the server locked at 60 FPS.
+The `Entities` test highlights the impact of allocation and batching behavior. Libraries that create many remote calls or intermediate tables per frame can show lower minimum framerates. Satset's batcher keeps this case at 60 FPS in Default Mode.
 
 ### Throttling Philosophy
 
-Satset intentionally spreads network load across multiple frames (visible in the slightly higher Drain Duration). While this adds ~2ms of synthetic latency, it prevents the massive CPU spikes that cause micro-stutters in high-intensity games.
+Satset can spread network load across multiple frames, visible in the higher Drain Duration. This can add a small amount of latency while reducing frame-time spikes.
 
 ---
 
@@ -265,6 +266,8 @@ Satset intentionally spreads network load across multiple frames (visible in the
 
 - **Environment:** Local Roblox Studio (1 Player).
 - **Test Intensity:** 200 events per frame (approx. 12,000 per second) for 10 seconds.
+- **Payload Source:** `benchmark/src/shared/benches`.
+- **Satset Mode Source:** `benchmark/src/shared/BenchmarkConfig.luau`.
 - **Metrics:**
   - **FPS p50/min/p95:** Median, absolute minimum, and 95th percentile framerate (**Higher is better**).
   - **Bandwidth p50:** Median raw bytes per second sent over the network (**Lower is better**).
@@ -282,3 +285,5 @@ For developers wishing to perform their own analysis or verify these claims, the
 
 - **Stability First (Default):** [default-mode-result.json](./default-mode-result.json)
 - **Latency Bypassed:** [latency-mode-result.json](./latency-mode-result.json)
+
+To regenerate the latency-mode result, set `activeMode = "latency"` in `benchmark/src/shared/BenchmarkConfig.luau` before running the benchmark.
