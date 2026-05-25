@@ -6,6 +6,32 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), version
 
 ## [Unreleased]
 
+## [0.4.0-rc.1] - 2026-05-25
+
+> Do not hates **monday**, **monday** hates you too. so lets make satset works on your hateful monday! >.<'
+
+This release candidate keeps the v0.4.0 scope narrow: lower internal allocation in batching and packet dispatch, better benchmark visibility, and docs that match the current runtime. It does not change the public Packet or Channel API. Treat it as an rc because the new batching path needs more Studio coverage outside the benchmark place.
+
+### Added
+
+- **Batcher Telemetry**: Added debug counters for commit counts, committed bytes, stream growth, and GC deltas across send, commit, receive decode, packet decode, and listener calls.
+- **Benchmark Profiles**: Added explicit default and latency benchmark profiles through `benchmark/src/shared/BenchmarkConfig.luau`.
+- **Studio Benchmark Place**: Added `benchmark/satset-benchmark.rbxl` and documented how to run the benchmark in Roblox Studio.
+
+### Changed
+
+- **Batch Processing**: Replaced decoded queue-entry tables with inline reliable and unreliable batch processing through `Batcher.processBatch()` and `Batcher.processUnreliableBatch()`.
+- **Packet Dispatch**: Added `Serializer.decodeToTable()` and changed packet dispatch to avoid callback closures, vararg packing, and per-listener error-handler closures.
+- **Commit Buffers**: Added a bounded exact-size buffer pool for committed batch buffers, with deferred return after remote fire.
+- **Benchmark Report**: Rebuilt `benchmark/Benchmarks.md` from the current default and latency JSON files, including `Packet` rows and corrected `Drain` units.
+- **Public Docs**: Updated README, API docs, and guides to match the current batching behavior, `u16` batch counts, listener protection, benchmark units, and runtime defaults.
+
+### Fixed
+
+- **Latency Threshold**: `reliableThreshold = 0` now disables threshold splitting instead of committing before almost every packet.
+- **Packet Type Checking**: Packet dispatch now uses a typed protected-call wrapper so Luau does not infer the decoded table as a `pcall` status value.
+- **Channel Comments**: Removed generated-style comments from `Channel.luau` and kept only comments that describe constraints or intent.
+
 ## [0.3.3] — 2026-05-08
 
 ### Fixed

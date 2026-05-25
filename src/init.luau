@@ -16,7 +16,7 @@ local RunService = game:GetService("RunService")
 
 -- [ Constants ]
 
-local VERSION = "0.3.3"
+local VERSION = "0.4.0-rc.1"
 local IS_SERVER = RunService:IsServer()
 
 local CHANNEL_RELIABLE_NAME = "__SatsetChannelReliable"
