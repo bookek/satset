@@ -21,7 +21,11 @@ jobs:
         run: |
           header_line=$(grep -E "^## \[[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+(\.[0-9]+)?)?\]" CHANGELOG.md | head -1)
           version=$(echo "$header_line" | sed 's/.*\[\([^]]*\)\].*/\1/')
-          raw_date=$(echo "$header_line" | sed 's/.* — //')
+          raw_date=$(echo "$header_line" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+          if [ -z "$raw_date" ]; then
+            echo "Could not extract changelog date from: $header_line" >&2
+            exit 1
+          fi
           
           # Format tanggal jadi cantik (April 30, 2026)
           pretty_date=$(date -d "$raw_date" +"%B %e, %Y")
@@ -49,7 +53,7 @@ jobs:
           ' CHANGELOG.md > /tmp/release_notes.txt
           {
             echo 'release_notes<<EOF'
-            echo "### Release v${{ steps.changelog_info.outputs.version }} — ${{ steps.changelog_info.outputs.pretty_date }}"
+            echo "### Release v${{ steps.changelog_info.outputs.version }} - ${{ steps.changelog_info.outputs.pretty_date }}"
             echo ""
             cat /tmp/release_notes.txt
             echo 'EOF'
