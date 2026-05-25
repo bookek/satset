@@ -135,6 +135,41 @@ function Serializer.decodeFrom(
 	return data, cursor - offset
 end
 
+function Serializer.decodeToTable(
+	compiled: SchemaCompiler.CompiledSchema,
+	b: buffer,
+	offset: number
+): ({ [string]: any }?, number)
+	local bufLen = buffer.len(b)
+
+	if compiled.fixedSize then
+		if offset + compiled.fixedSize > bufLen then
+			return nil, 0
+		end
+
+		local data = {}
+		for _, field in compiled.fields do
+			data[field.name] = field.type.read(b, offset + field.offset)
+		end
+		return data, compiled.fixedSize
+	end
+
+	local data = {}
+	local cursor = offset
+
+	for _, field in compiled.fields do
+		if not Sanitizer.checkBounds(b, cursor, field.type.size) then
+			return nil, 0
+		end
+
+		local val = field.type.read(b, cursor)
+		data[field.name] = val
+		cursor += field.type.getSize(val)
+	end
+
+	return data, cursor - offset
+end
+
 --[[
 	Convenience wrapper for decoding a full buffer from the start.
 ]]
