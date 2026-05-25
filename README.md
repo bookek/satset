@@ -11,40 +11,43 @@
 
 </div>
 
-**sat·set** /sat-sèt/ *adjective (slang)* — Indonesian colloquialism for being rapid, efficient, and quick to act.
+**sat·set** /sat-sèt/ *adjective (slang)*: Indonesian colloquialism for being rapid, efficient, and quick to act.
 
-> *"Sat set, sampai."* — Indonesian for "Swiftly done."
+> *"Sat set, sampai."* means "Swiftly done."
 
-Satset is a high-performance networking library for [Roblox](https://roblox.com). It handles the heavy lifting of buffer serialization and state synchronization. It connects low-level data packing with high-level state sync, offering a unified API for both stateless events (Packets) and delta-compressed channels.
+Satset is a buffer-backed networking library for [Roblox](https://roblox.com). It handles packet serialization, batching, rate limiting, and state synchronization. The public API covers stateless events (Packets) and delta-compressed state (Channels).
 
-The library is built on the principle that code on the hot path should not allocate. By using native Luau `buffer` operations and focusing on O(1) operations, Satset maintains performance even when syncing hundreds of entities per frame.
+Satset keeps the send path in Luau `buffer` objects where possible. Packet listeners receive decoded tables, and channel subscribers receive reconstructed state tables.
 
 # Performance Benchmarks
 
-Satset is designed for high-throughput scenarios. We maintain a [benchmark suite](benchmark/Benchmarks.md) that measures Satset against native RemoteEvents and other common implementations.
+The [benchmark suite](benchmark/Benchmarks.md) compares Satset with native Roblox remotes and community networking libraries. It sends 200 events per frame for 10 seconds per payload. The tables report Roblox `Stats.DataSendKbps` p50 values normalized to a 60 FPS baseline.
 
-## Dual-Mode Batching
+## Batching Profiles
 
-Satset provides two batching strategies. Users can tune the library for engine stability (segmenting large payloads) or raw throughput.
+The latest benchmark uses two Satset profiles:
 
-| Test Case (1,000 items/frame) | Satset (Stability) | Satset (Latency) | Native Remotes |
-| :--- | :--- | :--- | :--- |
-| **Vectors** | 4.2 MB/s | **39.2 B/s** | 213.7 MB/s |
-| **Strings** | 18.4 MB/s | **118.9 B/s** | 140.2 MB/s |
-| **Booleans** | 485.4 KB/s | **38.1 B/s** | 160.9 MB/s |
+| Payload | Default normalized | Latency normalized | Default commits/frame | Latency commits/frame |
+| :--- | ---: | ---: | ---: | ---: |
+| Vectors | 118.13 | 38.84 | 3 | 1 |
+| Booleans | 10.43 | 10.38 | 1 | 1 |
+| Mixed | 4.29 | 4.31 | 1 | 1 |
+| Entities | 117.53 | 39.15 | 3 | 1 |
+| Strings | 899.63 | 96.37 | 8 | 1 |
+| SingleValue | 2.39 | 2.38 | 1 | 1 |
 
 > [!NOTE]
-> **Payload Segmentation**: In standard use (Stability Mode), Satset segments payloads at 60KB to ensure frame-time consistency. Latency mode sends larger segments to allow better compression density when needed.
+> `Normalized` is `Stats.DataSendKbps` adjusted to 60 FPS. The default benchmark profile uses `reliableThreshold = 60000` and `maxPacketsPerFrame = 20`. The latency profile uses `reliableThreshold = 0` and `maxPacketsPerFrame = 0`.
 
-Detailed methodology and raw data can be found in the [Benchmarks Report](benchmark/Benchmarks.md).
+Detailed methodology and raw data are in the [Benchmarks Report](benchmark/Benchmarks.md).
 
 # Documentation
 
-Comprehensive technical documentation is available in the `docs/` directory:
+Technical documentation is available in the `docs/` directory:
 
 - **[Architecture & Getting Started](docs/guide/getting-started.md)**: High-level overview and initialization.
 - **[API Reference](docs/api/satset.md)**: Detailed breakdown of the `Satset` namespace.
-- **[Development Patterns](docs/guide/development-patterns.md)**: Design principles and performance constraints.
+- **[Development Patterns](docs/guide/development-patterns.md)**: Design rules and performance constraints.
 - **[Security & Guard](docs/guide/security.md)**: Documentation on the token bucket rate limiting implementation.
 - **[Serialization Types](docs/api/types.md)**: Available data types for buffer-backed schemas.
 
@@ -63,14 +66,15 @@ Satset provides two distinct communication modes:
 
 ## Implementation Details
 
-- **Zero-Allocation Pipeline**: Core operations happen in pre-allocated buffers. We use a callback-based dispatch model to minimize heap allocations on the hot path.
+- **Buffer-backed batching**: Outgoing payloads are encoded into Luau buffers and committed as exact-size buffers before transport.
 - **Nested Structs**: Use `Satset.struct(schema)` to create reusable, composable type objects for complex nested schemas.
 - **Readable Type Names**: Provides human-readable aliases (`string`, `uint8`, `float64`, etc.) alongside shorthand forms for cleaner, more self-documenting schemas.
-- **Built-in Security**: Relies on Luau's native buffer bounds checks. Payload errors are caught via `pcall` to maintain stability without redundant manual checks.
+- **Packet dispatch**: Incoming batches are decoded in place. Each packet listener receives a decoded table.
+- **Built-in Security**: Relies on Luau's native buffer bounds checks. Payload errors are caught via `pcall` before they reach game code.
 - **Buffer Safety**: Dynamic data (strings/arrays) is capped relative to the physical buffer size to prevent memory-related issues.
 - **Sanitized Floats**: Floating-point types (`f32`, `f64`, `Vector3`, etc.) are clamped to 0 if they are `NaN` or `±Infinity` to prevent state corruption.
 - **Header Stripping**: Automatically identifies fixed-size schemas and omits size headers when possible to reduce protocol overhead.
-- **MTU Management**: Automatic fragmentation for batches exceeding the [MTU](https://en.wikipedia.org/wiki/Maximum_transmission_unit) limit.
+- **Batch Segmentation**: Reliable batches split at `reliableThreshold`. Unreliable batches split around the configured unreliable threshold, which defaults to 900 bytes.
 - **Guard**: Built-in server-side rate limiting using a token bucket algorithm to prevent spam.
 
 # Architecture
@@ -111,13 +115,14 @@ flowchart TB
     DP --> PK
     DC --> CH
 
-    PK -->|"encode(schema, data)"| SR
+    PK -->|"calculateSize(schema, data)"| SR
     ST -->|"compile nested"| SC
     SR --> SC
     SR --> SN
     SC --> TP
 
-    PK -->|"enqueue(id, payload)"| BT
+    PK -->|"allocate stream slot"| BT
+    PK -->|"encodeInto(buffer, offset)"| SR
     CH -->|"encodeDelta(bitmask)"| BT
 
     BT -->|"flush & segment"| BR
@@ -163,7 +168,8 @@ Satset.start({
         refillRate = 30,
     },
     batching = {
-        reliableThreshold = 60000, -- Segmentation for stability
+        reliableThreshold = 60000, -- Split reliable batches above 60 KB
+        maxPacketsPerFrame = 0, -- Send all ready batches each frame
     }
 })
 ```

@@ -1,6 +1,7 @@
 -- Satset benchmark mode.
 local RunService = game:GetService("RunService")
 local Satset = require(game:GetService("ReplicatedStorage").references.Satset)
+local SatsetBatcher = require(game:GetService("ReplicatedStorage").references.Satset.Core.Batcher)
 local Types = Satset.Types
 
 -- We don't call Satset.start() here anymore.
@@ -81,12 +82,14 @@ for name, packet: any in Packets do
 	Wrapped[name] = {
 		fire = function(data: any)
 			if RunService:IsClient() then
+				local gcStart = SatsetBatcher.beginDebugGc()
 				local isWrapped = (type(data) == "table" and data[1] ~= nil) or type(data) == "number"
+				local payload = data
 				if isWrapped then
-					packet:fireServer({ value = data })
-				else
-					packet:fireServer(data)
+					payload = { value = data }
 				end
+				SatsetBatcher.recordDebugGc("adapter", gcStart)
+				packet:fireServer(payload)
 			end
 		end,
 		listen = function(callback: any)

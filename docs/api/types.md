@@ -34,7 +34,7 @@ Standard and optimized types for schemas.
 
 - `optional(type)`: Nullable type. Adds a **1-byte header** (a `u8` boolean flag) to check for `nil`.
 - `array(type)`: Array of a specific type. Includes a **2-byte header** (a `u16` integer) for length (max 65,535 elements) followed by the array elements.
-- `map(keyType, valType)`: Dictionary mapping. Includes a **2-byte header** (a `u16` integer) for element count. Keys are sorted alphabetically during serialization to ensure deterministic byte order output.
+- `map(keyType, valType)`: Dictionary mapping. Includes a **2-byte header** (a `u16` integer) for element count. Keys are sorted alphabetically during serialization to produce deterministic byte order output.
 - `enum(values: {string})`: Efficient mapping. Converts string constants into a **single 1-byte `u8` index** corresponding to its array position.
 
 ## Specialized

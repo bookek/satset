@@ -6,13 +6,14 @@ The main entry point for the library.
 
 ### `Satset.start(config: SatsetConfig?)`
 
-Initializes the networking engine. Must be called once on both server and client. Calling it more than once is safe — subsequent calls are ignored with a warning.
+Initializes the networking engine. Must be called once on both server and client. Calling it more than once is safe; later calls are ignored with a warning.
 
 - **config**: Optional configuration object.
   - **guard**: Guard configuration (see [Guard API](./guard.md)).
   - **batching**: Batching behavior.
-    - **reliableThreshold**: (number) Size in bytes before a reliable payload is segmented. Default is `60000`. Set to `0` to disable segmentation for lower latency.
-    - **maxPacketsPerFrame**: (number) Maximum number of packets to process per frame. Default is `0` (unlimited).
+    - **reliableThreshold**: (number) Size in bytes before a reliable stream is committed and a new stream begins. Default is `60000`. Set to `0` to disable threshold splitting; reliable packets are committed at the frame flush.
+    - **unreliableThreshold**: (number) Size in bytes before an unreliable stream is committed and a new stream begins. Default is `900`.
+    - **maxPacketsPerFrame**: (number) Maximum committed batches sent per frame for each queue. Default is `0` (no cap).
 
 ### `Satset.definePacket(config: PacketConfig): Packet`
 
@@ -55,7 +56,7 @@ Reference to the [Types module](./types.md).
 
 ## Performance Context
 
-Initialization and packet definitions are O(1) operations. For details on how Satset's hybrid engine performs under extreme network load, see the [Benchmarks Report](../../benchmark/Benchmarks.md).
+Initialization and packet definitions are O(1) operations. For benchmark results under heavy local Studio load, see the [Benchmarks Report](../../benchmark/Benchmarks.md).
 
 ## Related Guides
 

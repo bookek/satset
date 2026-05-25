@@ -1,13 +1,13 @@
 -- Benchmark server. Receives data from all modes and validates correctness.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local BenchmarkConfig = require(ReplicatedStorage.Shared.BenchmarkConfig)
 local Satset = require(ReplicatedStorage.references.Satset)
+local SatsetBatcher = require(ReplicatedStorage.references.Satset.Core.Batcher)
 Satset.start({
-	batching = {
-		reliableThreshold = 60000,
-		maxPacketsPerFrame = 20,
-	},
+	batching = BenchmarkConfig.batching,
 })
+SatsetBatcher.setDebugGcEnabled(true)
 
 local Benches = require(game:GetService("ReplicatedStorage").Shared.benches)
 local Modes = require(ReplicatedStorage.Shared.modes)
@@ -111,7 +111,14 @@ for name, data in Benches do
 end
 
 -- Client pulls received counts to compute packet loss.
-ReplicatedStorage.Shared.GetRecieved.OnServerInvoke = function()
+ReplicatedStorage.Shared.GetRecieved.OnServerInvoke = function(_player, action: string?)
+	if action == "resetSatsetDebugStats" then
+		SatsetBatcher.resetDebugStats()
+		return true
+	elseif action == "getSatsetDebugStats" then
+		return SatsetBatcher.getDebugStats()
+	end
+
 	return received
 end
 

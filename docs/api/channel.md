@@ -15,7 +15,7 @@ type ChannelConfig = {
 
 > [!IMPORTANT]
 > Channels only support **fixed-size types**. This allows the engine to pre-compute buffer offsets and perform zero-allocation updates.
-> There is a limit of **32 fields** per channel. This is a technical constraint of the 32-bit dirty bitmask tracking used to keep delta updates O(1) and extremely compact.
+> There is a limit of **32 fields** per channel. This is a technical constraint of the 32-bit dirty bitmask tracking used to keep delta updates O(1) and compact.
 
 ## Methods (Channel Object)
 

@@ -1,12 +1,12 @@
 # Packets
 
-Packets are the primary way to send data in Satset. They are designed for **stateless** communication—you send a piece of data, and the receiver handles it.
+Packets are the primary way to send data in Satset. They are designed for **stateless** communication: you send a piece of data, and the receiver handles it.
 
 ## Automatic Batching
 
-One of Satset's core strengths is automatic batching. When you call `:fireServer()` or `:fireClient()`, the data isn't sent immediately. Instead, Satset waits until the end of the frame, combines all outgoing packets into a single buffer, and sends them in one go.
+When you call `:fireServer()` or `:fireClient()`, Satset queues the encoded payload instead of sending it immediately. During `PostSimulation`, each queue is committed to one or more buffers and sent through the matching remote.
 
-This drastically reduces the overhead caused by Roblox's internal `RemoteEvent` overhead.
+Reliable batches split at `reliableThreshold`. Unreliable batches split around 900 bytes by default. Fixed-size packet schemas omit payload-size headers.
 
 ## Reliability
 
@@ -18,7 +18,7 @@ local PositionUpdate = Satset.definePacket({
     schema = {
         pos = Types.Vector3,
     },
-    reliable = false -- Use UnreliableRemoteEvent
+    reliable = false, -- Use UnreliableRemoteEvent
 })
 ```
 

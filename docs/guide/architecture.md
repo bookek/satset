@@ -32,23 +32,21 @@ sequenceDiagram
     participant SN as Sanitizer
 
     Dev->>PK: fireServer(data)
-    PK->>SR: encode(compiledSchema, data)
+    PK->>SR: calculateSize(compiledSchema, data)
     SR->>SC: uses field order and offsets
-    SR->>SR: calculateSize(compiledSchema, data)
-    SR->>SR: encodeInto(buffer, offset)
-    SR-->>PK: returns payload buffer
-
-    PK->>BT: enqueue(packetId, payload, reliable)
+    PK->>BT: allocateForServer(packetId, size, reliable)
+    BT-->>PK: buffer, offset
+    PK->>SR: encodeInto(compiledSchema, data, buffer, offset)
 
     Note over BT: PostSimulation fires once per frame
 
-    BT->>BT: encodeBatch(queue)
-    opt payload > reliableThreshold
-        BT->>BT: segment(payload)
+    BT->>BT: commitStream(queue)
+    opt reliableThreshold > 0 and stream exceeds threshold
+        BT->>BT: commit current buffer and start a new one
     end
-    Note right of BT: Wire: [u8 count][u8 id, (opt u16 size), payload]...
+    Note right of BT: Wire: [u16 count][u8 id, (opt u16 size), payload]...
     BT->>BR: getReliable()
-    BR->>RE: FireServer(segments[])
+    BR->>RE: FireServer(batchBuffer)
 
     Note over RE: Crosses the network boundary
 
@@ -56,16 +54,15 @@ sequenceDiagram
     GD->>GD: consume(player) via token bucket
     alt Token available
         GD->>PK: _dispatch(batchBuffer, player)
-        PK->>BT: decodeBatch(batchBuffer)
-        BT-->>PK: entries[]
+        PK->>BT: processBatch(batchBuffer, player, _dispatchSingle)
         loop For each entry
-            PK->>PK: pcall(decode)
-            PK->>SR: decodeFrom(compiled, buffer, offset, dispatch)
-            SR->>SR: uses callback-based iteration
+            BT->>PK: dispatch(packetId, buffer, payloadOffset, sender)
+            PK->>PK: pcall(decodeToTable)
+            PK->>SR: decodeToTable(compiled, buffer, offset)
             SR->>SN: sanitizeFloat(value) for each number field
             SR->>SN: checkBounds(buffer, cursor, size)
-            SR-->>PK: invokes dispatch(...) callback
-            PK->>Dev: listener(data, sender)
+            SR-->>PK: decoded data table
+            PK->>Dev: listener(data, sender) via pcall
             Note over PK: data table constructed only if listeners exist
         end
     else Token exhausted
@@ -76,7 +73,7 @@ sequenceDiagram
 ### Wire Format (Reliable Batch)
 
 ```luau
-[u8 packetCount]
+[u16 packetCount]
   [u8 packetId][u16 payloadSize][...payload bytes] (Variable size)
   [u8 packetId][...payload bytes] (Fixed size - size header omitted)
   ...
@@ -87,7 +84,7 @@ sequenceDiagram
 Unreliable batches include a sequence number for stale packet detection. If the batch exceeds 900 bytes (MTU limit), it is automatically split into multiple sub-batches, each with its own sequence number.
 
 ```luau
-[u16 sequenceNumber][u8 packetCount]
+[u16 sequenceNumber][u16 packetCount]
   [u8 packetId][u16 payloadSize][...payload bytes] (Variable)
   [u8 packetId][...payload bytes] (Fixed)
   ...
@@ -157,38 +154,38 @@ Channels periodically send a full keyframe to prevent client-side state drift ca
 
 Satset processes incoming data through a strict validation stack before it reaches the developer's listener:
 
-1. **OOB Shielding (`pcall`)**: All packet decoding runs inside a protected call. If a malicious payload forces a read past the end of the buffer, the VM throws an error that is immediately caught and silenced.
-2. **Allocation Capping (`table.create`)**: Variable-length types (arrays, strings, maps) mathematically limit their allocations based on the remaining bytes in the payload. This prevents exploiters from crashing the server with massive GC spikes.
+1. **OOB Shielding (`pcall`)**: Packet decoding runs inside a protected call. If a malicious payload forces a read past the end of the buffer, the VM throws an error that is caught and silenced.
+2. **Allocation Capping (`table.create`)**: Variable-length types (arrays, strings, maps) limit their allocations based on the remaining bytes in the payload. This prevents memory exhaustion and large GC spikes.
 3. **Float Sanitization (`Sanitizer.sanitizeFloat`)**: All floating-point fields (`f32`, `f64`, `Vector3`, etc.) are clamped to prevent `NaN` and `Infinity` from propagating into game logic.
 4. **Schema Verification (`Sanitizer.checkBounds`)**: For fixed-size schema fields, the serializer checks that enough bytes remain before executing the read.
 
 ## Batching Strategies
 
-Satset's batching engine can be configured to balance between raw networking performance and engine stability. This is controlled via the `batching` table in `Satset.start()`.
+Satset's batching engine is configured through the `batching` table in `Satset.start()`.
 
-### Stability Mode (Default)
+### Default Runtime Settings
 
-Optimized for consistent engine frame-times and reliable delivery of large data chunks.
-
-```luau
-batching = {
-    reliableThreshold = 60000, -- Segmentation at 60KB
-    maxPacketsPerFrame = 0     -- No rate limiting (default)
-}
-```
-
-> In this mode, Satset segments large payloads to stay within Roblox's internal buffer > limits, preventing "packet too large" errors and ensuring the engine can process network ?traffic smoothly.
-
-### Latency Mode
-
-Optimized for minimum overhead and maximum throughput. Recommended for competitive games with small, frequent updates.
+The default runtime settings split reliable streams above 60 KB and send every ready batch during the frame flush.
 
 ```luau
 batching = {
-    reliableThreshold = 0, -- Bypass segmentation
-    maxPacketsPerFrame = 0 
+    reliableThreshold = 60000, -- Split reliable batches above 60 KB
+    maxPacketsPerFrame = 0, -- Send all ready batches each frame
 }
 ```
 
->[!NOTE]
->By setting `reliableThreshold` to 0, Satset sends payloads as a single segment. This reduces protocol overhead and allows the engine's underlying [Zstd](https://github.com/facebook/zstd) compression to work much more efficiently, often resulting in significantly lower bandwidth usage in benchmarks.
+`maxPacketsPerFrame` caps how many committed batches each queue can send in one frame. A value of `0` means no cap.
+
+### One-Commit Profile
+
+Setting `reliableThreshold` to `0` disables threshold splitting for reliable streams. Queued reliable packets are committed once at the frame flush.
+
+```luau
+batching = {
+    reliableThreshold = 0, -- Disable threshold splitting
+    maxPacketsPerFrame = 0,
+}
+```
+
+> [!NOTE]
+> The current benchmark latency profile uses this setting. It reduces commit count for large homogeneous payloads, which reduces measured `Stats.DataSendKbps` in the benchmark. It also allows larger `RemoteEvent` payloads, so test it with real game payloads before use.
