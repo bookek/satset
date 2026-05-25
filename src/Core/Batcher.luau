@@ -17,12 +17,48 @@ local RELIABLE_SPLIT_THRESHOLD = 60000
 local UNRELIABLE_SPLIT_THRESHOLD = 900
 local MAX_PACKETS_PER_FRAME = 0 -- 0 means no limit (Latency Mode)
 local INITIAL_WORKING_SIZE = 65536
+local EXACT_BUFFER_POOL_MAX_PER_SIZE = 8
+local EXACT_BUFFER_POOL_MAX_SIZE_CLASSES = 64
+local EXACT_BUFFER_POOL_MAX_BYTES = 4 * 1024 * 1024
+local EXACT_BUFFER_POOL_MAX_BUFFER_SIZE = 512 * 1024
 
 type Stream = {
 	b: buffer,
 	cursor: number,
 	count: number,
 }
+
+export type DebugStats = {
+	reliableCommits: number,
+	reliableCommitBytes: number,
+	unreliableCommits: number,
+	unreliableCommitBytes: number,
+	streamGrowths: number,
+	streamGrowthBytes: number,
+	adapterGcKb: number,
+	adapterGcSamples: number,
+	sendGcKb: number,
+	sendGcSamples: number,
+	commitGcKb: number,
+	commitGcSamples: number,
+	receiveDecodeGcKb: number,
+	receiveDecodeGcSamples: number,
+	packetDecodeGcKb: number,
+	packetDecodeGcSamples: number,
+	listenerCallGcKb: number,
+	listenerCallGcSamples: number,
+	listenerDispatchGcKb: number,
+	listenerDispatchGcSamples: number,
+}
+
+export type DebugGcBucket =
+	"adapter"
+	| "send"
+	| "commit"
+	| "receiveDecode"
+	| "packetDecode"
+	| "listenerCall"
+	| "listenerDispatch"
 
 local serverReliableStream: Stream = { b = buffer.create(INITIAL_WORKING_SIZE), cursor = 2, count = 0 }
 local serverUnreliableStream: Stream = { b = buffer.create(INITIAL_WORKING_SIZE), cursor = 4, count = 0 }
@@ -44,6 +80,33 @@ local lastReceivedSeq: { [Player]: number } = {}
 local lastServerSeq: number = 0
 
 local packetFixedSizes: { [number]: number } = {}
+local exactBufferPool: { [number]: { buffer } } = {}
+local exactBufferReleaseQueue: { buffer } = {}
+local exactBufferPoolBytes = 0
+local exactBufferPoolSizeClasses = 0
+local debugStats: DebugStats = {
+	reliableCommits = 0,
+	reliableCommitBytes = 0,
+	unreliableCommits = 0,
+	unreliableCommitBytes = 0,
+	streamGrowths = 0,
+	streamGrowthBytes = 0,
+	adapterGcKb = 0,
+	adapterGcSamples = 0,
+	sendGcKb = 0,
+	sendGcSamples = 0,
+	commitGcKb = 0,
+	commitGcSamples = 0,
+	receiveDecodeGcKb = 0,
+	receiveDecodeGcSamples = 0,
+	packetDecodeGcKb = 0,
+	packetDecodeGcSamples = 0,
+	listenerCallGcKb = 0,
+	listenerCallGcSamples = 0,
+	listenerDispatchGcKb = 0,
+	listenerDispatchGcSamples = 0,
+}
+local debugGcEnabled = false
 
 local Batcher = {}
 
@@ -69,6 +132,191 @@ function Batcher.configure(config: BatchingConfig)
 	end
 end
 
+local function recordCommit(reliable: boolean, byteCount: number)
+	if reliable then
+		debugStats.reliableCommits += 1
+		debugStats.reliableCommitBytes += byteCount
+	else
+		debugStats.unreliableCommits += 1
+		debugStats.unreliableCommitBytes += byteCount
+	end
+end
+
+local function recordGcDelta(bucket: DebugGcBucket, deltaKb: number)
+	if bucket == "adapter" then
+		debugStats.adapterGcKb += deltaKb
+		debugStats.adapterGcSamples += 1
+	elseif bucket == "send" then
+		debugStats.sendGcKb += deltaKb
+		debugStats.sendGcSamples += 1
+	elseif bucket == "commit" then
+		debugStats.commitGcKb += deltaKb
+		debugStats.commitGcSamples += 1
+	elseif bucket == "receiveDecode" then
+		debugStats.receiveDecodeGcKb += deltaKb
+		debugStats.receiveDecodeGcSamples += 1
+	elseif bucket == "packetDecode" then
+		debugStats.packetDecodeGcKb += deltaKb
+		debugStats.packetDecodeGcSamples += 1
+	elseif bucket == "listenerCall" then
+		debugStats.listenerCallGcKb += deltaKb
+		debugStats.listenerCallGcSamples += 1
+	elseif bucket == "listenerDispatch" then
+		debugStats.listenerDispatchGcKb += deltaKb
+		debugStats.listenerDispatchGcSamples += 1
+	end
+end
+
+function Batcher.setDebugGcEnabled(enabled: boolean)
+	debugGcEnabled = enabled
+end
+
+function Batcher.beginDebugGc(): number?
+	if not debugGcEnabled then
+		return nil
+	end
+
+	return gcinfo()
+end
+
+function Batcher.recordDebugGc(bucket: DebugGcBucket, beforeKb: number?)
+	if not debugGcEnabled or beforeKb == nil then
+		return
+	end
+
+	recordGcDelta(bucket, gcinfo() - beforeKb)
+end
+
+function Batcher.getDebugStats(): DebugStats
+	return {
+		reliableCommits = debugStats.reliableCommits,
+		reliableCommitBytes = debugStats.reliableCommitBytes,
+		unreliableCommits = debugStats.unreliableCommits,
+		unreliableCommitBytes = debugStats.unreliableCommitBytes,
+		streamGrowths = debugStats.streamGrowths,
+		streamGrowthBytes = debugStats.streamGrowthBytes,
+		adapterGcKb = debugStats.adapterGcKb,
+		adapterGcSamples = debugStats.adapterGcSamples,
+		sendGcKb = debugStats.sendGcKb,
+		sendGcSamples = debugStats.sendGcSamples,
+		commitGcKb = debugStats.commitGcKb,
+		commitGcSamples = debugStats.commitGcSamples,
+		receiveDecodeGcKb = debugStats.receiveDecodeGcKb,
+		receiveDecodeGcSamples = debugStats.receiveDecodeGcSamples,
+		packetDecodeGcKb = debugStats.packetDecodeGcKb,
+		packetDecodeGcSamples = debugStats.packetDecodeGcSamples,
+		listenerCallGcKb = debugStats.listenerCallGcKb,
+		listenerCallGcSamples = debugStats.listenerCallGcSamples,
+		listenerDispatchGcKb = debugStats.listenerDispatchGcKb,
+		listenerDispatchGcSamples = debugStats.listenerDispatchGcSamples,
+	}
+end
+
+function Batcher.resetDebugStats()
+	debugStats.reliableCommits = 0
+	debugStats.reliableCommitBytes = 0
+	debugStats.unreliableCommits = 0
+	debugStats.unreliableCommitBytes = 0
+	debugStats.streamGrowths = 0
+	debugStats.streamGrowthBytes = 0
+	debugStats.adapterGcKb = 0
+	debugStats.adapterGcSamples = 0
+	debugStats.sendGcKb = 0
+	debugStats.sendGcSamples = 0
+	debugStats.commitGcKb = 0
+	debugStats.commitGcSamples = 0
+	debugStats.receiveDecodeGcKb = 0
+	debugStats.receiveDecodeGcSamples = 0
+	debugStats.packetDecodeGcKb = 0
+	debugStats.packetDecodeGcSamples = 0
+	debugStats.listenerCallGcKb = 0
+	debugStats.listenerCallGcSamples = 0
+	debugStats.listenerDispatchGcKb = 0
+	debugStats.listenerDispatchGcSamples = 0
+end
+
+local function acquireExactBuffer(size: number): buffer
+	local bucket = exactBufferPool[size]
+	if bucket then
+		local index = #bucket
+		local pooled = bucket[index]
+		if pooled then
+			bucket[index] = nil
+			exactBufferPoolBytes -= size
+			return pooled
+		end
+	end
+
+	return buffer.create(size)
+end
+
+local function reserveExactBufferSizeClass(): boolean
+	if exactBufferPoolSizeClasses < EXACT_BUFFER_POOL_MAX_SIZE_CLASSES then
+		return true
+	end
+
+	for size, bucket in exactBufferPool do
+		if #bucket == 0 then
+			exactBufferPool[size] = nil
+			exactBufferPoolSizeClasses -= 1
+			return true
+		end
+	end
+
+	return false
+end
+
+local function releaseExactBuffer(b: buffer)
+	local size = buffer.len(b)
+	if size > EXACT_BUFFER_POOL_MAX_BUFFER_SIZE then
+		return
+	end
+
+	if exactBufferPoolBytes + size > EXACT_BUFFER_POOL_MAX_BYTES then
+		return
+	end
+
+	local bucket = exactBufferPool[size]
+	if not bucket then
+		if not reserveExactBufferSizeClass() then
+			return
+		end
+
+		bucket = table.create(EXACT_BUFFER_POOL_MAX_PER_SIZE)
+		exactBufferPool[size] = bucket
+		exactBufferPoolSizeClasses += 1
+	elseif #bucket >= EXACT_BUFFER_POOL_MAX_PER_SIZE then
+		return
+	end
+
+	table.insert(bucket, b)
+	exactBufferPoolBytes += size
+end
+
+local function deferExactBufferRelease(b: buffer)
+	table.insert(exactBufferReleaseQueue, b)
+end
+
+local function drainExactBufferReleaseQueue()
+	for _, batch in exactBufferReleaseQueue do
+		releaseExactBuffer(batch)
+	end
+
+	table.clear(exactBufferReleaseQueue)
+end
+
+local function releaseQueuedBatches(batches: { buffer }?)
+	if not batches then
+		return
+	end
+
+	for _, batch in batches do
+		releaseExactBuffer(batch)
+	end
+
+	table.clear(batches)
+end
+
 local function commitStream(stream: Stream, reliable: boolean, seqCounter: number?): (buffer?, number?)
 	if stream.count == 0 then
 		return nil, seqCounter
@@ -84,10 +332,11 @@ local function commitStream(stream: Stream, reliable: boolean, seqCounter: numbe
 		nextSeq = val
 	end
 
-	-- Always create an exact-sized buffer for sending. Roblox RemoteEvent
-	-- transmits the entire buffer object, so we must right-size it.
-	local exactBuffer = buffer.create(stream.cursor)
+	local gcStart = Batcher.beginDebugGc()
+	local exactBuffer = acquireExactBuffer(stream.cursor)
 	buffer.copy(exactBuffer, 0, stream.b, 0, stream.cursor)
+	Batcher.recordDebugGc("commit", gcStart)
+	recordCommit(reliable, stream.cursor)
 
 	-- Reset stream for next frame. Reuse the existing working buffer
 	-- to avoid re-allocation when the load is stable across frames.
@@ -109,7 +358,7 @@ local function allocateInStream(
 	local isFixed = packetFixedSizes[packetId] ~= nil
 	local entrySize = 1 + (isFixed and 0 or 2) + size
 
-	if stream.cursor + entrySize > splitThreshold and stream.count > 0 then
+	if splitThreshold > 0 and stream.cursor + entrySize > splitThreshold and stream.count > 0 then
 		local exactBuffer, newSeq = commitStream(stream, reliable, seqCounter)
 		if exactBuffer then
 			table.insert(queueTo, exactBuffer)
@@ -120,9 +369,13 @@ local function allocateInStream(
 	end
 
 	if stream.cursor + entrySize > buffer.len(stream.b) then
+		local gcStart = Batcher.beginDebugGc()
 		local newB = buffer.create(math.max(buffer.len(stream.b) * 2, stream.cursor + entrySize))
 		buffer.copy(newB, 0, stream.b, 0, stream.cursor)
+		Batcher.recordDebugGc("send", gcStart)
 		stream.b = newB
+		debugStats.streamGrowths += 1
+		debugStats.streamGrowthBytes += buffer.len(newB)
 	end
 
 	local offset = stream.cursor
@@ -138,20 +391,22 @@ local function allocateInStream(
 
 	return stream.b, offset + 1, seqCounter
 end
-type QueueEntry = { id: number, b: buffer, offset: number, len: number }
+
+type DispatchFn = (packetId: number, b: buffer, offset: number, sender: Player?) -> ()
 
 -- [ Internal API ]
 
 --[[
-	Splits a reliable batch back into individual packets without allocating new buffers.
+	Processes a reliable batch and dispatches each packet without allocating queue entries.
 ]]
-function Batcher.decodeBatch(b: buffer): { QueueEntry }
-	local results = {}
+function Batcher.processBatch(b: buffer, sender: Player?, dispatch: DispatchFn)
+	local gcStart = Batcher.beginDebugGc()
 	local cursor = 0
 	local bufLen = buffer.len(b)
 
 	if bufLen < 2 then
-		return results
+		Batcher.recordDebugGc("receiveDecode", gcStart)
+		return
 	end
 
 	local count = buffer.readu16(b, cursor)
@@ -179,21 +434,26 @@ function Batcher.decodeBatch(b: buffer): { QueueEntry }
 			break
 		end
 
-		table.insert(results, { id = id, b = b, offset = cursor, len = payloadLen })
+		local payloadOffset = cursor
 		cursor += payloadLen
+
+		Batcher.recordDebugGc("receiveDecode", gcStart)
+		dispatch(id, b, payloadOffset, sender)
+		gcStart = Batcher.beginDebugGc()
 	end
 
-	return results
+	Batcher.recordDebugGc("receiveDecode", gcStart)
 end
 
 --[[
-	Decodes an unreliable batch and checks for staleness.
-	If the packet is too old, it returns nil.
+	Processes an unreliable batch and skips stale packets.
 ]]
-function Batcher.decodeUnreliableBatch(b: buffer, sender: Player?): { QueueEntry }?
+function Batcher.processUnreliableBatch(b: buffer, sender: Player?, dispatch: DispatchFn)
+	local gcStart = Batcher.beginDebugGc()
 	local bufLen = buffer.len(b)
 	if bufLen < 4 then
-		return nil
+		Batcher.recordDebugGc("receiveDecode", gcStart)
+		return
 	end
 
 	local seq = buffer.readu16(b, 0)
@@ -208,7 +468,8 @@ function Batcher.decodeUnreliableBatch(b: buffer, sender: Player?): { QueueEntry
 	-- We use a half-window comparison to handle 16-bit wraparound correctly.
 	local diff = (seq - lastSeq) % 65536
 	if diff == 0 or diff > 32768 then
-		return nil -- Stale or duplicate.
+		Batcher.recordDebugGc("receiveDecode", gcStart)
+		return -- Stale or duplicate.
 	end
 
 	if IS_SERVER then
@@ -217,7 +478,6 @@ function Batcher.decodeUnreliableBatch(b: buffer, sender: Player?): { QueueEntry
 		lastServerSeq = seq
 	end
 
-	local results = {}
 	local cursor = 2
 
 	local count = buffer.readu16(b, cursor)
@@ -244,11 +504,15 @@ function Batcher.decodeUnreliableBatch(b: buffer, sender: Player?): { QueueEntry
 			break
 		end
 
-		table.insert(results, { id = id, b = b, offset = cursor, len = payloadLen })
+		local payloadOffset = cursor
 		cursor += payloadLen
+
+		Batcher.recordDebugGc("receiveDecode", gcStart)
+		dispatch(id, b, payloadOffset, sender)
+		gcStart = Batcher.beginDebugGc()
 	end
 
-	return results
+	Batcher.recordDebugGc("receiveDecode", gcStart)
 end
 
 -- [ Enqueue API ]
@@ -331,6 +595,8 @@ end
 -- [ Flush ]
 
 local function flush()
+	drainExactBufferReleaseQueue()
+
 	if IS_SERVER then
 		local reliableRemote = Bridge.getReliable()
 		local unreliableRemote = Bridge.getUnreliable()
@@ -346,7 +612,9 @@ local function flush()
 				local sentThisFrame = 0
 				local i = 1
 				while i <= #batches do
-					reliableRemote:FireClient(player, batches[i])
+					local batch = batches[i]
+					reliableRemote:FireClient(player, batch)
+					deferExactBufferRelease(batch)
 					sentThisFrame += 1
 					table.remove(batches, i)
 
@@ -356,6 +624,7 @@ local function flush()
 				end
 			elseif exact then
 				reliableRemote:FireClient(player, exact)
+				deferExactBufferRelease(exact)
 			end
 		end
 
@@ -373,7 +642,9 @@ local function flush()
 				local sentThisFrame = 0
 				local i = 1
 				while i <= #batches do
-					unreliableRemote:FireClient(player, batches[i])
+					local batch = batches[i]
+					unreliableRemote:FireClient(player, batch)
+					deferExactBufferRelease(batch)
 					sentThisFrame += 1
 					table.remove(batches, i)
 
@@ -383,6 +654,7 @@ local function flush()
 				end
 			elseif exact then
 				unreliableRemote:FireClient(player, exact)
+				deferExactBufferRelease(exact)
 			end
 		end
 
@@ -394,7 +666,9 @@ local function flush()
 		local sentThisFrame = 0
 		local i = 1
 		while i <= #broadcastReliableBatches do
-			reliableRemote:FireAllClients(broadcastReliableBatches[i])
+			local batch = broadcastReliableBatches[i]
+			reliableRemote:FireAllClients(batch)
+			deferExactBufferRelease(batch)
 			sentThisFrame += 1
 			table.remove(broadcastReliableBatches, i)
 
@@ -411,7 +685,9 @@ local function flush()
 		local sentThisFrame = 0
 		local i = 1
 		while i <= #serverReliableBatches do
-			Bridge.getReliable():FireServer(serverReliableBatches[i])
+			local batch = serverReliableBatches[i]
+			Bridge.getReliable():FireServer(batch)
+			deferExactBufferRelease(batch)
 			sentThisFrame += 1
 			table.remove(serverReliableBatches, i)
 
@@ -429,7 +705,9 @@ local function flush()
 		i = 1
 		local sentThisFrameU = 0
 		while i <= #serverUnreliableBatches do
-			Bridge.getUnreliable():FireServer(serverUnreliableBatches[i])
+			local batch = serverUnreliableBatches[i]
+			Bridge.getUnreliable():FireServer(batch)
+			deferExactBufferRelease(batch)
 			sentThisFrameU += 1
 			table.remove(serverUnreliableBatches, i)
 
@@ -451,6 +729,8 @@ end
 	Purges a player's state when they disconnect.
 ]]
 function Batcher.removePlayer(player: Player)
+	releaseQueuedBatches(clientReliableBatches[player])
+	releaseQueuedBatches(clientUnreliableBatches[player])
 	clientReliableStreams[player] = nil
 	clientUnreliableStreams[player] = nil
 	clientReliableBatches[player] = nil
