@@ -6,6 +6,8 @@ local SchemaCompiler = require(script.Parent.Parent.Serialization.SchemaCompiler
 local Serializer = require(script.Parent.Parent.Serialization.Serializer)
 local Types = require(script.Parent.Parent.Types)
 
+local protectedCall: (any, ...any) -> (boolean, any) = pcall :: any
+
 local RunService = game:GetService("RunService")
 
 -- [ Constants ]
@@ -77,23 +79,35 @@ function Packet.definePacket(config: PacketConfig): Packet
 
 	function self:fireServer(data: { [string]: any })
 		assert(not IS_SERVER, "[Satset] fireServer can only be called from the client")
+		local gcStart = Batcher.beginDebugGc()
 		local size = compiled.fixedSize or Serializer.calculateSize(compiled, data)
+		Batcher.recordDebugGc("send", gcStart)
 		local b, offset = Batcher.allocateForServer(id, size, def.reliable)
+		gcStart = Batcher.beginDebugGc()
 		Serializer.encodeInto(compiled, data, b, offset)
+		Batcher.recordDebugGc("send", gcStart)
 	end
 
 	function self:fireClient(player: Player, data: { [string]: any })
 		assert(IS_SERVER, "[Satset] fireClient can only be called from the server")
+		local gcStart = Batcher.beginDebugGc()
 		local size = compiled.fixedSize or Serializer.calculateSize(compiled, data)
+		Batcher.recordDebugGc("send", gcStart)
 		local b, offset = Batcher.allocateForPlayer(player, id, size, def.reliable)
+		gcStart = Batcher.beginDebugGc()
 		Serializer.encodeInto(compiled, data, b, offset)
+		Batcher.recordDebugGc("send", gcStart)
 	end
 
 	function self:fireAllClients(data: { [string]: any })
 		assert(IS_SERVER, "[Satset] fireAllClients can only be called from the server")
+		local gcStart = Batcher.beginDebugGc()
 		local size = compiled.fixedSize or Serializer.calculateSize(compiled, data)
+		Batcher.recordDebugGc("send", gcStart)
 		local b, offset = Batcher.allocateForAllPlayers(id, size)
+		gcStart = Batcher.beginDebugGc()
 		Serializer.encodeInto(compiled, data, b, offset)
+		Batcher.recordDebugGc("send", gcStart)
 	end
 
 	function self:listen(callback: (data: { [string]: any }, sender: Player?) -> ())
@@ -114,55 +128,42 @@ function Packet._dispatchSingle(packetId: number, b: buffer, offset: number, sen
 		return
 	end
 
-	-- Zero-allocation path: serializer calls this callback with raw values.
-	local function dispatch(...)
-		local args = { ... }
-		local data = nil
-
-		for _, listener in def.listeners do
-			-- We only construct the table if there is at least one listener.
-			-- This still allows us to eventually support 'raw' listeners
-			-- that take (...any) instead of (data).
-			if not data then
-				data = {}
-				for i, field in def.compiled.fields do
-					data[field.name] = args[i]
-				end
-			end
-
-			xpcall(listener, function(err)
-				warn(`[Satset] Packet '{def.name}' listener error: {err}`)
-			end, data, sender)
-		end
+	if #def.listeners == 0 then
+		return
 	end
 
-	-- pcall shields against buffer OOB from crafted payloads.
-	pcall(Serializer.decodeFrom, def.compiled, b, offset, dispatch)
+	local gcStart = Batcher.beginDebugGc()
+	local ok, decoded = protectedCall(Serializer.decodeToTable, def.compiled, b, offset)
+	Batcher.recordDebugGc("packetDecode", gcStart)
+
+	if not ok or not decoded then
+		return
+	end
+
+	local data = decoded :: { [string]: any }
+
+	gcStart = Batcher.beginDebugGc()
+	for _, listener in def.listeners do
+		local success, err = protectedCall(listener, data, sender)
+		if not success then
+			warn(`[Satset] Packet '{def.name}' listener error: {err}`)
+		end
+	end
+	Batcher.recordDebugGc("listenerCall", gcStart)
 end
 
 --[[
 	Processes a reliable batch of packets.
 ]]
 function Packet._dispatch(batchPayload: buffer, sender: Player?)
-	local entries = Batcher.decodeBatch(batchPayload)
-
-	for _, entry in entries do
-		Packet._dispatchSingle(entry.id, entry.b, entry.offset, sender)
-	end
+	Batcher.processBatch(batchPayload, sender, Packet._dispatchSingle)
 end
 
 --[[
 	Processes an unreliable batch, including staleness checks.
 ]]
 function Packet._dispatchUnreliable(batchPayload: buffer, sender: Player?)
-	local entries = Batcher.decodeUnreliableBatch(batchPayload, sender)
-	if not entries then
-		return
-	end
-
-	for _, entry in entries do
-		Packet._dispatchSingle(entry.id, entry.b, entry.offset, sender)
-	end
+	Batcher.processUnreliableBatch(batchPayload, sender, Packet._dispatchSingle)
 end
 
 return Packet

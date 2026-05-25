@@ -1,5 +1,5 @@
 -- This file is part of the Satset networking library and is licensed under MIT License; see LICENSE.txt for details
--- Channel — stateful, delta-synced networking with dirty bitmask tracking.
+-- Channel state sync with dirty bitmask tracking.
 
 local RunService = game:GetService("RunService")
 
@@ -56,21 +56,13 @@ local Channel = {}
 
 -- [ Public API ]
 
---[[
-	Defines a new stateful channel.
-	
-	Channels are for data that changes frequently and needs to be 
-	synchronized (like player health, positions, or vehicle states). 
-	They are much more bandwidth-efficient than packets because they only 
-	send what has changed.
-]]
 function Channel.defineChannel(config: ChannelConfig): any
 	local compiled = SchemaCompiler.compile(config.schema)
 
-	-- Channels rely on pre-computed offsets, so they require fixed-size types.
+	-- Channel updates patch bytes by offset, so fields must have fixed sizes.
 	assert(compiled.fixedSize ~= nil, "[Satset] Channel '" .. config.name .. "' requires a fixed-size schema.")
 
-	-- We use a 32-bit bitmask for dirty tracking, which limits us to 32 fields.
+	-- Dirty tracking uses one bit per field.
 	assert(compiled.fieldCount <= 32, "[Satset] Channel '" .. config.name .. "' exceeds the 32-field limit.")
 
 	local id = nextChannelId
@@ -94,9 +86,6 @@ function Channel.defineChannel(config: ChannelConfig): any
 	local self = {}
 
 	if IS_SERVER then
-		--[[
-			Creates a new entity instance for this channel.
-		]]
 		function self:create(entityId: number, initialData: { [string]: any }?): Entity
 			local stateSize = compiled.fixedSize :: number
 			local stateBuffer = buffer.create(stateSize)
@@ -104,7 +93,7 @@ function Channel.defineChannel(config: ChannelConfig): any
 			local entityData: EntityData = {
 				id = entityId,
 				stateBuffer = stateBuffer,
-				dirtyMask = FULL_MASK, -- Start with a full mask to force an initial keyframe.
+				dirtyMask = FULL_MASK, -- Send a keyframe on the first flush.
 				alive = true,
 			}
 
@@ -127,10 +116,8 @@ function Channel.defineChannel(config: ChannelConfig): any
 					return
 				end
 
-				-- We write directly into the flat buffer. Zero allocations.
 				fieldDef.type.write(stateBuffer, fieldDef.offset, value)
 
-				-- Mark the field as dirty so it gets included in the next delta.
 				entityData.dirtyMask = bit32.bor(entityData.dirtyMask, bit32.lshift(1, fieldDef.index))
 			end
 
@@ -158,9 +145,6 @@ function Channel.defineChannel(config: ChannelConfig): any
 			return entity :: any
 		end
 	else
-		--[[
-			Registers a listener for state changes on this channel.
-		]]
 		function self:subscribe(callback: (entityId: number, state: { [string]: any }) -> ())
 			table.insert(def.subscribers, callback)
 		end
@@ -171,9 +155,6 @@ end
 
 -- [ Internal API ]
 
---[[
-	Encodes only the changed fields for an entity.
-]]
 local function encodeDelta(def: ChannelDef, entityData: EntityData): buffer?
 	local mask = entityData.dirtyMask
 	if mask == 0 then
@@ -206,11 +187,6 @@ local function encodeDelta(def: ChannelDef, entityData: EntityData): buffer?
 	return b
 end
 
---[[
-	Encodes the entire state of an entity. 
-	
-	Used for initial synchronization and periodic resyncs to prevent drift.
-]]
 local function encodeKeyframe(def: ChannelDef, entityData: EntityData): buffer
 	local stateSize = def.compiled.fixedSize :: number
 	local headerSize = 1 + 4 + 4
@@ -224,9 +200,6 @@ local function encodeKeyframe(def: ChannelDef, entityData: EntityData): buffer
 	return b
 end
 
---[[
-	Processes incoming state updates from the server.
-]]
 function Channel._applyUpdate(b: buffer)
 	local bufLen = buffer.len(b)
 	if bufLen < 9 then
@@ -277,11 +250,6 @@ function Channel._applyUpdate(b: buffer)
 	end
 end
 
---[[
-	Collects all pending updates for all channels. 
-	
-	This runs every frame on the server to push out deltas.
-]]
 function Channel._flush(): { buffer }
 	if not IS_SERVER then
 		return {}
