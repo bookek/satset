@@ -1,5 +1,5 @@
 -- Benchmark client. Fires 200 events per frame for 10 seconds per tool per bench.
--- Measures FPS and bandwidth (Kbps) at percentile intervals.
+-- Measures FPS and bandwidth in KB/s as reported by Stats.DataSendKbps.
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -7,20 +7,19 @@ local RunService = game:GetService("RunService")
 local StarterGui = game:GetService("StarterGui")
 local Stats = game:GetService("Stats")
 
+local BenchmarkConfig = require(ReplicatedStorage.Shared.BenchmarkConfig)
 local Satset = require(ReplicatedStorage.references.Satset)
+local SatsetBatcher = require(ReplicatedStorage.references.Satset.Core.Batcher)
 Satset.start({
-	batching = {
-		reliableThreshold = 60000,
-		maxPacketsPerFrame = 20,
-	},
+	batching = BenchmarkConfig.batching,
 })
+SatsetBatcher.setDebugGcEnabled(true)
 
 local MAXIMUM_FRAMERATE = 60
 
 local Benches, Modes
 
 -- Minimize rendering overhead to isolate network performance.
--- Disabe Character AutoLoads in Player service instead
 
 for _, item in Enum.CoreGuiType:GetEnumItems() do
 	while true do
@@ -40,6 +39,9 @@ type Benchmark = {
 	NormalizedBandwidth: { number },
 	Framerate: { number },
 	DrainDuration: number,
+	Frames: number?,
+	DebugStats: { [string]: number }?,
+	ServerDebugStats: { [string]: number }?,
 }
 
 type Results = {
@@ -117,6 +119,14 @@ local function waitForDrain(baselineKbps: number): number
 	return os.clock() - started
 end
 
+local function assertSplitDebugStats(stats: { [string]: number }?, source: string)
+	if not stats or stats.packetDecodeGcKb == nil or stats.listenerCallGcKb == nil then
+		error(
+			`[Satset Benchmark] {source} is missing split GC stats. Stop Play, reconnect Rojo, and rerun the benchmark.`
+		)
+	end
+end
+
 local function runBenchmark(tool: string, bench: string): Benchmark
 	local total = 0
 	local frames = 0
@@ -125,12 +135,18 @@ local function runBenchmark(tool: string, bench: string): Benchmark
 	local framerates = {}
 
 	local sent = 0
+	local totalFrames = 0
 	local data = Benches[bench]
 	local events = Modes[tool]
 	local event = events[bench]
 	local method
 
 	local lowerTool = string.lower(tool)
+	if lowerTool == "satset" then
+		SatsetBatcher.resetDebugStats()
+		ReplicatedStorage.Shared.GetRecieved:InvokeServer("resetSatsetDebugStats")
+	end
+
 	if lowerTool == "roblox" then
 		method = function(d)
 			event:FireServer(d)
@@ -150,6 +166,7 @@ local function runBenchmark(tool: string, bench: string): Benchmark
 	local connection = RunService.PostSimulation:Connect(function(dt: number)
 		total += dt
 		frames += 1
+		totalFrames += 1
 
 		if total >= 1 then
 			local actualKbps = Stats.DataSendKbps
@@ -189,19 +206,40 @@ local function runBenchmark(tool: string, bench: string): Benchmark
 		table.insert(frameratePercentiles, percentile(framerates, pct))
 	end
 
-	return {
+	local result: Benchmark = {
 		Sent = sent,
 		Recieve = 0,
 		Bandwidth = bandwidthPercentiles,
 		NormalizedBandwidth = normalizedBandwidthPercentiles,
 		Framerate = frameratePercentiles,
+		Frames = totalFrames,
 	}
+
+	if lowerTool == "satset" then
+		local debugStats = SatsetBatcher.getDebugStats()
+		assertSplitDebugStats(debugStats, "Client SatsetBatcher")
+		result.DebugStats = debugStats
+
+		if BenchmarkConfig.activeMode == "latency" and debugStats.reliableCommits > totalFrames + 2 then
+			error(
+				`[Satset Benchmark] reliableThreshold = 0 produced {debugStats.reliableCommits} reliable commits across {totalFrames} frames`
+			)
+		end
+	end
+
+	return result
 end
 
 local function runAll()
 	Benches = require(ReplicatedStorage.Shared.benches)
 	Modes = require(ReplicatedStorage.Shared.modes)
 	local results: Results = {}
+
+	assertSplitDebugStats(SatsetBatcher.getDebugStats(), "Client SatsetBatcher")
+	assertSplitDebugStats(
+		ReplicatedStorage.Shared.GetRecieved:InvokeServer("getSatsetDebugStats"),
+		"Server SatsetBatcher"
+	)
 
 	print("Measuring baseline bandwidth...")
 	local baselineKbps = measureBaseline(5)
@@ -216,6 +254,24 @@ local function runAll()
 			results[bench][tool] = runBenchmark(tool, bench)
 			local drainDuration = waitForDrain(baselineKbps)
 			results[bench][tool].DrainDuration = drainDuration
+
+			if string.lower(tool) == "satset" then
+				local debugStats = SatsetBatcher.getDebugStats()
+				assertSplitDebugStats(debugStats, "Client SatsetBatcher")
+				results[bench][tool].DebugStats = debugStats
+				if
+					BenchmarkConfig.activeMode == "latency"
+					and debugStats.reliableCommits > (results[bench][tool].Frames or 0) + 2
+				then
+					error(
+						`[Satset Benchmark] reliableThreshold = 0 produced {debugStats.reliableCommits} reliable commits across {results[bench][tool].Frames or 0} frames`
+					)
+				end
+
+				local serverDebugStats = ReplicatedStorage.Shared.GetRecieved:InvokeServer("getSatsetDebugStats")
+				assertSplitDebugStats(serverDebugStats, "Server SatsetBatcher")
+				results[bench][tool].ServerDebugStats = serverDebugStats
+			end
 		end
 
 		waitForDrain(baselineKbps)

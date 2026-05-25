@@ -1,6 +1,6 @@
 # Security
 
-Satset was built with production security in mind. It includes multiple layers of protection to keep your server safe from malicious clients.
+Satset treats incoming network data as untrusted. The server validates payloads before game code receives them.
 
 ## The Guard
 
@@ -28,19 +28,19 @@ When a player exceeds their limit, the Guard drops the packet silently. We do no
 
 We treat all incoming client data as hostile. If an exploiter sends a corrupted or spoofed packet, the server must not crash or lag.
 
-- **OOB Shielding**: We wrap all packet decoding in a `pcall`. If a malicious client truncates a buffer to force an out-of-bounds read, the operation fails silently. The server drops the packet without printing stack traces to the console.
+- **OOB Shielding**: We wrap packet decoding in a `pcall`. If a malicious client truncates a buffer to force an out-of-bounds read, the operation fails silently. The server drops the packet without printing stack traces to the console.
 - **Allocation Capping**: When reading variable-length types like arrays or strings, we cap the `table.create` allocation to the actual remaining bytes in the buffer. If an exploiter sends a 4-byte payload claiming to contain 65,000 elements, Satset limits the array size to match the buffer. This stops memory exhaustion and garbage collector spikes.
 - **Float Sanitization**: We clamp `NaN` and `±Infinity` to `0` when reading or writing floating-point numbers (`f32`, `f64`, `Vector3`). This prevents corrupted math from infecting the server state.
 
 ## Listener Protection
 
-All user-registered callbacks (both `Packet:listen` and `Channel:subscribe`) are wrapped in `xpcall`. If your callback throws an error, it will:
+User-registered callbacks are protected before Satset calls them. `Packet:listen` uses `pcall`; `Channel:subscribe` uses `xpcall`. If your callback throws an error, Satset:
 
-1. Be caught and reported via `warn` with the packet/channel name and the error message.
-2. Not affect any other listeners registered on the same packet or channel.
-3. Not halt the library's internal dispatch loop.
+1. Catches it and reports it via `warn` with the packet or channel name and the error message.
+2. Continues running other listeners registered on the same packet or channel.
+3. Continues the internal dispatch loop.
 
-This prevents a single broken game script from taking down the entire networking layer.
+One broken game callback does not stop packet or channel dispatch.
 
 ## Stateless Design
 

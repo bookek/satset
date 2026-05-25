@@ -24,4 +24,4 @@ wally install
 
 ## Rojo
 
-If you are using Rojo, you can simply sync the `src/` folder into your project under `ReplicatedStorage.Packages.Satset`.
+If you are using Rojo, sync the `src/` folder into your project under `ReplicatedStorage.Packages.Satset`.

@@ -1,17 +1,17 @@
 # Introduction
 
-**Satset** is a high-performance, buffer-backed hybrid networking library for Roblox. It is designed to be the fastest and most efficient way to synchronize data between the server and clients, combining the best patterns from community leaders like [Blink](https://github.com/1Axen/blink), [Zap](https://github.com/red-blox/zap), [ByteNet](https://github.com/ffrostfall/ByteNet), [Warp](https://github.com/imezx/Warp), [BridgeNet2](https://github.com/ffrostfall/BridgeNet2), [Packet](https://devforum.roblox.com/t/packet-networking-library/3573907/1), and [Red](https://github.com/red-blox/Red).
+**Satset** is a buffer-backed hybrid networking library for Roblox. It provides stateless packets, stateful channels, schema-based serialization, and server-side rate limiting.
 
 ## Why Satset?
 
-Roblox's native `RemoteEvent` system is powerful but can be inefficient for high-frequency data (like character positions or combat state). Satset solves this by:
+Roblox's native `RemoteEvent` system can become expensive for high-frequency data such as character positions or combat state. Satset handles this with:
 
-- **Buffer-backed serialization**: Uses Luau `buffer` for zero-allocation, tightly packed data.
-- **Automatic batching**: Combines multiple packet fires into a single remote call per frame.
+- **Buffer-backed serialization**: Uses Luau `buffer` for compact binary payloads.
+- **Automatic batching**: Queues packet fires and commits them during `PostSimulation`.
 - **Stateful Channels**: Efficiently synchronizes state changes using bitmask-based delta compression.
-- **Security-first**: Built-in rate limiting (Guard) and data sanitization.
-- **Developer Experience**: Simple, type-safe API that doesn't require a complex build step for most use cases.
+- **Guard and sanitization**: Applies server-side token buckets, buffer bounds checks, and float sanitization.
+- **Plain Luau API**: Works without a code generation step.
 
 ## "Sat set, sampai."
 
-The name comes from Indonesian slang meaning "quick and efficient." Our goal is to get your data from A to B as fast and reliably as possible, with no overhead.
+The name comes from Indonesian slang meaning "quick and efficient." Satset aims to reduce per-event overhead while keeping the API direct.

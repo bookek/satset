@@ -18,7 +18,7 @@ Objects returned by `Satset.definePacket`.
 
 ### `:listen(callback: (data: table, sender: Player?) -> ())`
 
-Registers a listener for the packet. Listeners are wrapped in `xpcall` internally, so an error in one listener will not prevent other listeners from running or crash the library. Errors are reported to the output via `warn`.
+Registers a listener for the packet. Listener calls are wrapped in `pcall`, so an error in one listener does not prevent later listeners from running. Errors are reported through `warn`.
 
 - **data**: The decoded payload.
 - **sender**: The player who sent the packet (Server only).

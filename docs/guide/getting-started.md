@@ -16,8 +16,8 @@ Satset.start({
         studioBypass = true -- Enabled by default
     },
     batching = {
-        reliableThreshold = 60000, -- Segmentation for stability
-        maxPacketsPerFrame = 0     -- No frame-spreading
+        reliableThreshold = 60000, -- Split reliable batches above 60 KB
+        maxPacketsPerFrame = 0, -- Send all ready batches each frame
     }
 })
 ```

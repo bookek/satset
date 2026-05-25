@@ -1,19 +1,19 @@
 # Development Patterns
 
-Satset follows strict performance and safety constraints. These patterns ensure the library stays efficient under high-throughput conditions.
+Satset follows strict performance and safety constraints. These patterns keep the library predictable under high-throughput conditions.
 
-## Zero-allocation hot path
+## Allocation-aware hot path
 
-Allocations during the sync cycle are prohibited. Satset uses native Luau `buffer` operations for all throughput to avoid garbage collection (GC) overhead.
+The send path avoids per-packet queue tables. Satset writes payloads directly into Luau `buffer` streams and commits exact-size buffers at flush time.
 
-* **The Problem**: Table and string allocations trigger GC pauses. When syncing hundreds of entities, these pauses cause frame drops.
-* **The Pattern**: Reuse pre-allocated buffers. Avoid creating tables or strings during encoding and decoding.
+* **The Problem**: Table and string allocations can trigger GC pauses. When syncing hundreds of entities, those pauses can reduce frame rate.
+* **The Pattern**: Reuse working buffers on the send path. Decode into tables only at the public API boundary, where packet listeners and channel subscribers receive Lua values.
 
 ## Deterministic byte alignment
 
 Satset doesn't transmit type metadata or field names. Server and client must share an identical understanding of the buffer layout.
 
-* **The Pattern**: `SchemaCompiler` sorts field definitions alphabetically before calculating memory offsets. This guarantees that different environments produce the same binary schema, regardless of how the Luau table is ordered.
+* **The Pattern**: `SchemaCompiler` sorts field definitions alphabetically before calculating memory offsets. This produces the same binary schema across environments, regardless of how the Luau table is ordered.
 
 ## Mandatory input sanitization
 
@@ -32,7 +32,7 @@ Choose data types based on bit-density.
 
 State sync is an explicit, bitmask-tracked process, not an automatic "magic" sync.
 
-* **The Pattern**: `Channels` track modified fields using a 32-bit mask. Only dirty fields are sent. Syncing happens during `PostSimulation` to maximize batching efficiency.
+* **The Pattern**: `Channels` track modified fields using a 32-bit mask. Only dirty fields are sent. Syncing happens during `PostSimulation`, the same frame phase used by packet batching.
 
 ## Defensive buffer reads
 
@@ -53,7 +53,7 @@ Satset uses a specific naming convention to maintain code clarity across the lib
 
 ## Change checklist
 
-When you modify any part of Satset, use this checklist to make sure nothing falls out of sync. Not every change touches every item, but you should actively consider each one.
+When you modify any part of Satset, use this checklist to make sure related docs and examples stay in sync. Not every change touches every item.
 
 ### If you change a public API method or add a new one
 
