@@ -1,0 +1,2186 @@
+{
+    "Vectors": {
+        "warp": {
+            "Framerate": [
+                60,
+                54,
+                60,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                2.795123338699341,
+                2.1197614669799806,
+                3.6373419761657717,
+                4.114903926849365,
+                4.114903926849365,
+                4.114903926849365
+            ],
+            "DrainDuration": 4.939354101999925,
+            "Recieve": 112800,
+            "Sent": 112800,
+            "Frames": 564,
+            "NormalizedBandwidth": [
+                2.8061359603857296,
+                2.119761577534156,
+                4.058330842473024,
+                4.132049569632617,
+                4.132049569632617,
+                4.132049569632617
+            ]
+        },
+        "bridgenet2": {
+            "Framerate": [
+                60,
+                56,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                15633.830078125,
+                11280.8828125,
+                15722.05859375,
+                15730.8095703125,
+                15730.8095703125,
+                15730.8095703125
+            ],
+            "DrainDuration": 22.1529455660002,
+            "Recieve": 115200,
+            "Sent": 115200,
+            "Frames": 576,
+            "NormalizedBandwidth": [
+                15633.830893492777,
+                11280.883400843886,
+                15722.059413719253,
+                15730.810390738152,
+                15730.810390738152,
+                15730.810390738152
+            ]
+        },
+        "packet": {
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                72.64115142822266,
+                55.15867233276367,
+                72.71024322509766,
+                72.74811553955078,
+                72.80789947509766,
+                72.80789947509766
+            ],
+            "DrainDuration": 9.266659813999923,
+            "Recieve": 120200,
+            "Sent": 120200,
+            "Frames": 601,
+            "NormalizedBandwidth": [
+                72.64115521675393,
+                55.15867520951261,
+                72.71024701723235,
+                72.74811933366067,
+                72.80790327232552,
+                72.80790327232552
+            ]
+        },
+        "bytenet": {
+            "Framerate": [
+                60,
+                60,
+                61,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                72.50541687011719,
+                50.04075622558594,
+                72.63225555419922,
+                72.88240051269531,
+                72.88240051269531,
+                72.88240051269531
+            ],
+            "DrainDuration": 9.317384534999747,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                72.50542065156935,
+                50.04075883541475,
+                72.7114399665677,
+                72.81098939238808,
+                72.81098939238808,
+                72.81098939238808
+            ]
+        },
+        "roblox": {
+            "Framerate": [
+                60,
+                60,
+                60,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                84985.6953125,
+                54201.9375,
+                103543.6484375,
+                138999.15625,
+                138999.15625,
+                138999.15625
+            ],
+            "DrainDuration": 9.916805902000306,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                84985.69974484941,
+                54201.94032685133,
+                103543.65383772209,
+                138999.16349937093,
+                138999.16349937093,
+                138999.16349937093
+            ]
+        },
+        "satset": {
+            "DrainDuration": 7.816942086999916,
+            "DebugStats": {
+                "reliableCommitBytes": 72601200,
+                "commitGcKb": 118,
+                "unreliableCommits": 0,
+                "receiveDecodeGcKb": 0,
+                "commitGcSamples": 600,
+                "reliableCommits": 600,
+                "packetDecodeGcKb": 0,
+                "listenerCallGcSamples": 0,
+                "packetDecodeGcSamples": 0,
+                "exactBufferPoolRejectedBySizeClassCap": 0,
+                "streamGrowths": 1,
+                "streamGrowthBytes": 131072,
+                "exactBufferPoolSizeClasses": 1,
+                "exactBufferPoolHits": 599,
+                "adapterGcSamples": 120000,
+                "sendGcSamples": 240001,
+                "listenerDispatchGcSamples": 0,
+                "listenerDispatchGcKb": 0,
+                "exactBufferPoolRejectedByTotalByteCap": 0,
+                "exactBufferPoolAcceptedReleases": 600,
+                "exactBufferPoolRejectedBySizeCap": 0,
+                "exactBufferPoolRejectedByPerSizeCap": 0,
+                "exactBufferPoolMisses": 1,
+                "exactBufferPoolBytes": 121002,
+                "adapterGcKb": -1922,
+                "sendGcKb": 129,
+                "unreliableCommitBytes": 0,
+                "listenerCallGcKb": 0,
+                "receiveDecodeGcSamples": 0
+            },
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                39.01645100947576,
+                29.32838974370597,
+                39.08814330622268,
+                39.11245550056677,
+                39.12745870569495,
+                39.12745870569495
+            ],
+            "Framerate": [
+                60,
+                59,
+                60,
+                60,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                38.99591064453125,
+                29.328388214111329,
+                39.05757141113281,
+                39.11245346069336,
+                39.12745666503906,
+                39.12745666503906
+            ],
+            "ServerDebugStats": {
+                "reliableCommitBytes": 0,
+                "commitGcKb": 0,
+                "unreliableCommits": 0,
+                "listenerDispatchGcSamples": 0,
+                "exactBufferPoolRejectedBySizeCap": 0,
+                "reliableCommits": 0,
+                "listenerCallGcKb": -4238,
+                "listenerCallGcSamples": 120000,
+                "packetDecodeGcSamples": 120000,
+                "exactBufferPoolRejectedBySizeClassCap": 0,
+                "streamGrowths": 0,
+                "streamGrowthBytes": 0,
+                "receiveDecodeGcSamples": 120600,
+                "exactBufferPoolHits": 0,
+                "adapterGcSamples": 0,
+                "sendGcSamples": 0,
+                "commitGcSamples": 0,
+                "listenerDispatchGcKb": 0,
+                "exactBufferPoolMisses": 0,
+                "exactBufferPoolAcceptedReleases": 0,
+                "exactBufferPoolRejectedByTotalByteCap": 0,
+                "exactBufferPoolRejectedByPerSizeCap": 0,
+                "packetDecodeGcKb": 202416,
+                "exactBufferPoolBytes": 0,
+                "adapterGcKb": 0,
+                "exactBufferPoolSizeClasses": 0,
+                "unreliableCommitBytes": 0,
+                "sendGcKb": 0,
+                "receiveDecodeGcKb": 1
+            },
+            "Recieve": 120000
+        },
+        "zap": {
+            "Framerate": [
+                60,
+                57,
+                61,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                72.82897186279297,
+                53.49580764770508,
+                72.90431213378906,
+                72.99083709716797,
+                72.99083709716797,
+                72.99083709716797
+            ],
+            "DrainDuration": 9.366167209000196,
+            "Recieve": 119400,
+            "Sent": 119400,
+            "Frames": 597,
+            "NormalizedBandwidth": [
+                72.82897566111984,
+                53.49581043772886,
+                72.99084090393677,
+                75.75096898770812,
+                75.75096898770812,
+                75.75096898770812
+            ]
+        },
+        "netray_compile": {
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                72.57927703857422,
+                53.587520599365237,
+                72.74488067626953,
+                72.81295776367188,
+                72.82084655761719,
+                72.82084655761719
+            ],
+            "DrainDuration": 9.333106287000192,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                72.57928082387849,
+                53.58752339417222,
+                72.7448844702107,
+                72.81296156116355,
+                72.82085035552029,
+                72.82085035552029
+            ]
+        },
+        "blink": {
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                72.62796020507813,
+                53.81346130371094,
+                72.70398712158203,
+                72.70944213867188,
+                72.8438720703125,
+                72.8438720703125
+            ],
+            "DrainDuration": 9.350005999000132,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                72.62796399292142,
+                53.81346411030165,
+                72.70399091339044,
+                72.70944593076479,
+                72.84387586941648,
+                72.84387586941648
+            ]
+        },
+        "quicknet": {
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                38.97089767456055,
+                29.025203704833986,
+                38.99586868286133,
+                39.01387023925781,
+                39.06427001953125,
+                39.06427001953125
+            ],
+            "DrainDuration": 8.800044874999913,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                38.970899707051248,
+                29.02520521861632,
+                38.995870716654369,
+                39.013872273989708,
+                39.064272056891699,
+                39.064272056891699
+            ]
+        }
+    },
+    "Booleans": {
+        "warp": {
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                2.5221173763275148,
+                2.368652582168579,
+                2.7293598651885988,
+                2.742267608642578,
+                4.425382137298584,
+                4.425382137298584
+            ],
+            "DrainDuration": 3.73334475799993,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                2.522117507866186,
+                2.368652705703438,
+                2.729360007535808,
+                2.742267751662979,
+                4.425382368100248,
+                4.425382368100248
+            ]
+        },
+        "bridgenet2": {
+            "Framerate": [
+                59,
+                57,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                23483.62109375,
+                17632.859375,
+                23723.904296875,
+                23853.603515625,
+                23853.603515625,
+                23853.603515625
+            ],
+            "DrainDuration": 23.136419982999997,
+            "Recieve": 116200,
+            "Sent": 116200,
+            "Frames": 581,
+            "NormalizedBandwidth": [
+                23921.604724863195,
+                18792.91683245423,
+                24179.78737920204,
+                24180.170360287975,
+                24180.170360287975,
+                24180.170360287975
+            ]
+        },
+        "packet": {
+            "Framerate": [
+                60,
+                60,
+                61,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                23.585262298583986,
+                17.192241668701173,
+                23.95997428894043,
+                24.088584899902345,
+                24.088584899902345,
+                24.088584899902345
+            ],
+            "DrainDuration": 6.731871806000072,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                23.627085793863999,
+                17.335511397494707,
+                23.959975717066187,
+                24.088586470299349,
+                24.088586470299349,
+                24.088586470299349
+            ]
+        },
+        "bytenet": {
+            "Framerate": [
+                60,
+                60,
+                60,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                18.982406616210939,
+                14.272871017456055,
+                19.024717330932618,
+                19.0316219329834,
+                19.0316219329834,
+                19.0316219329834
+            ],
+            "DrainDuration": 6.267633172999922,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                18.98240760622059,
+                14.272871761844286,
+                19.024718323148947,
+                19.03162292555983,
+                19.03162292555983,
+                19.03162292555983
+            ]
+        },
+        "roblox": {
+            "Framerate": [
+                54,
+                53,
+                54,
+                55,
+                55,
+                55
+            ],
+            "Bandwidth": [
+                52951.83203125,
+                42563.93359375,
+                53619.45703125,
+                54912.875,
+                54912.875,
+                54912.875
+            ],
+            "DrainDuration": 10.33922282399999,
+            "Recieve": 106600,
+            "Sent": 106600,
+            "Frames": 533,
+            "NormalizedBandwidth": [
+                59674.45842593734,
+                48587.1337841858,
+                60321.8916681039,
+                62165.521299562875,
+                62165.521299562875,
+                62165.521299562875
+            ]
+        },
+        "satset": {
+            "DrainDuration": 5.217620056000214,
+            "DebugStats": {
+                "reliableCommitBytes": 15627202,
+                "commitGcKb": 25,
+                "unreliableCommits": 0,
+                "receiveDecodeGcKb": 0,
+                "commitGcSamples": 601,
+                "reliableCommits": 601,
+                "packetDecodeGcKb": 0,
+                "listenerCallGcSamples": 0,
+                "packetDecodeGcSamples": 0,
+                "exactBufferPoolRejectedBySizeClassCap": 0,
+                "streamGrowths": 0,
+                "streamGrowthBytes": 0,
+                "exactBufferPoolSizeClasses": 2,
+                "exactBufferPoolHits": 600,
+                "adapterGcSamples": 120200,
+                "sendGcSamples": 240400,
+                "listenerDispatchGcSamples": 0,
+                "listenerDispatchGcKb": 0,
+                "exactBufferPoolRejectedByTotalByteCap": 0,
+                "exactBufferPoolAcceptedReleases": 601,
+                "exactBufferPoolRejectedBySizeCap": 0,
+                "exactBufferPoolRejectedByPerSizeCap": 0,
+                "exactBufferPoolMisses": 1,
+                "exactBufferPoolBytes": 147004,
+                "adapterGcKb": 9391,
+                "sendGcKb": 1,
+                "unreliableCommitBytes": 0,
+                "listenerCallGcKb": 0,
+                "receiveDecodeGcSamples": 0
+            },
+            "Sent": 120200,
+            "Frames": 601,
+            "NormalizedBandwidth": [
+                10.341739240230404,
+                7.609570900104892,
+                10.370192114944317,
+                10.385531967123747,
+                10.388734405645259,
+                10.388734405645259
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                10.3417387008667,
+                7.609570503234863,
+                10.37019157409668,
+                10.385531425476075,
+                10.388733863830567,
+                10.388733863830567
+            ],
+            "ServerDebugStats": {
+                "reliableCommitBytes": 0,
+                "commitGcKb": 0,
+                "unreliableCommits": 0,
+                "listenerDispatchGcSamples": 0,
+                "exactBufferPoolRejectedBySizeCap": 0,
+                "reliableCommits": 0,
+                "listenerCallGcKb": -1098686,
+                "listenerCallGcSamples": 120200,
+                "packetDecodeGcSamples": 120200,
+                "exactBufferPoolRejectedBySizeClassCap": 0,
+                "streamGrowths": 0,
+                "streamGrowthBytes": 0,
+                "receiveDecodeGcSamples": 120801,
+                "exactBufferPoolHits": 0,
+                "adapterGcSamples": 0,
+                "sendGcSamples": 0,
+                "commitGcSamples": 0,
+                "listenerDispatchGcKb": 0,
+                "exactBufferPoolMisses": 0,
+                "exactBufferPoolAcceptedReleases": 0,
+                "exactBufferPoolRejectedByTotalByteCap": 0,
+                "exactBufferPoolRejectedByPerSizeCap": 0,
+                "packetDecodeGcKb": 1085444,
+                "exactBufferPoolBytes": 0,
+                "adapterGcKb": 0,
+                "exactBufferPoolSizeClasses": 0,
+                "unreliableCommitBytes": 0,
+                "sendGcKb": 0,
+                "receiveDecodeGcKb": 0
+            },
+            "Recieve": 120200
+        },
+        "zap": {
+            "Framerate": [
+                60,
+                58,
+                60,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                29.29340171813965,
+                22.247533798217775,
+                29.353622436523439,
+                29.4331111907959,
+                29.4331111907959,
+                29.4331111907959
+            ],
+            "DrainDuration": 7.249783056000069,
+            "Recieve": 118200,
+            "Sent": 118200,
+            "Frames": 591,
+            "NormalizedBandwidth": [
+                29.25287780739467,
+                22.24753495851708,
+                29.353623967434147,
+                29.43311272585227,
+                29.43311272585227,
+                29.43311272585227
+            ]
+        },
+        "netray_compile": {
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                10.330069541931153,
+                7.806988716125488,
+                10.423501014709473,
+                10.453253746032715,
+                10.481480598449707,
+                10.481480598449707
+            ],
+            "DrainDuration": 5.266017387999909,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                10.330070080686263,
+                7.806989123291679,
+                10.423501558337414,
+                10.453254291212382,
+                10.481481145101519,
+                10.481481145101519
+            ]
+        },
+        "blink": {
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                29.3564510345459,
+                22.068872451782228,
+                29.416034698486329,
+                29.475997924804689,
+                29.538347244262697,
+                29.538347244262697
+            ],
+            "DrainDuration": 7.3002381010001049,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                29.35645256560413,
+                22.068873602763618,
+                29.41603623265209,
+                29.475999462097776,
+                29.538348784807554,
+                29.538348784807554
+            ]
+        },
+        "quicknet": {
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                10.251404762268067,
+                7.644955158233643,
+                10.285540580749512,
+                10.343138694763184,
+                10.350224494934082,
+                10.350224494934082
+            ],
+            "DrainDuration": 5.349255260000064,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                10.251405296920489,
+                7.6449555569491249,
+                10.285541117182256,
+                10.343139234199903,
+                10.350225034740355,
+                10.350225034740355
+            ]
+        }
+    },
+    "Mixed": {
+        "warp": {
+            "Framerate": [
+                60,
+                60,
+                61,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                2.3952059745788576,
+                1.8949764966964722,
+                2.4854116439819338,
+                2.4946699142456056,
+                2.4946699142456056,
+                2.4946699142456056
+            ],
+            "DrainDuration": 3.5164384939998856,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                2.3952060994985837,
+                1.894976595527198,
+                2.475225660918384,
+                2.4946700443527805,
+                2.4946700443527805,
+                2.4946700443527805
+            ]
+        },
+        "bridgenet2": {
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                1680.6226806640626,
+                1335.4205322265626,
+                1682.36572265625,
+                1684.0098876953126,
+                1684.0745849609376,
+                1684.0745849609376
+            ],
+            "DrainDuration": 16.39816557999984,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                1680.6227683153657,
+                1335.4206018741707,
+                1682.3658103984599,
+                1684.0099755232723,
+                1684.0746727922715,
+                1684.0746727922715
+            ]
+        },
+        "packet": {
+            "Framerate": [
+                60,
+                60,
+                61,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                4.826046466827393,
+                3.839698553085327,
+                4.86691427230835,
+                4.877917289733887,
+                4.877917289733887,
+                4.877917289733887
+            ],
+            "DrainDuration": 4.2670023149999,
+            "Recieve": 120200,
+            "Sent": 120200,
+            "Frames": 601,
+            "NormalizedBandwidth": [
+                4.836130584914796,
+                3.839698753341212,
+                4.869125389413176,
+                4.877917544137098,
+                4.877917544137098,
+                4.877917544137098
+            ]
+        },
+        "bytenet": {
+            "Framerate": [
+                60,
+                58,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                4.965731143951416,
+                3.7711398601531984,
+                5.00945520401001,
+                5.052359104156494,
+                5.070005893707275,
+                5.070005893707275
+            ],
+            "DrainDuration": 4.249917537999863,
+            "Recieve": 119600,
+            "Sent": 119600,
+            "Frames": 598,
+            "NormalizedBandwidth": [
+                4.965731402934477,
+                3.9011793764045836,
+                5.009455465273458,
+                5.052359367657555,
+                5.070006158128688,
+                5.070006158128688
+            ]
+        },
+        "roblox": {
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                3019.898193359375,
+                2986.68310546875,
+                3056.64501953125,
+                3117.58544921875,
+                3235.4482421875,
+                3235.4482421875
+            ],
+            "DrainDuration": 9.332867358000386,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                3019.898350859339,
+                2986.6832612364125,
+                3056.6451789477107,
+                3117.5856118135018,
+                3235.4484109292754,
+                3235.4484109292754
+            ]
+        },
+        "satset": {
+            "DrainDuration": 4.232817628000248,
+            "DebugStats": {
+                "reliableCommitBytes": 3841200,
+                "commitGcKb": 6,
+                "unreliableCommits": 0,
+                "receiveDecodeGcKb": 0,
+                "commitGcSamples": 600,
+                "reliableCommits": 600,
+                "packetDecodeGcKb": 0,
+                "listenerCallGcSamples": 0,
+                "packetDecodeGcSamples": 0,
+                "exactBufferPoolRejectedBySizeClassCap": 0,
+                "streamGrowths": 0,
+                "streamGrowthBytes": 0,
+                "exactBufferPoolSizeClasses": 3,
+                "exactBufferPoolHits": 599,
+                "adapterGcSamples": 120000,
+                "sendGcSamples": 240000,
+                "listenerDispatchGcSamples": 0,
+                "listenerDispatchGcKb": 0,
+                "exactBufferPoolRejectedByTotalByteCap": 0,
+                "exactBufferPoolAcceptedReleases": 600,
+                "exactBufferPoolRejectedBySizeCap": 0,
+                "exactBufferPoolRejectedByPerSizeCap": 0,
+                "exactBufferPoolMisses": 1,
+                "exactBufferPoolBytes": 153406,
+                "adapterGcKb": 0,
+                "sendGcKb": 1,
+                "unreliableCommitBytes": 0,
+                "listenerCallGcKb": 0,
+                "receiveDecodeGcSamples": 0
+            },
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                4.341675031123486,
+                3.3954738957309429,
+                4.397094955888861,
+                4.414083234210171,
+                4.414083234210171,
+                4.414083234210171
+            ],
+            "Framerate": [
+                60,
+                60,
+                61,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                4.3416748046875,
+                3.3954737186431886,
+                4.3970947265625,
+                4.414083003997803,
+                4.414083003997803,
+                4.414083003997803
+            ],
+            "ServerDebugStats": {
+                "reliableCommitBytes": 0,
+                "commitGcKb": 0,
+                "unreliableCommits": 0,
+                "listenerDispatchGcSamples": 0,
+                "exactBufferPoolRejectedBySizeCap": 0,
+                "reliableCommits": 0,
+                "listenerCallGcKb": -1815,
+                "listenerCallGcSamples": 120000,
+                "packetDecodeGcSamples": 120000,
+                "exactBufferPoolRejectedBySizeClassCap": 0,
+                "streamGrowths": 0,
+                "streamGrowthBytes": 0,
+                "receiveDecodeGcSamples": 120600,
+                "exactBufferPoolHits": 0,
+                "adapterGcSamples": 0,
+                "sendGcSamples": 0,
+                "commitGcSamples": 0,
+                "listenerDispatchGcKb": 0,
+                "exactBufferPoolMisses": 0,
+                "exactBufferPoolAcceptedReleases": 0,
+                "exactBufferPoolRejectedByTotalByteCap": 0,
+                "exactBufferPoolRejectedByPerSizeCap": 0,
+                "packetDecodeGcKb": 32921,
+                "exactBufferPoolBytes": 0,
+                "adapterGcKb": 0,
+                "exactBufferPoolSizeClasses": 0,
+                "unreliableCommitBytes": 0,
+                "sendGcKb": 0,
+                "receiveDecodeGcKb": 0
+            },
+            "Recieve": 120000
+        },
+        "zap": {
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                4.941019058227539,
+                3.867702007293701,
+                4.970263481140137,
+                4.99273681640625,
+                5.028336524963379,
+                5.028336524963379
+            ],
+            "DrainDuration": 4.21691076199977,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                4.941019315921764,
+                3.86770220901008,
+                4.970263740359577,
+                4.992737076797766,
+                5.028336787211565,
+                5.028336787211565
+            ]
+        },
+        "netray_compile": {
+            "Framerate": [
+                60,
+                53,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                4.923576831817627,
+                3.547711133956909,
+                5.275604724884033,
+                5.326401233673096,
+                5.326401233673096,
+                5.326401233673096
+            ],
+            "DrainDuration": 4.231533036000201,
+            "Recieve": 103000,
+            "Sent": 103000,
+            "Frames": 515,
+            "NormalizedBandwidth": [
+                4.923577088602169,
+                3.962882519319976,
+                5.275605000028261,
+                5.3264015114665679,
+                5.3264015114665679,
+                5.3264015114665679
+            ]
+        },
+        "blink": {
+            "Framerate": [
+                60,
+                58,
+                60,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                4.990184783935547,
+                3.9084055423736574,
+                5.037812232971191,
+                5.047177791595459,
+                5.047177791595459,
+                5.047177791595459
+            ],
+            "DrainDuration": 4.216966139000306,
+            "Recieve": 119400,
+            "Sent": 119400,
+            "Frames": 597,
+            "NormalizedBandwidth": [
+                5.01952831862577,
+                3.9084057462128909,
+                5.026492901175637,
+                5.037812495713574,
+                5.037812495713574,
+                5.037812495713574
+            ]
+        },
+        "quicknet": {
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                4.178702354431152,
+                3.3327412605285646,
+                4.336594581604004,
+                4.363077163696289,
+                4.381412029266357,
+                4.381412029266357
+            ],
+            "DrainDuration": 4.0829869429999239,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                4.178702572367463,
+                3.332741434344566,
+                4.336594807775036,
+                4.3630773912484959,
+                4.381412257774802,
+                4.381412257774802
+            ]
+        }
+    },
+    "Entities": {
+        "warp": {
+            "Framerate": [
+                60,
+                48,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                2.642598867416382,
+                2.339517116546631,
+                5.124763488769531,
+                5.360812664031982,
+                5.360812664031982,
+                5.360812664031982
+            ],
+            "DrainDuration": 4.232482034999975,
+            "Recieve": 114000,
+            "Sent": 114000,
+            "Frames": 570,
+            "NormalizedBandwidth": [
+                2.6425990052386529,
+                2.3989964881740288,
+                5.545668572695285,
+                6.432646181903561,
+                6.432646181903561,
+                6.432646181903561
+            ]
+        },
+        "bridgenet2": {
+            "Framerate": [
+                20,
+                18,
+                21,
+                21,
+                21,
+                21
+            ],
+            "Bandwidth": [
+                31321.0234375,
+                16699.271484375,
+                33063.125,
+                34682.3515625,
+                34682.3515625,
+                34682.3515625
+            ],
+            "DrainDuration": 26.12603970100008,
+            "Recieve": 37400,
+            "Sent": 37400,
+            "Frames": 187,
+            "NormalizedBandwidth": [
+                100015.95861837034,
+                48507.410530431356,
+                102438.30999190055,
+                102808.40569773017,
+                102808.40569773017,
+                102808.40569773017
+            ]
+        },
+        "packet": {
+            "Framerate": [
+                54,
+                48,
+                56,
+                56,
+                56,
+                56
+            ],
+            "Bandwidth": [
+                34.13130569458008,
+                24.773115158081056,
+                36.219722747802737,
+                36.26628875732422,
+                36.26628875732422,
+                36.26628875732422
+            ],
+            "DrainDuration": 7.7387636429998569,
+            "Recieve": 106200,
+            "Sent": 106200,
+            "Frames": 531,
+            "NormalizedBandwidth": [
+                38.80684753601841,
+                27.755065370438314,
+                39.54637022131169,
+                39.65759281404712,
+                39.65759281404712,
+                39.65759281404712
+            ]
+        },
+        "bytenet": {
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                38.88546371459961,
+                28.805343627929689,
+                38.90737533569336,
+                38.9367790222168,
+                38.95856475830078,
+                38.95856475830078
+            ],
+            "DrainDuration": 8.049676222000017,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                38.88546574263458,
+                28.805345130245429,
+                38.90737736487111,
+                38.93678105292807,
+                38.95856679014827,
+                38.95856679014827
+            ]
+        },
+        "roblox": {
+            "Framerate": [
+                19,
+                17,
+                19,
+                20,
+                20,
+                20
+            ],
+            "Bandwidth": [
+                151953.0625,
+                86996.3515625,
+                155034.625,
+                159276.9375,
+                159276.9375,
+                159276.9375
+            ],
+            "DrainDuration": 13.747457960000247,
+            "Recieve": 35800,
+            "Sent": 35800,
+            "Frames": 179,
+            "NormalizedBandwidth": [
+                487420.6000677301,
+                298445.83610686365,
+                547477.9790702512,
+                569180.8496718319,
+                569180.8496718319,
+                569180.8496718319
+            ]
+        },
+        "satset": {
+            "DrainDuration": 7.765782782000315,
+            "DebugStats": {
+                "reliableCommitBytes": 72480198,
+                "commitGcKb": 0,
+                "unreliableCommits": 0,
+                "receiveDecodeGcKb": 0,
+                "commitGcSamples": 599,
+                "reliableCommits": 599,
+                "packetDecodeGcKb": 0,
+                "listenerCallGcSamples": 0,
+                "packetDecodeGcSamples": 0,
+                "exactBufferPoolRejectedBySizeClassCap": 0,
+                "streamGrowths": 0,
+                "streamGrowthBytes": 0,
+                "exactBufferPoolSizeClasses": 3,
+                "exactBufferPoolHits": 599,
+                "adapterGcSamples": 119800,
+                "sendGcSamples": 239600,
+                "listenerDispatchGcSamples": 0,
+                "listenerDispatchGcKb": 0,
+                "exactBufferPoolRejectedByTotalByteCap": 0,
+                "exactBufferPoolAcceptedReleases": 599,
+                "exactBufferPoolRejectedBySizeCap": 0,
+                "exactBufferPoolRejectedByPerSizeCap": 0,
+                "exactBufferPoolMisses": 0,
+                "exactBufferPoolBytes": 153406,
+                "adapterGcKb": 9366,
+                "sendGcKb": 1,
+                "unreliableCommitBytes": 0,
+                "listenerCallGcKb": 0,
+                "receiveDecodeGcSamples": 0
+            },
+            "Sent": 119800,
+            "Frames": 599,
+            "NormalizedBandwidth": [
+                38.95809650589702,
+                30.072644848439866,
+                39.14834035961604,
+                39.23565568109752,
+                39.23565568109752,
+                39.23565568109752
+            ],
+            "Framerate": [
+                60,
+                59,
+                61,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                38.89755630493164,
+                30.072643280029298,
+                39.11841583251953,
+                39.148338317871097,
+                39.148338317871097,
+                39.148338317871097
+            ],
+            "ServerDebugStats": {
+                "reliableCommitBytes": 0,
+                "commitGcKb": 0,
+                "unreliableCommits": 0,
+                "listenerDispatchGcSamples": 0,
+                "exactBufferPoolRejectedBySizeCap": 0,
+                "reliableCommits": 0,
+                "listenerCallGcKb": -3322,
+                "listenerCallGcSamples": 119800,
+                "packetDecodeGcSamples": 119800,
+                "exactBufferPoolRejectedBySizeClassCap": 0,
+                "streamGrowths": 0,
+                "streamGrowthBytes": 0,
+                "receiveDecodeGcSamples": 120399,
+                "exactBufferPoolHits": 0,
+                "adapterGcSamples": 0,
+                "sendGcSamples": 0,
+                "commitGcSamples": 0,
+                "listenerDispatchGcKb": 0,
+                "exactBufferPoolMisses": 0,
+                "exactBufferPoolAcceptedReleases": 0,
+                "exactBufferPoolRejectedByTotalByteCap": 0,
+                "exactBufferPoolRejectedByPerSizeCap": 0,
+                "packetDecodeGcKb": -49204,
+                "exactBufferPoolBytes": 0,
+                "adapterGcKb": 0,
+                "exactBufferPoolSizeClasses": 0,
+                "unreliableCommitBytes": 0,
+                "sendGcKb": 0,
+                "receiveDecodeGcKb": 0
+            },
+            "Recieve": 119800
+        },
+        "zap": {
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                38.90581512451172,
+                29.449384689331056,
+                39.00778579711914,
+                39.00813293457031,
+                39.04766845703125,
+                39.04766845703125
+            ],
+            "DrainDuration": 7.784289073999844,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                38.9058171536081,
+                29.449386225236155,
+                39.007787831533708,
+                39.00813496900298,
+                39.04767049352586,
+                39.04767049352586
+            ]
+        },
+        "netray_compile": {
+            "Framerate": [
+                60,
+                60,
+                60,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                38.942970275878909,
+                29.502450942993165,
+                39.021278381347659,
+                39.064598083496097,
+                39.064598083496097,
+                39.064598083496097
+            ],
+            "DrainDuration": 7.8671460139999,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                38.94297230691308,
+                29.38154080468019,
+                39.02128041646591,
+                39.06460012087365,
+                39.06460012087365,
+                39.06460012087365
+            ]
+        },
+        "blink": {
+            "Framerate": [
+                60,
+                58,
+                61,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                38.90694046020508,
+                29.5908145904541,
+                39.01515579223633,
+                39.08964538574219,
+                39.08964538574219,
+                39.08964538574219
+            ],
+            "DrainDuration": 7.867791304999628,
+            "Recieve": 118800,
+            "Sent": 118800,
+            "Frames": 594,
+            "NormalizedBandwidth": [
+                38.985967762036327,
+                29.469542310675086,
+                39.08964742442606,
+                40.00941117887839,
+                40.00941117887839,
+                40.00941117887839
+            ]
+        },
+        "quicknet": {
+            "Framerate": [
+                60,
+                54,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                38.56299591064453,
+                24.317609786987306,
+                39.07694625854492,
+                39.110050201416019,
+                39.110050201416019,
+                39.110050201416019
+            ],
+            "DrainDuration": 7.766553356999793,
+            "Recieve": 110400,
+            "Sent": 110400,
+            "Frames": 552,
+            "NormalizedBandwidth": [
+                38.562997921861498,
+                27.019567839166095,
+                39.076948296566488,
+                39.110052241164087,
+                39.110052241164087,
+                39.110052241164087
+            ]
+        }
+    },
+    "SingleValue": {
+        "warp": {
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                2.2876994609832765,
+                1.7765506505966187,
+                2.343151569366455,
+                2.3724896907806398,
+                2.390052318572998,
+                2.390052318572998
+            ],
+            "DrainDuration": 3.69888145799996,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                2.287699580296101,
+                1.7765507432509554,
+                2.3431516915713326,
+                2.3724898145156194,
+                2.39005244322394,
+                2.39005244322394
+            ]
+        },
+        "bridgenet2": {
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                145.18408203125,
+                114.86489868164063,
+                145.40121459960938,
+                145.43458557128907,
+                145.45436096191407,
+                145.45436096191407
+            ],
+            "DrainDuration": 10.400244908999867,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                145.18408960318994,
+                114.86490467231192,
+                145.40122218287366,
+                145.43459315629378,
+                145.45436854795015,
+                145.45436854795015
+            ]
+        },
+        "packet": {
+            "Framerate": [
+                60,
+                58,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                2.081904888153076,
+                1.871042251586914,
+                2.1085805892944338,
+                2.1959121227264406,
+                2.3312995433807375,
+                2.3312995433807375
+            ],
+            "DrainDuration": 4.185431512999912,
+            "Recieve": 119600,
+            "Sent": 119600,
+            "Frames": 598,
+            "NormalizedBandwidth": [
+                2.104463925445428,
+                1.8710423491693718,
+                2.177805133314769,
+                2.195912237252182,
+                2.3312996649674835,
+                2.3312996649674835
+            ]
+        },
+        "bytenet": {
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                2.4102277755737306,
+                1.9082095623016358,
+                2.449385166168213,
+                2.477407455444336,
+                2.477407455444336,
+                2.477407455444336
+            ],
+            "DrainDuration": 3.4316659649998657,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                2.4102279012769047,
+                1.9082096618225198,
+                2.4595910648309937,
+                2.4774075846512035,
+                2.4774075846512035,
+                2.4774075846512035
+            ]
+        },
+        "roblox": {
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                227.17901611328126,
+                224.49551391601563,
+                228.17010498046876,
+                228.95358276367188,
+                229.26002502441407,
+                229.26002502441407
+            ],
+            "DrainDuration": 9.133543672000087,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                227.17902796159025,
+                224.49552562436907,
+                228.17011688046706,
+                228.95359470453173,
+                229.26003698125613,
+                229.26003698125613
+            ]
+        },
+        "satset": {
+            "DrainDuration": 3.4324183919998179,
+            "DebugStats": {
+                "reliableCommitBytes": 241602,
+                "commitGcKb": 0,
+                "unreliableCommits": 0,
+                "receiveDecodeGcKb": 0,
+                "commitGcSamples": 601,
+                "reliableCommits": 601,
+                "packetDecodeGcKb": 0,
+                "listenerCallGcSamples": 0,
+                "packetDecodeGcSamples": 0,
+                "exactBufferPoolRejectedBySizeClassCap": 0,
+                "streamGrowths": 0,
+                "streamGrowthBytes": 0,
+                "exactBufferPoolSizeClasses": 5,
+                "exactBufferPoolHits": 600,
+                "adapterGcSamples": 120200,
+                "sendGcSamples": 240400,
+                "listenerDispatchGcSamples": 0,
+                "listenerDispatchGcKb": 0,
+                "exactBufferPoolRejectedByTotalByteCap": 0,
+                "exactBufferPoolAcceptedReleases": 601,
+                "exactBufferPoolRejectedBySizeCap": 0,
+                "exactBufferPoolRejectedByPerSizeCap": 0,
+                "exactBufferPoolMisses": 1,
+                "exactBufferPoolBytes": 587610,
+                "adapterGcKb": 9389,
+                "sendGcKb": 1,
+                "unreliableCommitBytes": 0,
+                "listenerCallGcKb": 0,
+                "receiveDecodeGcSamples": 0
+            },
+            "Sent": 120200,
+            "Frames": 601,
+            "NormalizedBandwidth": [
+                2.4630578848824227,
+                1.9384501991357706,
+                2.519162071005505,
+                2.554712667189447,
+                2.5740772636125976,
+                2.5740772636125976
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                2.46305775642395,
+                1.9384500980377198,
+                2.5191619396209719,
+                2.5547125339508058,
+                2.5740771293640138,
+                2.5740771293640138
+            ],
+            "ServerDebugStats": {
+                "reliableCommitBytes": 0,
+                "commitGcKb": 0,
+                "unreliableCommits": 0,
+                "listenerDispatchGcSamples": 0,
+                "exactBufferPoolRejectedBySizeCap": 0,
+                "reliableCommits": 0,
+                "listenerCallGcKb": -1874,
+                "listenerCallGcSamples": 120200,
+                "packetDecodeGcSamples": 120200,
+                "exactBufferPoolRejectedBySizeClassCap": 0,
+                "streamGrowths": 0,
+                "streamGrowthBytes": 0,
+                "receiveDecodeGcSamples": 120801,
+                "exactBufferPoolHits": 0,
+                "adapterGcSamples": 0,
+                "sendGcSamples": 0,
+                "commitGcSamples": 0,
+                "listenerDispatchGcKb": 0,
+                "exactBufferPoolMisses": 0,
+                "exactBufferPoolAcceptedReleases": 0,
+                "exactBufferPoolRejectedByTotalByteCap": 0,
+                "exactBufferPoolRejectedByPerSizeCap": 0,
+                "packetDecodeGcKb": 6757,
+                "exactBufferPoolBytes": 0,
+                "adapterGcKb": 0,
+                "exactBufferPoolSizeClasses": 0,
+                "unreliableCommitBytes": 0,
+                "sendGcKb": 0,
+                "receiveDecodeGcKb": 0
+            },
+            "Recieve": 120200
+        },
+        "zap": {
+            "Framerate": [
+                60,
+                60,
+                61,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                2.338430881500244,
+                1.8679817914962769,
+                2.369088888168335,
+                2.3784589767456056,
+                2.3784589767456056,
+                2.3784589767456056
+            ],
+            "DrainDuration": 3.716088968999884,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                2.3399690973322215,
+                1.867981888919119,
+                2.378015016253504,
+                2.3784591007919078,
+                2.3784591007919078,
+                2.3784591007919078
+            ]
+        },
+        "netray_compile": {
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                2.4127581119537355,
+                1.915351390838623,
+                2.4495925903320314,
+                2.4844465255737306,
+                2.4844465255737306,
+                2.4844465255737306
+            ],
+            "DrainDuration": 3.8176179279998907,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                2.4127582377888769,
+                1.9153514907319825,
+                2.4495927180882406,
+                2.484446655147714,
+                2.484446655147714,
+                2.484446655147714
+            ]
+        },
+        "blink": {
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                2.3603014945983888,
+                1.6909959316253663,
+                2.4237380027770998,
+                2.440016508102417,
+                2.458296298980713,
+                2.458296298980713
+            ],
+            "DrainDuration": 3.699903177000124,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                2.3603016176977045,
+                1.6980418357794856,
+                2.423738129184887,
+                2.4400166353591947,
+                2.458296427190856,
+                2.458296427190856
+            ]
+        },
+        "quicknet": {
+            "Framerate": [
+                60,
+                60,
+                61,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                2.3922231197357179,
+                1.9022480249404908,
+                2.4450292587280275,
+                2.4501376152038576,
+                2.4501376152038576,
+                2.4501376152038576
+            ],
+            "DrainDuration": 3.748861912999928,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                2.392223244499876,
+                1.9022481241504564,
+                2.4400961959837206,
+                2.44502938624624,
+                2.44502938624624,
+                2.44502938624624
+            ]
+        }
+    },
+    "Strings": {
+        "warp": {
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                3.448098659515381,
+                3.3145055770874025,
+                6.075814247131348,
+                6.445077419281006,
+                15.775246620178223,
+                15.775246620178223
+            ],
+            "DrainDuration": 3.7676475160001248,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                3.4480988393477398,
+                3.314505749952339,
+                6.075814564009754,
+                6.445077755417987,
+                15.775247442921448,
+                15.775247442921448
+            ]
+        },
+        "bridgenet2": {
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                27188.83984375,
+                21572.578125,
+                27291.423828125,
+                27292.138671875,
+                27306.3828125,
+                27306.3828125
+            ],
+            "DrainDuration": 39.9191793670002,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                27188.841261758498,
+                21572.579250097624,
+                27291.42525148367,
+                27292.140095270952,
+                27306.38423663884,
+                27306.38423663884
+            ]
+        },
+        "packet": {
+            "Framerate": [
+                60,
+                60,
+                61,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                95.8426284790039,
+                73.63484191894531,
+                96.41002655029297,
+                96.52901458740235,
+                96.52901458740235,
+                96.52901458740235
+            ],
+            "DrainDuration": 9.449241188000088,
+            "Recieve": 120200,
+            "Sent": 120200,
+            "Frames": 601,
+            "NormalizedBandwidth": [
+                95.8426334775865,
+                73.63484575930159,
+                96.41003157846768,
+                96.52901962178277,
+                96.52901962178277,
+                96.52901962178277
+            ]
+        },
+        "bytenet": {
+            "Framerate": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "Bandwidth": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "DrainDuration": 3.0139235769997869,
+            "Recieve": 1400,
+            "Sent": 1400,
+            "Frames": 7,
+            "NormalizedBandwidth": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        "roblox": {
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                80407.65625,
+                70049.5078125,
+                83918.40625,
+                86964.1328125,
+                92304.15625,
+                92304.15625
+            ],
+            "DrainDuration": 10.867273030999968,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                80407.66044358607,
+                70049.51146586653,
+                83918.41062668595,
+                86964.13734803297,
+                92304.16106403689,
+                92304.16106403689
+            ]
+        },
+        "satset": {
+            "DrainDuration": 9.74898279800027,
+            "DebugStats": {
+                "reliableCommitBytes": 260715002,
+                "commitGcKb": 424,
+                "unreliableCommits": 0,
+                "receiveDecodeGcKb": 0,
+                "commitGcSamples": 601,
+                "reliableCommits": 601,
+                "packetDecodeGcKb": 0,
+                "listenerCallGcSamples": 0,
+                "packetDecodeGcSamples": 0,
+                "exactBufferPoolRejectedBySizeClassCap": 0,
+                "streamGrowths": 2,
+                "streamGrowthBytes": 786432,
+                "exactBufferPoolSizeClasses": 4,
+                "exactBufferPoolHits": 600,
+                "adapterGcSamples": 120200,
+                "sendGcSamples": 240402,
+                "listenerDispatchGcSamples": 0,
+                "listenerDispatchGcKb": 0,
+                "exactBufferPoolRejectedByTotalByteCap": 0,
+                "exactBufferPoolAcceptedReleases": 601,
+                "exactBufferPoolRejectedBySizeCap": 0,
+                "exactBufferPoolRejectedByPerSizeCap": 0,
+                "exactBufferPoolMisses": 1,
+                "exactBufferPoolBytes": 587208,
+                "adapterGcKb": 9308,
+                "sendGcKb": 770,
+                "unreliableCommitBytes": 0,
+                "listenerCallGcKb": 0,
+                "receiveDecodeGcSamples": 0
+            },
+            "Sent": 120200,
+            "Frames": 601,
+            "NormalizedBandwidth": [
+                96.4289829954717,
+                73.35116196765086,
+                96.59933975484478,
+                96.7008564837721,
+                96.84271745308479,
+                96.84271745308479
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                96.4289779663086,
+                73.35115814208985,
+                96.59933471679688,
+                96.70085144042969,
+                96.84271240234375,
+                96.84271240234375
+            ],
+            "ServerDebugStats": {
+                "reliableCommitBytes": 0,
+                "commitGcKb": 0,
+                "unreliableCommits": 0,
+                "listenerDispatchGcSamples": 0,
+                "exactBufferPoolRejectedBySizeCap": 0,
+                "reliableCommits": 0,
+                "listenerCallGcKb": -529,
+                "listenerCallGcSamples": 120200,
+                "packetDecodeGcSamples": 120200,
+                "exactBufferPoolRejectedBySizeClassCap": 0,
+                "streamGrowths": 0,
+                "streamGrowthBytes": 0,
+                "receiveDecodeGcSamples": 120801,
+                "exactBufferPoolHits": 0,
+                "adapterGcSamples": 0,
+                "sendGcSamples": 0,
+                "commitGcSamples": 0,
+                "listenerDispatchGcKb": 0,
+                "exactBufferPoolMisses": 0,
+                "exactBufferPoolAcceptedReleases": 0,
+                "exactBufferPoolRejectedByTotalByteCap": 0,
+                "exactBufferPoolRejectedByPerSizeCap": 0,
+                "packetDecodeGcKb": -249839,
+                "exactBufferPoolBytes": 0,
+                "adapterGcKb": 0,
+                "exactBufferPoolSizeClasses": 0,
+                "unreliableCommitBytes": 0,
+                "sendGcKb": 0,
+                "receiveDecodeGcKb": 0
+            },
+            "Recieve": 120200
+        },
+        "zap": {
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                100.29021453857422,
+                75.2690200805664,
+                100.6224594116211,
+                100.70121002197266,
+                100.77957916259766,
+                100.77957916259766
+            ],
+            "DrainDuration": 11.881539900999997,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                100.2902197691165,
+                75.26902400615171,
+                100.6224646594913,
+                100.70121527395003,
+                100.7795844186623,
+                100.7795844186623
+            ]
+        },
+        "netray_compile": {
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                96.3437728881836,
+                73.3901138305664,
+                96.48297119140625,
+                96.84610748291016,
+                97.13309478759766,
+                97.13309478759766
+            ],
+            "DrainDuration": 9.89921039300043,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                96.34377791290291,
+                73.39011765815912,
+                96.48297622338532,
+                96.84611253382826,
+                97.13309985348332,
+                97.13309985348332
+            ]
+        },
+        "blink": {
+            "Framerate": [
+                60,
+                60,
+                61,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                100.3739013671875,
+                76.27218627929688,
+                100.47459411621094,
+                100.83391571044922,
+                100.83391571044922,
+                100.83391571044922
+            ],
+            "DrainDuration": 9.965582208000342,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                100.36395787110678,
+                76.58999101442271,
+                100.79213116619622,
+                100.83885672784609,
+                100.83885672784609,
+                100.83885672784609
+            ]
+        },
+        "quicknet": {
+            "Framerate": [
+                60,
+                60,
+                61,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                96.38121032714844,
+                47.9400634765625,
+                96.53449249267578,
+                96.77434539794922,
+                96.77434539794922,
+                96.77434539794922
+            ],
+            "DrainDuration": 9.816952269000013,
+            "Recieve": 120000,
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                96.37773429910109,
+                48.13981622941128,
+                96.5344975273419,
+                96.81548622770203,
+                96.81548622770203,
+                96.81548622770203
+            ]
+        }
+    }
+}
