@@ -6,6 +6,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), version
 
 ## [Unreleased]
 
+## [0.4.0-rc.2] - 2026-06-03
+
+This release candidate removes the old split between benchmark batching profiles. Satset now tests the rc.2 batching path as one default behavior: one reliable commit per frame, with large reliable payloads kept in a single commit unless users explicitly configure otherwise.
+
+### Added
+
+- **QuickNet Benchmark Adapter**: Added QuickNet to the Studio benchmark comparison suite, including its Rojo mapping and benchmark wrapper.
+
+### Changed
+
+- **Reliable Batching Default**: Changed the default reliable split threshold to use one reliable commit per frame.
+- **Benchmark Result Data**: Replaced separate default and latency benchmark JSON files with `benchmark/benchmark-result.json`.
+- **Benchmark Report**: Updated `benchmark/Benchmarks.md` with the latest Studio run, QuickNet rows, and one benchmark control instead of default and latency profiles.
+- **Benchmark Config**: Simplified `benchmark/src/shared/BenchmarkConfig.luau` so it no longer presents duplicate benchmark modes.
+
 ## [0.4.0-rc.1] - 2026-05-25
 
 > Do not hates **monday**, **monday** hates you too. so lets make satset works on your hateful monday! >.<'
