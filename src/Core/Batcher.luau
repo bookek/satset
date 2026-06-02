@@ -49,6 +49,15 @@ export type DebugStats = {
 	listenerCallGcSamples: number,
 	listenerDispatchGcKb: number,
 	listenerDispatchGcSamples: number,
+	exactBufferPoolHits: number,
+	exactBufferPoolMisses: number,
+	exactBufferPoolAcceptedReleases: number,
+	exactBufferPoolRejectedBySizeCap: number,
+	exactBufferPoolRejectedByPerSizeCap: number,
+	exactBufferPoolRejectedBySizeClassCap: number,
+	exactBufferPoolRejectedByTotalByteCap: number,
+	exactBufferPoolBytes: number,
+	exactBufferPoolSizeClasses: number,
 }
 
 export type DebugGcBucket =
@@ -105,6 +114,15 @@ local debugStats: DebugStats = {
 	listenerCallGcSamples = 0,
 	listenerDispatchGcKb = 0,
 	listenerDispatchGcSamples = 0,
+	exactBufferPoolHits = 0,
+	exactBufferPoolMisses = 0,
+	exactBufferPoolAcceptedReleases = 0,
+	exactBufferPoolRejectedBySizeCap = 0,
+	exactBufferPoolRejectedByPerSizeCap = 0,
+	exactBufferPoolRejectedBySizeClassCap = 0,
+	exactBufferPoolRejectedByTotalByteCap = 0,
+	exactBufferPoolBytes = 0,
+	exactBufferPoolSizeClasses = 0,
 }
 local debugGcEnabled = false
 
@@ -209,6 +227,15 @@ function Batcher.getDebugStats(): DebugStats
 		listenerCallGcSamples = debugStats.listenerCallGcSamples,
 		listenerDispatchGcKb = debugStats.listenerDispatchGcKb,
 		listenerDispatchGcSamples = debugStats.listenerDispatchGcSamples,
+		exactBufferPoolHits = debugStats.exactBufferPoolHits,
+		exactBufferPoolMisses = debugStats.exactBufferPoolMisses,
+		exactBufferPoolAcceptedReleases = debugStats.exactBufferPoolAcceptedReleases,
+		exactBufferPoolRejectedBySizeCap = debugStats.exactBufferPoolRejectedBySizeCap,
+		exactBufferPoolRejectedByPerSizeCap = debugStats.exactBufferPoolRejectedByPerSizeCap,
+		exactBufferPoolRejectedBySizeClassCap = debugStats.exactBufferPoolRejectedBySizeClassCap,
+		exactBufferPoolRejectedByTotalByteCap = debugStats.exactBufferPoolRejectedByTotalByteCap,
+		exactBufferPoolBytes = exactBufferPoolBytes,
+		exactBufferPoolSizeClasses = exactBufferPoolSizeClasses,
 	}
 end
 
@@ -233,6 +260,13 @@ function Batcher.resetDebugStats()
 	debugStats.listenerCallGcSamples = 0
 	debugStats.listenerDispatchGcKb = 0
 	debugStats.listenerDispatchGcSamples = 0
+	debugStats.exactBufferPoolHits = 0
+	debugStats.exactBufferPoolMisses = 0
+	debugStats.exactBufferPoolAcceptedReleases = 0
+	debugStats.exactBufferPoolRejectedBySizeCap = 0
+	debugStats.exactBufferPoolRejectedByPerSizeCap = 0
+	debugStats.exactBufferPoolRejectedBySizeClassCap = 0
+	debugStats.exactBufferPoolRejectedByTotalByteCap = 0
 end
 
 local function acquireExactBuffer(size: number): buffer
@@ -243,10 +277,12 @@ local function acquireExactBuffer(size: number): buffer
 		if pooled then
 			bucket[index] = nil
 			exactBufferPoolBytes -= size
+			debugStats.exactBufferPoolHits += 1
 			return pooled
 		end
 	end
 
+	debugStats.exactBufferPoolMisses += 1
 	return buffer.create(size)
 end
 
@@ -269,16 +305,19 @@ end
 local function releaseExactBuffer(b: buffer)
 	local size = buffer.len(b)
 	if size > EXACT_BUFFER_POOL_MAX_BUFFER_SIZE then
+		debugStats.exactBufferPoolRejectedBySizeCap += 1
 		return
 	end
 
 	if exactBufferPoolBytes + size > EXACT_BUFFER_POOL_MAX_BYTES then
+		debugStats.exactBufferPoolRejectedByTotalByteCap += 1
 		return
 	end
 
 	local bucket = exactBufferPool[size]
 	if not bucket then
 		if not reserveExactBufferSizeClass() then
+			debugStats.exactBufferPoolRejectedBySizeClassCap += 1
 			return
 		end
 
@@ -286,11 +325,13 @@ local function releaseExactBuffer(b: buffer)
 		exactBufferPool[size] = bucket
 		exactBufferPoolSizeClasses += 1
 	elseif #bucket >= EXACT_BUFFER_POOL_MAX_PER_SIZE then
+		debugStats.exactBufferPoolRejectedByPerSizeCap += 1
 		return
 	end
 
 	table.insert(bucket, b)
 	exactBufferPoolBytes += size
+	debugStats.exactBufferPoolAcceptedReleases += 1
 end
 
 local function deferExactBufferRelease(b: buffer)

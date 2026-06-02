@@ -17,7 +17,7 @@ Treat rows with low frame counts or partial packet counts as incomplete rows, no
 
 ## Result Summary
 
-Satset is clean in all default and latency rows. The current default profile still fragments large reliable payloads. That shows up as 3 reliable commits per frame for Vectors and Entities, and 8 reliable commits per frame for Strings. The latency profile uses one reliable commit per frame and cuts those bandwidth numbers sharply.
+Satset is clean in all default and latency rows. These are benchmark controls, not public Satset modes. The current default benchmark control still fragments large reliable payloads. That shows up as 3 reliable commits per frame for Vectors and Entities, and 8 reliable commits per frame for Strings. The latency benchmark control uses one reliable commit per frame and cuts those bandwidth numbers sharply.
 
 Current Satset default rows:
 
@@ -45,7 +45,7 @@ Opinionated read:
 
 - Satset's serializer is not the source of the default-mode gap. Raw bytes per packet are almost identical between default and latency.
 - Commit count is the main signal. Vectors and Entities use 3 commits per frame in default mode. Strings uses 8.
-- The next useful profile is a named throughput profile that keeps one reliable commit per frame without changing default behavior.
+- The next runtime experiment should aim for one default behavior that handles both light and heavy payloads. A separate public throughput mode is not the goal.
 - Repeated-id segmentation should be tested separately. It can reduce benchmark bytes in homogeneous rows, but it does not explain the large default-mode gap by itself.
 
 ---
@@ -265,6 +265,7 @@ SingleValue is measurement-noise territory for the compact libraries. Warp, Pack
 - Satset profile source: `benchmark/src/shared/BenchmarkConfig.luau`.
 - Default profile: `reliableThreshold = 60000`, `maxPacketsPerFrame = 20`.
 - Latency profile: `reliableThreshold = 0`, `maxPacketsPerFrame = 0`.
+- These profiles are benchmark controls. They do not define public Satset modes.
 - Validation: the server verifies every received packet.
 
 The benchmark does not prove a single universal winner. It shows how each library behaves under one heavy local Studio workload. Use the packet counts and min FPS before comparing bandwidth.
@@ -282,4 +283,4 @@ The benchmark place file is [satset-benchmark.rbxl](./satset-benchmark.rbxl).
 2. If you are testing local source changes, connect Rojo to this repo before pressing Play.
 3. Set `activeMode` in `benchmark/src/shared/BenchmarkConfig.luau` to `"default"` or `"latency"`.
 4. Press Play with one local player and wait until Studio Output prints `Generated results`.
-5. The server creates `game.Result`, a `StringValue` whose `Value` contains the JSON for the run. Use that value for `default-mode-result.json` or `latency-mode-result.json`, based on the selected mode.
+5. The server creates `game.Result`, a `StringValue` whose `Value` contains the JSON for the run. Use that value for the result file that matches the selected mode.

@@ -119,10 +119,16 @@ local function waitForDrain(baselineKbps: number): number
 	return os.clock() - started
 end
 
-local function assertSplitDebugStats(stats: { [string]: number }?, source: string)
-	if not stats or stats.packetDecodeGcKb == nil or stats.listenerCallGcKb == nil then
+local function assertSatsetDebugStats(stats: { [string]: number }?, source: string)
+	if
+		not stats
+		or stats.packetDecodeGcKb == nil
+		or stats.listenerCallGcKb == nil
+		or stats.exactBufferPoolHits == nil
+		or stats.exactBufferPoolMisses == nil
+	then
 		error(
-			`[Satset Benchmark] {source} is missing split GC stats. Stop Play, reconnect Rojo, and rerun the benchmark.`
+			`[Satset Benchmark] {source} is missing rc.2 debug stats. Stop Play, reconnect Rojo, and rerun the benchmark.`
 		)
 	end
 end
@@ -217,12 +223,12 @@ local function runBenchmark(tool: string, bench: string): Benchmark
 
 	if lowerTool == "satset" then
 		local debugStats = SatsetBatcher.getDebugStats()
-		assertSplitDebugStats(debugStats, "Client SatsetBatcher")
+		assertSatsetDebugStats(debugStats, "Client SatsetBatcher")
 		result.DebugStats = debugStats
 
-		if BenchmarkConfig.activeMode == "latency" and debugStats.reliableCommits > totalFrames + 2 then
+		if BenchmarkConfig.expectsSingleReliableCommit and debugStats.reliableCommits > totalFrames + 2 then
 			error(
-				`[Satset Benchmark] reliableThreshold = 0 produced {debugStats.reliableCommits} reliable commits across {totalFrames} frames`
+				`[Satset Benchmark] {BenchmarkConfig.activeMode} expected one reliable commit per frame, but produced {debugStats.reliableCommits} reliable commits across {totalFrames} frames`
 			)
 		end
 	end
@@ -235,8 +241,8 @@ local function runAll()
 	Modes = require(ReplicatedStorage.Shared.modes)
 	local results: Results = {}
 
-	assertSplitDebugStats(SatsetBatcher.getDebugStats(), "Client SatsetBatcher")
-	assertSplitDebugStats(
+	assertSatsetDebugStats(SatsetBatcher.getDebugStats(), "Client SatsetBatcher")
+	assertSatsetDebugStats(
 		ReplicatedStorage.Shared.GetRecieved:InvokeServer("getSatsetDebugStats"),
 		"Server SatsetBatcher"
 	)
@@ -257,19 +263,19 @@ local function runAll()
 
 			if string.lower(tool) == "satset" then
 				local debugStats = SatsetBatcher.getDebugStats()
-				assertSplitDebugStats(debugStats, "Client SatsetBatcher")
+				assertSatsetDebugStats(debugStats, "Client SatsetBatcher")
 				results[bench][tool].DebugStats = debugStats
 				if
-					BenchmarkConfig.activeMode == "latency"
+					BenchmarkConfig.expectsSingleReliableCommit
 					and debugStats.reliableCommits > (results[bench][tool].Frames or 0) + 2
 				then
 					error(
-						`[Satset Benchmark] reliableThreshold = 0 produced {debugStats.reliableCommits} reliable commits across {results[bench][tool].Frames or 0} frames`
+						`[Satset Benchmark] {BenchmarkConfig.activeMode} expected one reliable commit per frame, but produced {debugStats.reliableCommits} reliable commits across {results[bench][tool].Frames or 0} frames`
 					)
 				end
 
 				local serverDebugStats = ReplicatedStorage.Shared.GetRecieved:InvokeServer("getSatsetDebugStats")
-				assertSplitDebugStats(serverDebugStats, "Server SatsetBatcher")
+				assertSatsetDebugStats(serverDebugStats, "Server SatsetBatcher")
 				results[bench][tool].ServerDebugStats = serverDebugStats
 			end
 		end
