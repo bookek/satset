@@ -22,7 +22,7 @@ Contributions to Satset are welcome. This document covers what you need to know 
 
 ## Commits
 
-Follow Conventional Commits. One logical change per commit.
+Follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/#summary). One logical change per commit.
 
 ```yaml
 type(scope?): brief description
