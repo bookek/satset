@@ -13,7 +13,7 @@ local IS_SERVER = RunService:IsServer()
 
 -- UnreliableRemoteEvent has a limit around 1000 bytes.
 -- We cap at 900 to stay safe.
-local RELIABLE_SPLIT_THRESHOLD = 60000
+local RELIABLE_SPLIT_THRESHOLD = 0
 local UNRELIABLE_SPLIT_THRESHOLD = 900
 local MAX_PACKETS_PER_FRAME = 0 -- 0 means no limit (Latency Mode)
 local INITIAL_WORKING_SIZE = 65536
