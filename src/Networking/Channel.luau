@@ -5,21 +5,16 @@ local RunService = game:GetService("RunService")
 
 local SchemaCompiler = require(script.Parent.Parent.Serialization.SchemaCompiler)
 
--- [ Constants ]
-
 local IS_SERVER = RunService:IsServer()
 local FULL_MASK: number = 0xFFFFFFFF
-
--- [ Types ]
 
 export type ChannelConfig = {
 	name: string,
 	schema: { [string]: any },
-	unreliable: boolean?, -- Use UnreliableRemoteEvent (default true)
-	resyncInterval: number?, -- Seconds between full keyframes (default 5)
+	unreliable: boolean?, -- default true
+	resyncInterval: number?, -- keyframe cadence, seconds
 }
 
--- Entity: server-side state container with dirty tracking.
 export type Entity = {
 	set: (self: Entity, fieldName: string, value: any) -> (),
 	get: (self: Entity, fieldName: string) -> any,
@@ -46,15 +41,11 @@ type ChannelDef = {
 	clientState: { [number]: buffer },
 }
 
--- [ State ]
-
 local channelRegistry: { [number]: ChannelDef } = {}
 local channelsByName: { [string]: ChannelDef } = {}
 local nextChannelId = 1
 
 local Channel = {}
-
--- [ Public API ]
 
 function Channel.defineChannel(config: ChannelConfig): any
 	local compiled = SchemaCompiler.compile(config.schema)
@@ -93,7 +84,7 @@ function Channel.defineChannel(config: ChannelConfig): any
 			local entityData: EntityData = {
 				id = entityId,
 				stateBuffer = stateBuffer,
-				dirtyMask = FULL_MASK, -- Send a keyframe on the first flush.
+				dirtyMask = FULL_MASK, -- first flush must be a keyframe
 				alive = true,
 			}
 
@@ -152,8 +143,6 @@ function Channel.defineChannel(config: ChannelConfig): any
 
 	return self :: any
 end
-
--- [ Internal API ]
 
 local function encodeDelta(def: ChannelDef, entityData: EntityData): buffer?
 	local mask = entityData.dirtyMask

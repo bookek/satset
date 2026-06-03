@@ -1,19 +1,18 @@
 -- This file is part of the Satset networking library and is licensed under MIT License; see LICENSE.txt for details
--- Guard — server-side token bucket rate limiter for DDoS protection.
+-- Guard runs Satset's server-side token bucket.
 
 local RunService = game:GetService("RunService")
 
--- [ Constants ]
-
 local IS_STUDIO = RunService:IsStudio()
-
--- [ Types ]
+local DEFAULT_MAX_TOKENS = 1000
+local DEFAULT_REFILL_RATE = 500
+local DEFAULT_STUDIO_BYPASS = true
 
 export type GuardConfig = {
-	maxTokens: number, -- Max burst capacity (how many packets can be sent at once)
-	refillRate: number, -- Tokens refilled per second
-	onFlood: ((player: Player) -> ())?, -- Optional callback for when a player is flooding
-	studioBypass: boolean?, -- If true, rate limiting is disabled in Studio (Default: true)
+	maxTokens: number?,
+	refillRate: number?,
+	onFlood: ((player: Player) -> ())?,
+	studioBypass: boolean?,
 }
 
 type PlayerBucket = {
@@ -21,104 +20,80 @@ type PlayerBucket = {
 	lastRefill: number,
 }
 
--- We define the Guard type explicitly for better type checking in methods.
 export type Guard = {
 	consume: (self: Guard, player: Player) -> boolean,
 	removePlayer: (self: Guard, player: Player) -> (),
-	_getBucket: (self: Guard, player: Player) -> PlayerBucket,
+}
+
+type GuardImpl = Guard & {
 	_maxTokens: number,
 	_refillRate: number,
 	_onFlood: ((player: Player) -> ())?,
+	_studioBypass: boolean,
 	_buckets: { [Player]: PlayerBucket },
 }
-
--- [ Private Constants ]
-
-local DEFAULT_CONFIG: GuardConfig = {
-	maxTokens = 1000,
-	refillRate = 500,
-	onFlood = nil,
-	studioBypass = true,
-}
-
--- [ Public API ]
 
 local Guard = {}
 Guard.__index = Guard
 
---[[
-	Creates a new Guard instance. 
-	
-	The guard implements a token bucket algorithm to prevent players from 
-	spamming the server. If a player exceeds the maxTokens, their packets 
-	will be dropped until the bucket refills.
-]]
 function Guard.new(config: GuardConfig?): Guard
-	local self = setmetatable({}, Guard)
+	local cfg: GuardConfig = config or {}
+	local maxTokens = cfg.maxTokens or DEFAULT_MAX_TOKENS
+	local refillRate = cfg.refillRate or DEFAULT_REFILL_RATE
+	local studioBypass = if cfg.studioBypass ~= nil then cfg.studioBypass else DEFAULT_STUDIO_BYPASS
 
-	local cfg = config or DEFAULT_CONFIG
-	self._maxTokens = math.max(cfg.maxTokens or DEFAULT_CONFIG.maxTokens, 1)
-	self._refillRate = math.max(cfg.refillRate or DEFAULT_CONFIG.refillRate, 1)
-	self._onFlood = cfg.onFlood
-	self._studioBypass = if cfg.studioBypass ~= nil then cfg.studioBypass else DEFAULT_CONFIG.studioBypass
-	self._buckets = {} :: { [Player]: PlayerBucket }
+	local self = setmetatable({
+		_maxTokens = math.max(maxTokens, 1),
+		_refillRate = math.max(refillRate, 1),
+		_onFlood = cfg.onFlood,
+		_studioBypass = studioBypass,
+		_buckets = {} :: { [Player]: PlayerBucket },
+	}, Guard)
 
 	return (self :: any) :: Guard
 end
 
---[[
-	Consumes a token for the given player. 
-	
-	Returns true if the request is within the rate limit, or false if 
-	the player is flooding.
-]]
+local function getBucket(guard: GuardImpl, player: Player): PlayerBucket
+	local bucket = guard._buckets[player]
+	if not bucket then
+		bucket = {
+			tokens = guard._maxTokens,
+			lastRefill = os.clock(),
+		}
+		guard._buckets[player] = bucket
+	end
+	return bucket
+end
+
 function Guard:consume(player: Player): boolean
-	-- Bypass rate limiting in Studio if enabled.
-	if IS_STUDIO and self._studioBypass then
+	local guard = (self :: any) :: GuardImpl
+
+	if IS_STUDIO and guard._studioBypass then
 		return true
 	end
 
-	local bucket: PlayerBucket = self:_getBucket(player)
+	local bucket = getBucket(guard, player)
 	local now = os.clock()
 	local elapsed = now - bucket.lastRefill
 
-	-- Refill tokens based on elapsed time.
-	bucket.tokens = math.min(self._maxTokens, bucket.tokens + elapsed * self._refillRate)
+	bucket.tokens = math.min(guard._maxTokens, bucket.tokens + elapsed * guard._refillRate)
 	bucket.lastRefill = now
 
-	-- Check if we have enough tokens to allow this request.
 	if bucket.tokens >= 1 then
 		bucket.tokens -= 1
 		return true
 	end
 
-	-- Trigger the flood callback if it exists.
-	if self._onFlood then
-		self._onFlood(player)
+	if guard._onFlood then
+		guard._onFlood(player)
 	end
 
 	return false
 end
 
---[[
-	Cleans up the bucket for a player when they disconnect.
-]]
 function Guard:removePlayer(player: Player)
-	self._buckets[player] = nil
-end
-
--- [ Private Logic ]
-
-function Guard:_getBucket(player: Player): PlayerBucket
-	local bucket = self._buckets[player]
-	if not bucket then
-		bucket = {
-			tokens = self._maxTokens,
-			lastRefill = os.clock(),
-		}
-		self._buckets[player] = bucket
-	end
-	return bucket
+	local guard = (self :: any) :: GuardImpl
+	guard._buckets[player] = nil
 end
 
 return Guard

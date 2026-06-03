@@ -126,9 +126,17 @@ local function assertSatsetDebugStats(stats: { [string]: number }?, source: stri
 		or stats.listenerCallGcKb == nil
 		or stats.exactBufferPoolHits == nil
 		or stats.exactBufferPoolMisses == nil
+		or stats.groupedRuns == nil
+		or stats.groupedHeaderBytesSaved == nil
+		or stats.deltaEncoded == nil
+		or stats.deltaDecoded == nil
+		or stats.deltaSkipped == nil
+		or stats.deltaInputBytes == nil
+		or stats.deltaZeroBytes == nil
+		or stats.deltaStoredBytes == nil
 	then
 		error(
-			`[Satset Benchmark] {source} is missing rc.2 debug stats. Stop Play, reconnect Rojo, and rerun the benchmark.`
+			`[Satset Benchmark] {source} is missing rc.2 reliable delta debug stats. Stop Play, reconnect Rojo, and rerun the benchmark.`
 		)
 	end
 end
