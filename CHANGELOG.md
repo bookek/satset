@@ -6,6 +6,29 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), version
 
 ## [Unreleased]
 
+## [0.4.0-rc.3] - 2026-06-03
+
+This release candidate keeps the rc.2 public API, but changes the reliable wire path again. Satset now groups repeated reliable packet ids and delta-encodes same-size reliable batches. The Studio benchmark also includes QuickNet as a regular comparison target.
+
+### Added
+
+- **Reliable Run Grouping**: Added compact grouped entries for repeated reliable packet ids. Reduces repeated header bytes in homogeneous benchmark rows.
+- **Reliable Delta Encoding**: Added same-size reliable batch delta encoding for direct client/server traffic. Broadcast reliable traffic stays raw.
+- **QuickNet Benchmark Rows**: Added QuickNet to the benchmark report and source links.
+
+### Changed
+
+- **Runtime Batching**: Updated the rc.3 batching path around one reliable commit per frame, grouped reliable runs, and same-size reliable delta.
+- **Benchmark Report**: Rebuilt `benchmark/Benchmarks.md` from the latest `benchmark/benchmark-result.json`, with `Kbps (p50)` columns and notes for partial rows.
+- **Public Docs**: Updated README, API docs, and guides for the current batching defaults, reliable delta path, Guard defaults, and benchmark units.
+- **Internal Comments**: Trimmed generated-style comments in core modules and kept comments that explain constraints or tradeoffs.
+
+### Fixed
+
+- **Bridge Initialization**: Added clearer runtime checks for bridge access before initialization and client wait failures.
+- **Guard Types**: Removed private fields from the public Guard type and documented the current defaults.
+- **Serializer Decode Path**: Removed the vararg fill helper from fixed-size table decode.
+
 ## [0.4.0-rc.2] - 2026-06-03
 
 This release candidate removes the old split between benchmark batching profiles. Satset now tests the rc.2 batching path as one default behavior: one reliable commit per frame, with large reliable payloads kept in a single commit unless users explicitly configure otherwise.
