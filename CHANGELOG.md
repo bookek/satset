@@ -6,9 +6,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), version
 
 ## [Unreleased]
 
-## [0.4.0-rc.3] - 2026-06-03
+## [0.4.0] - 2026-06-03
 
-This release candidate keeps the rc.2 public API, but changes the reliable wire path again. Satset now groups repeated reliable packet ids and delta-encodes same-size reliable batches. The Studio benchmark also includes QuickNet as a regular comparison target.
+This release keeps the rc.2 public API and finishes the reliable wire-format pass. Satset now groups repeated reliable packet ids and delta-encodes same-size reliable batches. The Studio benchmark also includes QuickNet as a regular comparison target.
 
 ### Added
 
@@ -18,7 +18,7 @@ This release candidate keeps the rc.2 public API, but changes the reliable wire 
 
 ### Changed
 
-- **Runtime Batching**: Updated the rc.3 batching path around one reliable commit per frame, grouped reliable runs, and same-size reliable delta.
+- **Runtime Batching**: Updated the default batching path around one reliable commit per frame, grouped reliable runs, and same-size reliable delta.
 - **Benchmark Report**: Rebuilt `benchmark/Benchmarks.md` from the latest `benchmark/benchmark-result.json`, with `Kbps (p50)` columns and notes for partial rows.
 - **Public Docs**: Updated README, API docs, and guides for the current batching defaults, reliable delta path, Guard defaults, and benchmark units.
 - **Internal Comments**: Trimmed generated-style comments in core modules and kept comments that explain constraints or tradeoffs.

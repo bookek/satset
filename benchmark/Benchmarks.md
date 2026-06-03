@@ -1,6 +1,6 @@
 # [**Satset**](https://github.com/bookek/satset) Networking Benchmarks
 
-**Last updated:** June 3, 2026
+**Last updated:** June 3, 2026 (Satset v0.4.0)
 
 These benchmarks compare **Satset** with native Roblox remotes and community networking libraries. The runner fires 200 events per frame for 10 seconds with one local player in Roblox Studio. A `120K / 120K` sent/received count means 120,000 events were sent by the client and verified by the server.
 
