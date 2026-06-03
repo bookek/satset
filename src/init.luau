@@ -121,12 +121,17 @@ function Satset.start(config: SatsetConfig?)
 
 		-- Reliable packet listener.
 		Bridge.getReliable().OnServerEvent:Connect(function(player, payload)
-			if not _guard:consume(player) then
-				return -- Too many requests, dropping.
+			if typeof(payload) ~= "buffer" then
+				return -- Malformed data
 			end
 
-			if typeof(payload) ~= "buffer" then
-				return -- Malformed data.
+			-- Decode before guard, or a rejected reliable batch leaves XOR state behind
+			if not Batcher.decodeClientReliablePayload(player, payload) then
+				return
+			end
+
+			if not _guard:consume(player) then
+				return -- Too many requests, dropping
 			end
 
 			Packet._dispatch(payload, player)
@@ -170,6 +175,11 @@ function Satset.start(config: SatsetConfig?)
 		-- Standard reliable packet listener.
 		Bridge.getReliable().OnClientEvent:Connect(function(payload)
 			if typeof(payload) ~= "buffer" then
+				return
+			end
+
+			-- Broadcast stays raw; direct server traffic carries the tracked flag
+			if not Batcher.decodeServerReliablePayload(payload) then
 				return
 			end
 

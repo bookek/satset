@@ -3,6 +3,8 @@
 -- This file is part of the Satset networking library and is licensed under MIT License; see LICENSE.txt for details
 -- Types — provides optimized serialization primitives and composite types.
 
+local Sanitizer = require(script.Parent.Serialization.Sanitizer)
+
 -- [ Types ]
 
 export type Type<T> = {
@@ -23,11 +25,7 @@ local function fixedSize(size: number)
 	end
 end
 
--- Clamps NaN and ±Infinity to 0. Prevents malicious clients from
--- injecting poisoned floats that propagate through server arithmetic.
-local function sanitizeFloat(v: number): number
-	return if v == v and v ~= math.huge and v ~= -math.huge then v else 0
-end
+local sanitizeFloat = Sanitizer.sanitizeFloat
 
 -- [ Primitives ]
 
@@ -895,7 +893,7 @@ function Types.enum(values: { string }): Type<string>
 	}
 end
 
--- [ Aliases for ByteNet Compatibility ]
+-- ByteNet-style names, kept on purpose
 Types.string = Types.string16
 Types.uint8 = Types.u8
 Types.int8 = Types.i8

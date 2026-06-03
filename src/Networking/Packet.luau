@@ -6,7 +6,7 @@ local SchemaCompiler = require(script.Parent.Parent.Serialization.SchemaCompiler
 local Serializer = require(script.Parent.Parent.Serialization.Serializer)
 local Types = require(script.Parent.Parent.Types)
 
-local protectedCall: (any, ...any) -> (boolean, any) = pcall :: any
+local protectedCall: (any, ...any) -> (boolean, ...any) = pcall :: any
 
 local RunService = game:GetService("RunService")
 
@@ -122,22 +122,43 @@ end
 --[[
 	Decodes and dispatches a single packet to its registered listeners.
 ]]
-function Packet._dispatchSingle(packetId: number, b: buffer, offset: number, sender: Player?)
+function Packet._dispatchSingle(
+	packetId: number,
+	b: buffer,
+	offset: number,
+	sender: Player?,
+	needsConsumed: boolean?
+): number?
 	local def = packetRegistry[packetId]
 	if not def then
 		return
 	end
 
 	if #def.listeners == 0 then
+		if needsConsumed then
+			if def.compiled.fixedSize then
+				return def.compiled.fixedSize
+			end
+
+			local gcStart = Batcher.beginDebugGc()
+			local ok, _, consumedBytes = protectedCall(Serializer.decodeToTable, def.compiled, b, offset)
+			Batcher.recordDebugGc("packetDecode", gcStart)
+			if ok and type(consumedBytes) == "number" then
+				return consumedBytes
+			end
+
+			return 0
+		end
+
 		return
 	end
 
 	local gcStart = Batcher.beginDebugGc()
-	local ok, decoded = protectedCall(Serializer.decodeToTable, def.compiled, b, offset)
+	local ok, decoded, consumedBytes = protectedCall(Serializer.decodeToTable, def.compiled, b, offset)
 	Batcher.recordDebugGc("packetDecode", gcStart)
 
 	if not ok or not decoded then
-		return
+		return if needsConsumed then 0 else nil
 	end
 
 	local data = decoded :: { [string]: any }
@@ -150,6 +171,12 @@ function Packet._dispatchSingle(packetId: number, b: buffer, offset: number, sen
 		end
 	end
 	Batcher.recordDebugGc("listenerCall", gcStart)
+
+	if needsConsumed and type(consumedBytes) == "number" then
+		return consumedBytes
+	end
+
+	return nil
 end
 
 --[[

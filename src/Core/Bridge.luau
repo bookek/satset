@@ -1,72 +1,98 @@
 -- This file is part of the Satset networking library and is licensed under MIT License; see LICENSE.txt for details
--- Bridge — manages underlying RemoteEvent and UnreliableRemoteEvent instances.
+-- Bridge owns Satset's RemoteEvent pair.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-
--- [ Constants ]
 
 local IS_SERVER = RunService:IsServer()
 
 local FOLDER_NAME = "__SatsetBridge"
 local RELIABLE_NAME = "__SatsetReliable"
 local UNRELIABLE_NAME = "__SatsetUnreliable"
+local REMOTE_WAIT_TIMEOUT = 10
 
--- [ State ]
-
-local bridgeFolder: Folder
-local reliableRemote: RemoteEvent
-local unreliableRemote: UnreliableRemoteEvent
+local reliableRemote: RemoteEvent? = nil
+local unreliableRemote: UnreliableRemoteEvent? = nil
+local initialized = false
 
 local Bridge = {}
 
--- [ Public API ]
-
---[[
-	Initializes the bridge folder and remotes. 
-	
-	The server creates the folder and instances in ReplicatedStorage, 
-	while the client waits for them to appear.
-]]
-function Bridge.init()
-	if IS_SERVER then
-		bridgeFolder = Instance.new("Folder")
-		bridgeFolder.Name = FOLDER_NAME
-		bridgeFolder.Parent = ReplicatedStorage
-
-		reliableRemote = Instance.new("RemoteEvent")
-		reliableRemote.Name = RELIABLE_NAME
-		reliableRemote.Parent = bridgeFolder
-
-		unreliableRemote = Instance.new("UnreliableRemoteEvent")
-		unreliableRemote.Name = UNRELIABLE_NAME
-		unreliableRemote.Parent = bridgeFolder
-	else
-		bridgeFolder = ReplicatedStorage:WaitForChild(FOLDER_NAME) :: Folder
-		reliableRemote = bridgeFolder:WaitForChild(RELIABLE_NAME) :: RemoteEvent
-		unreliableRemote = bridgeFolder:WaitForChild(UNRELIABLE_NAME) :: UnreliableRemoteEvent
+local function checkClass(child: Instance, name: string, className: string)
+	if not child:IsA(className) then
+		error(`[Satset] {name} exists but is not a {className}`, 3)
 	end
 end
 
---[[
-	Returns the shared reliable RemoteEvent.
-]]
+local function getServerFolder(): Folder
+	local existing = ReplicatedStorage:FindFirstChild(FOLDER_NAME)
+	if existing then
+		checkClass(existing, FOLDER_NAME, "Folder")
+		return existing :: Folder
+	end
+
+	local folder = Instance.new("Folder")
+	folder.Name = FOLDER_NAME
+	folder.Parent = ReplicatedStorage
+	return folder
+end
+
+local function getServerRemote(parent: Folder, name: string, className: string): Instance
+	local existing = parent:FindFirstChild(name)
+	if existing then
+		checkClass(existing, name, className)
+		return existing
+	end
+
+	local remote = Instance.new(className)
+	remote.Name = name
+	remote.Parent = parent
+	return remote
+end
+
+local function waitForBridgeChild(parent: Instance, name: string, className: string): Instance
+	local child = parent:WaitForChild(name, REMOTE_WAIT_TIMEOUT)
+	if not child then
+		error(`[Satset] Timed out waiting for {name}`, 3)
+	end
+
+	checkClass(child, name, className)
+	return child
+end
+
+function Bridge.init()
+	if initialized then
+		return
+	end
+
+	if IS_SERVER then
+		local folder = getServerFolder()
+		reliableRemote = getServerRemote(folder, RELIABLE_NAME, "RemoteEvent") :: RemoteEvent
+		unreliableRemote = getServerRemote(folder, UNRELIABLE_NAME, "UnreliableRemoteEvent") :: UnreliableRemoteEvent
+	else
+		local folder = waitForBridgeChild(ReplicatedStorage, FOLDER_NAME, "Folder") :: Folder
+		reliableRemote = waitForBridgeChild(folder, RELIABLE_NAME, "RemoteEvent") :: RemoteEvent
+		unreliableRemote = waitForBridgeChild(folder, UNRELIABLE_NAME, "UnreliableRemoteEvent") :: UnreliableRemoteEvent
+	end
+
+	initialized = true
+end
+
 function Bridge.getReliable(): RemoteEvent
-	return reliableRemote
+	local remote = reliableRemote
+	if not remote then
+		error("[Satset] Bridge.init() must run before Bridge.getReliable()", 2)
+	end
+
+	return remote
 end
 
---[[
-	Returns the shared UnreliableRemoteEvent.
-]]
 function Bridge.getUnreliable(): UnreliableRemoteEvent
-	return unreliableRemote
-end
+	local remote = unreliableRemote
+	if not remote then
+		error("[Satset] Bridge.init() must run before Bridge.getUnreliable()", 2)
+	end
 
---[[
-	Helper to check if we are currently executing on the server.
-]]
-function Bridge.isServer(): boolean
-	return IS_SERVER
+	return remote
 end
 
 return Bridge
