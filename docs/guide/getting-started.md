@@ -1,6 +1,6 @@
 # Getting Started
 
-Setting up Satset is straightforward. You need to start the engine on both the server and the client before using it.
+Start Satset once on both the server and the client before defining packets or channels.
 
 ## Initialization
 
@@ -11,16 +11,19 @@ local Satset = require(game:GetService("ReplicatedStorage").Packages.Satset)
 
 Satset.start({
     guard = {
-        maxTokens = 60,
-        refillRate = 30,
+        maxTokens = 1000,
+        refillRate = 500,
         studioBypass = true -- Enabled by default
     },
     batching = {
-        reliableThreshold = 60000, -- Split reliable batches above 60 KB
-        maxPacketsPerFrame = 0, -- Send all ready batches each frame
+        reliableThreshold = 0, -- Commit reliable traffic at the frame flush
+        unreliableThreshold = 900, -- Keep unreliable batches below the safe payload size
+        maxPacketsPerFrame = 0, -- No per-frame send cap
     }
 })
 ```
+
+You can omit the config table and use the same defaults.
 
 ## Your First Packet
 

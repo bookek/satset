@@ -1,10 +1,10 @@
 # Channels
 
-Channels are for **stateful** synchronization. Unlike packets, which represent an *event*, a channel represents the *state* of an object.
+Channels are Satset's state sync path. A packet represents an event. A channel represents the current state of an object.
 
 ## Delta Compression
 
-Channels only send what has changed. When you update a field in a channel, Satset uses a bitmask to identify only the modified fields and sends only those bytes.
+Channels send a full keyframe first. After that, `:set()` marks fields in a 32-bit dirty bitmask and the next flush sends only those field bytes. Periodic keyframes reset drift after dropped unreliable updates.
 
 ## Definition
 
@@ -27,14 +27,14 @@ local PlayerState = Satset.defineChannel({
 ## Updating State (Server)
 
 ```luau
--- Create a stateful entity for a player
+-- Create state for a player
 local entity = PlayerState:create(player.UserId, {
     health = 100,
     mana = 50,
 })
 
--- Later, updating only health
-entity:set("health", 95) -- Only the 1-byte health field is transmitted!
+-- The next flush sends only the 1-byte health field
+entity:set("health", 95)
 ```
 
 ## Reading State (Client)
@@ -46,9 +46,9 @@ end)
 ```
 
 > [!NOTE]
-> Channels are optimized for **zero-allocation** updates. When you call `:set()`, Satset writes directly into a pre-allocated buffer and marks a bitmask. No tables are created during the sync process.
+> Channels write server-side state into a buffer and mark a bitmask. Client subscribers still receive a normal table, because that is the public API boundary.
 
 ## Constraints
 
 - **Fixed-size only**: Channels do not support variable-length types like strings or arrays.
-- **32 Field Limit**: Due to the 32-bit bitmask used for dirty tracking, a single channel can have at most 32 fields.
+- **32 field limit**: A single channel can have at most 32 fields because dirty tracking uses one 32-bit mask.

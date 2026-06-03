@@ -1,53 +1,59 @@
 # Development Patterns
 
-Satset follows strict performance and safety constraints. These patterns keep the library predictable under high-throughput conditions.
+Satset code should stay predictable under high packet volume. Prefer small changes that preserve the current buffer pipeline.
 
-## Allocation-aware hot path
+## Allocation-Aware Hot Path
 
 The send path avoids per-packet queue tables. Satset writes payloads directly into Luau `buffer` streams and commits exact-size buffers at flush time.
 
-* **The Problem**: Table and string allocations can trigger GC pauses. When syncing hundreds of entities, those pauses can reduce frame rate.
-* **The Pattern**: Reuse working buffers on the send path. Decode into tables only at the public API boundary, where packet listeners and channel subscribers receive Lua values.
+Reuse working buffers on the send path. Decode into tables only at the public API boundary, where packet listeners and channel subscribers receive Luau values.
 
-## Deterministic byte alignment
+## Deterministic Byte Alignment
 
 Satset doesn't transmit type metadata or field names. Server and client must share an identical understanding of the buffer layout.
 
-* **The Pattern**: `SchemaCompiler` sorts field definitions alphabetically before calculating memory offsets. This produces the same binary schema across environments, regardless of how the Luau table is ordered.
+`SchemaCompiler` sorts field definitions alphabetically before calculating offsets. Server and client then produce the same binary schema, regardless of Luau table order.
 
-## Mandatory input sanitization
+## Input Sanitization
 
 Network data is untrusted. All numeric inputs must be validated before they reach the server state.
 
-* **The Problem**: Malformed packets with `NaN` or `Infinity` can corrupt physics and state calculations.
-* **The Pattern**: All floating-point types pass through `Sanitizer.sanitizeFloat()`. Values that fail validation are clamped to `0`.
+Malformed packets with `NaN` or `Infinity` can corrupt physics and state calculations. Floating-point types pass through `Sanitizer.sanitizeFloat()`. Invalid values become `0`.
 
-## Bit-density optimization
+## Bit Density
 
 Choose data types based on bit-density.
 
-* **The Pattern**: Use the smallest applicable type (e.g., `u8` for values 0-255). Use quantized types like `Vector3Quantized` for spatial data when full float precision isn't necessary.
+Use the smallest applicable type, such as `u8` for values from 0 to 255. Use quantized types like `Vector3Quantized` for spatial data when full float precision is unnecessary.
 
-## Explicit delta tracking
+## Explicit Delta Tracking
 
-State sync is an explicit, bitmask-tracked process, not an automatic "magic" sync.
+State sync is an explicit, bitmask-tracked process.
 
-* **The Pattern**: `Channels` track modified fields using a 32-bit mask. Only dirty fields are sent. Syncing happens during `PostSimulation`, the same frame phase used by packet batching.
+`Channel` tracks modified fields using a 32-bit mask. Only dirty fields are sent after the first keyframe. Syncing happens during `PostSimulation`, the same frame phase used by packet batching.
 
-## Defensive buffer reads
+## Reliable Batch Compaction
+
+Reliable packet batches are allowed to change shape before they hit `RemoteEvent`.
+
+Repeated packet ids can become a grouped run. Direct reliable batches with the same byte length can be XORed against the previous batch for that peer. Broadcast reliable traffic stays raw because there is no single receiver state to track.
+
+Keep the header flags explicit. The high bits of the reliable header carry tracking and delta state; the low 14 bits remain the item count.
+
+## Defensive Buffer Reads
 
 Every buffer read includes a bounds check.
 
-* **The Pattern**: The `Serializer` verifies buffer length before every read. Out-of-bounds attempts throw errors immediately to prevent undefined behavior.
+`Serializer` verifies buffer length before reads. Out-of-bounds attempts throw and are caught by the packet dispatch protected call.
 
 ## Naming conventions
 
-Satset uses a specific naming convention to maintain code clarity across the library:
+Satset uses these naming conventions:
 
-* **PascalCase**: Used for Modules, Class definitions, and Luau Types (e.g., `SchemaCompiler`, `SatsetConfig`).
-* **camelCase**: Used for public API methods, local variables, and object properties (e.g., `definePacket`, `channelId`, `maxTokens`).
-* **_camelCase** (Leading underscore): Used for internal/private state or functions that should not be accessed by the public API (e.g., `_guard`, `_applyUpdate`).
-* **SCREAMING_SNAKE_CASE**: Used for constants and environment flags (e.g., `IS_SERVER`, `MTU_LIMIT`).
+* **PascalCase**: Modules, class-like tables, and Luau types, such as `SchemaCompiler` and `SatsetConfig`.
+* **camelCase**: Public API methods, locals, and object fields, such as `definePacket`, `channelId`, and `maxTokens`.
+* **_camelCase**: Internal state or functions outside the public API, such as `_guard` and `_applyUpdate`.
+* **SCREAMING_SNAKE_CASE**: Constants and environment flags, such as `IS_SERVER`.
 
 ---
 
