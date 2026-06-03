@@ -1,16 +1,21 @@
 # Packets
 
-Packets are the primary way to send data in Satset. They are designed for **stateless** communication: you send a piece of data, and the receiver handles it.
+Packets are Satset's stateless event path. You send a schema-backed payload, and the receiver handles the decoded table.
 
 ## Automatic Batching
 
 When you call `:fireServer()` or `:fireClient()`, Satset queues the encoded payload instead of sending it immediately. During `PostSimulation`, each queue is committed to one or more buffers and sent through the matching remote.
 
-Reliable batches split at `reliableThreshold`. Unreliable batches split around 900 bytes by default. Fixed-size packet schemas omit payload-size headers.
+Reliable traffic is committed at the frame flush by default. Direct reliable traffic also gets two wire-format passes before send:
+
+- same-packet runs share one packet id and one run count;
+- same-size batches are XORed against the previous batch for that peer.
+
+Unreliable traffic still splits around 900 bytes by default. Fixed-size packet schemas omit payload-size headers.
 
 ## Reliability
 
-By default, packets are **reliable** (order and delivery are guaranteed). You can make a packet **unreliable** by setting the `reliable` flag:
+By default, packets are **reliable**. You can make a packet **unreliable** by setting the `reliable` flag:
 
 ```lua
 local PositionUpdate = Satset.definePacket({
@@ -24,11 +29,11 @@ local PositionUpdate = Satset.definePacket({
 
 ## Schemas
 
-Packets require a schema to know how to pack and unpack data. Satset's `Types` module provides a wide variety of optimized types:
+Packets require a schema to pack and unpack data. Satset's `Types` module provides:
 
 - **Primitives**: `u8`, `u16`, `u32`, `i8`, `i16`, `i32`, `f32`, `f64`, `bool`, `u4`.
 - **Composites**: `array(type)`, `optional(type)`, `map(keyType, valType)`, `enum(values)`.
 - **Roblox**: `Vector3`, `Vector2`, `Color3`, `CFrame`.
-- **Optimized**: `Vector3Quantized`, `Vector2Quantized`, `CFrame` (18-byte compressed).
+- **Compact forms**: `Vector3Quantized`, `Vector2Quantized`, `CFrame` (18-byte compressed).
 
 Check the [Types API](../api/types.md) for more details.

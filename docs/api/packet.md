@@ -6,15 +6,15 @@ Objects returned by `Satset.definePacket`.
 
 ### `:fireServer(data: table)`
 
-**Client Only.** Sends data to the server. Automatically batched.
+**Client Only.** Queues data for the server. Satset sends the batch during `PostSimulation`.
 
 ### `:fireClient(player: Player, data: table)`
 
-**Server Only.** Sends data to a specific player. Automatically batched.
+**Server Only.** Queues data for a specific player.
 
 ### `:fireAllClients(data: table)`
 
-**Server Only.** Sends data to all players. Automatically batched.
+**Server Only.** Queues data for all players.
 
 ### `:listen(callback: (data: table, sender: Player?) -> ())`
 

@@ -1,6 +1,6 @@
 # Installation
 
-Satset can be installed using Wally, the most popular package manager for Roblox.
+Install Satset with Wally, a model file, or Rojo.
 
 ## Wally
 

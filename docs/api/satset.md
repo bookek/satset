@@ -6,12 +6,12 @@ The main entry point for the library.
 
 ### `Satset.start(config: SatsetConfig?)`
 
-Initializes the networking engine. Must be called once on both server and client. Calling it more than once is safe; later calls are ignored with a warning.
+Starts the networking engine. Call it once on both server and client before defining packets or channels. Later calls are ignored with a warning.
 
 - **config**: Optional configuration object.
   - **guard**: Guard configuration (see [Guard API](./guard.md)).
   - **batching**: Batching behavior.
-    - **reliableThreshold**: (number) Size in bytes before a reliable stream is committed and a new stream begins. Default is `60000`. Set to `0` to disable threshold splitting; reliable packets are committed at the frame flush.
+    - **reliableThreshold**: (number) Size in bytes before a reliable stream is committed and a new stream begins. Default is `0`, which commits reliable traffic at the frame flush.
     - **unreliableThreshold**: (number) Size in bytes before an unreliable stream is committed and a new stream begins. Default is `900`.
     - **maxPacketsPerFrame**: (number) Maximum committed batches sent per frame for each queue. Default is `0` (no cap).
 
@@ -56,7 +56,7 @@ Reference to the [Types module](./types.md).
 
 ## Performance Context
 
-Initialization and packet definitions are O(1) operations. For benchmark results under heavy local Studio load, see the [Benchmarks Report](../../benchmark/Benchmarks.md).
+Startup and packet definitions are O(1) operations. Reliable traffic uses frame batching, run grouping for repeated packet ids, and same-size XOR delta encoding for direct reliable batches. For local Studio numbers, see the [Benchmarks Report](../../benchmark/Benchmarks.md).
 
 ## Related Guides
 

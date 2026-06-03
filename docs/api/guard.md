@@ -6,16 +6,18 @@ Configuration for server-side rate limiting.
 
 ```lua
 type GuardConfig = {
-    maxTokens: number?, -- Max burst capacity (default: 60)
-    refillRate: number?, -- Tokens refilled per second (default: 30)
+    maxTokens: number?, -- Max burst capacity (default: 1000)
+    refillRate: number?, -- Tokens refilled per second (default: 500)
     onFlood: ((player: Player) -> ())?, -- Optional flood callback
+    studioBypass: boolean?, -- Skip rate limiting in Studio (default: true)
 }
 ```
 
 The Guard uses a **Token Bucket** algorithm. Each player has a bucket that starts full with `maxTokens`.
 
-- Every packet sent consumes **1 token**.
-- Tokens refill automatically over time at the speed of `refillRate` per second.
+- Every incoming client packet consumes **1 token**.
+- Tokens refill at `refillRate` per second.
 - If a player runs out of tokens, any further packets from them are dropped until the bucket has at least 1 token again.
+- In Studio, rate limiting is skipped by default. Published servers always use the bucket.
 
-This allows players to send small bursts of traffic without being dropped, while still enforcing a strict average limit.
+The defaults are tuned for the benchmark harness and high-frequency game traffic. Tighten them per game if the server expects lower packet volume.
