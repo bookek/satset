@@ -6,11 +6,21 @@ authors = ["Iqbal F <iqbalfauzien@pm.me", "LVSandals <lvsandals-rbx@pm.me>"]
 license = "MIT"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
-exclude = ["**"]
-include = [
-	"default.project.json",
-	"src/**",
-	"LICENSE"
+exclude = [
+	"benchmarks",
+	"CHANGELOG.md",
+	"comparison",
+	"CONTRIBUTING.md",
+	"DevPackages",
+	"package.json",
+	"Packages",
+    "docs",
+	"README.md",
+	"references",
+	"rokit.toml",
+	"scratch",
+	"selene.toml",
+	"stylua.toml",
 ]
 
 [dev-dependencies]
