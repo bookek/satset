@@ -1,12 +1,17 @@
 [package]
 name = "protheeuz/satset"
 description = "High-performance, buffer-backed hybrid networking for Roblox with zero-allocation delta synchronization."
-version = "0.4.0"
+version = "0.4.1"
 authors = ["Iqbal F <iqbalfauzien@pm.me", "LVSandals <lvsandals-rbx@pm.me>"]
 license = "MIT"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
 exclude = ["**"]
+include = [
+	"default.project.json",
+	"src/**",
+	"LICENSE"
+]
 
 [dev-dependencies]
 ByteNet = "ffrostflame/bytenet@0.4.6"
