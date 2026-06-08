@@ -1,0 +1,116 @@
+{
+  "adaptive": {
+    "raw": 600,
+    "textDeltaMinZeroRatio": 0.975,
+    "xor": 0
+  },
+  "codec": "zstd CLI",
+  "codecVersion": "*** Zstandard CLI (64-bit) v1.5.7, by Yann Collet ***",
+  "eventsPerFrame": 200,
+  "frames": 600,
+  "note": "Local Zstd is a layout filter, not a replacement for Roblox Stats.DataSendKbps.",
+  "payload": "Strings",
+  "results": [
+    {
+      "compressedBytesPerEvent": 113.67249166666667,
+      "compressedP50PerFrame": 22736,
+      "compressedP95PerFrame": 22765,
+      "compressedTotal": 13640699,
+      "name": "satset_raw",
+      "ratio": 0.049038509794616825,
+      "rawBytesPerEvent": 2318.025,
+      "rawTotal": 278163000,
+      "savedPercent": 95.0961490205383
+    },
+    {
+      "compressedBytesPerEvent": 113.67249166666667,
+      "compressedP50PerFrame": 22736,
+      "compressedP95PerFrame": 22765,
+      "compressedTotal": 13640699,
+      "name": "satset_adaptive",
+      "ratio": 0.049038509794616825,
+      "rawBytesPerEvent": 2318.025,
+      "rawTotal": 278163000,
+      "savedPercent": 95.0961490205383
+    },
+    {
+      "compressedBytesPerEvent": 113.70969166666667,
+      "compressedP50PerFrame": 22742,
+      "compressedP95PerFrame": 22769,
+      "compressedTotal": 13645163,
+      "name": "zap",
+      "ratio": 0.04903393344832543,
+      "rawBytesPerEvent": 2319,
+      "rawTotal": 278280000,
+      "savedPercent": 95.09660665516746
+    },
+    {
+      "compressedBytesPerEvent": 114.084325,
+      "compressedP50PerFrame": 22823,
+      "compressedP95PerFrame": 22847,
+      "compressedTotal": 13690119,
+      "name": "satset_varuint_candidate",
+      "ratio": 0.051458294335878035,
+      "rawBytesPerEvent": 2217.025,
+      "rawTotal": 266043000,
+      "savedPercent": 94.8541705664122
+    },
+    {
+      "compressedBytesPerEvent": 114.119125,
+      "compressedP50PerFrame": 22819,
+      "compressedP95PerFrame": 22859,
+      "compressedTotal": 13694295,
+      "name": "netray_compile",
+      "ratio": 0.05147410713480257,
+      "rawBytesPerEvent": 2217.02,
+      "rawTotal": 266042400,
+      "savedPercent": 94.85258928651974
+    },
+    {
+      "compressedBytesPerEvent": 114.3517,
+      "compressedP50PerFrame": 22880,
+      "compressedP95PerFrame": 22901,
+      "compressedTotal": 13722204,
+      "name": "satset_u8_legacy",
+      "ratio": 0.0515556407164031,
+      "rawBytesPerEvent": 2218.025,
+      "rawTotal": 266163000,
+      "savedPercent": 94.8444359283597
+    },
+    {
+      "compressedBytesPerEvent": 114.40111666666667,
+      "compressedP50PerFrame": 22890,
+      "compressedP95PerFrame": 22914,
+      "compressedTotal": 13728134,
+      "name": "packet",
+      "ratio": 0.05155525762355415,
+      "rawBytesPerEvent": 2219,
+      "rawTotal": 266280000,
+      "savedPercent": 94.84447423764458
+    },
+    {
+      "compressedBytesPerEvent": 114.91353333333333,
+      "compressedP50PerFrame": 22993,
+      "compressedP95PerFrame": 23015,
+      "compressedTotal": 13789624,
+      "name": "satset_length_plane_candidate",
+      "ratio": 0.05180894414325057,
+      "rawBytesPerEvent": 2218.025,
+      "rawTotal": 266163000,
+      "savedPercent": 94.81910558567495
+    },
+    {
+      "compressedBytesPerEvent": 194.76821666666666,
+      "compressedP50PerFrame": 38977,
+      "compressedP95PerFrame": 39118,
+      "compressedTotal": 23372186,
+      "name": "satset_xor",
+      "ratio": 0.08402334602373429,
+      "rawBytesPerEvent": 2318.025,
+      "rawTotal": 278163000,
+      "savedPercent": 91.59766539762657
+    }
+  ],
+  "variant": "moving",
+  "zstdLevel": 1
+}
