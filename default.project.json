@@ -1,12 +1,6 @@
 {
   "name": "satset",
   "tree": {
-    "$className": "DataModel",
-
-    "ReplicatedStorage": {
-      "Satset": {
-        "$path": "src"
-      }
-    }
+    "$path": "src"
   }
 }
