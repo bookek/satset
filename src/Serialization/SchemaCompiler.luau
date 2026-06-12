@@ -18,6 +18,7 @@ export type CompiledSchema = {
 	fixedSize: number?, -- nil if any field is variable-sized
 	fieldCount: number,
 	fieldsByName: { [string]: FieldDef }, -- O(1) lookup for runtime access
+	compressionProfile: Types.CompressionProfile,
 	encoder: ((b: buffer, offset: number, data: { [string]: any }) -> ())?, -- compiled fast-path encoder
 	decoder: ((b: buffer, offset: number, callback: (...any) -> ()) -> ())?, -- zero-allocation callback decoder
 }
@@ -137,6 +138,7 @@ function SchemaCompiler.compile(schema: { [string]: Types.Type<any> }): Compiled
 	local fields: { FieldDef } = {}
 	local isFixedSize = true
 	local totalFixed = 0
+	local compressionProfile: Types.CompressionProfile? = nil
 
 	for name, typeInfo in schema do
 		table.insert(fields, {
@@ -156,6 +158,17 @@ function SchemaCompiler.compile(schema: { [string]: Types.Type<any> }): Compiled
 
 	for i, field in fields do
 		field.index = i - 1
+
+		local fieldProfile: Types.CompressionProfile = "general"
+		if field.type.compressionProfile ~= nil then
+			fieldProfile = field.type.compressionProfile :: Types.CompressionProfile
+		end
+
+		if compressionProfile == nil then
+			compressionProfile = fieldProfile
+		elseif compressionProfile ~= fieldProfile then
+			compressionProfile = "general" :: Types.CompressionProfile
+		end
 
 		if not field.type.isFixed then
 			isFixedSize = false
@@ -181,6 +194,7 @@ function SchemaCompiler.compile(schema: { [string]: Types.Type<any> }): Compiled
 		fixedSize = if isFixedSize then totalFixed else nil,
 		fieldCount = #fields,
 		fieldsByName = fieldsByName,
+		compressionProfile = compressionProfile or ("general" :: Types.CompressionProfile),
 		encoder = encoder,
 		decoder = decoder,
 	}

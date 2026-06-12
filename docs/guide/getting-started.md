@@ -1,6 +1,7 @@
 # Getting Started
 
-Start Satset once on both the server and the client before defining packets or channels.
+Start Satset once on both the server and the client before defining packets,
+groups, or channels.
 
 ## Initialization
 
@@ -55,7 +56,25 @@ ChatMessage:fireServer({ message = "Hello, world!" })
 
 ```luau
 local ChatMessage = require(path.to.Shared.Packets)
-ChatMessage:listen(function(data, player)
+ChatMessage:listenServer(function(player, data)
     print(player.Name .. " says: " .. data.message)
 end)
 ```
+
+## Sending To A Group
+
+Groups are server-owned packet audiences. Membership is explicit; clients
+cannot subscribe themselves.
+
+```luau
+local RedTeam = Satset.defineGroup("RedTeam")
+
+RedTeam:add(player)
+ChatMessage:fireGroup(RedTeam, { message = "Red team only" })
+
+RedTeam:remove(player)
+RedTeam:destroy()
+```
+
+Satset removes players from groups when they leave the server. See the
+[Group API](../api/group.md) for the lifetime rules.

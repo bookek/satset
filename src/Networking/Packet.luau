@@ -2,6 +2,7 @@
 -- Packet — the public API for stateless, fire-and-forget networking.
 
 local Batcher = require(script.Parent.Parent.Core.Batcher)
+local Group = require(script.Parent.Group)
 local SchemaCompiler = require(script.Parent.Parent.Serialization.SchemaCompiler)
 local Serializer = require(script.Parent.Parent.Serialization.Serializer)
 local Types = require(script.Parent.Parent.Types)
@@ -15,6 +16,8 @@ local RunService = game:GetService("RunService")
 local IS_SERVER = RunService:IsServer()
 
 -- [ Types ]
+
+type GroupObject = Group.Group
 
 export type PacketConfig = {
 	name: string,
@@ -34,7 +37,9 @@ export type Packet = {
 	fireServer: (self: Packet, data: { [string]: any }) -> (),
 	fireClient: (self: Packet, player: Player, data: { [string]: any }) -> (),
 	fireAllClients: (self: Packet, data: { [string]: any }) -> (),
+	fireGroup: (self: Packet, group: GroupObject, data: { [string]: any }) -> (),
 	listen: (self: Packet, callback: (data: { [string]: any }, sender: Player?) -> ()) -> (),
+	listenServer: (self: Packet, callback: (player: Player, data: { [string]: any }) -> ()) -> (),
 }
 
 -- [ State ]
@@ -71,6 +76,7 @@ function Packet.definePacket(config: PacketConfig): Packet
 	if compiled.fixedSize then
 		Batcher.registerFixedSize(id, compiled.fixedSize)
 	end
+	Batcher.registerCompressionProfile(id, compiled.compressionProfile)
 
 	packetRegistry[id] = def
 	packetsByName[config.name] = def
@@ -110,8 +116,42 @@ function Packet.definePacket(config: PacketConfig): Packet
 		Batcher.recordDebugGc("send", gcStart)
 	end
 
+	function self:fireGroup(group: GroupObject, data: { [string]: any })
+		assert(IS_SERVER, "[Satset] fireGroup can only be called from the server")
+
+		local members = Group._getMembers(group)
+		local firstPlayer = next(members)
+		if not firstPlayer then
+			return
+		end
+
+		local gcStart = Batcher.beginDebugGc()
+		local size = compiled.fixedSize or Serializer.calculateSize(compiled, data)
+		Batcher.recordDebugGc("send", gcStart)
+
+		local source, sourceOffset = Batcher.allocateForPlayer(firstPlayer, id, size, def.reliable)
+		gcStart = Batcher.beginDebugGc()
+		Serializer.encodeInto(compiled, data, source, sourceOffset)
+
+		for player in members do
+			if player ~= firstPlayer then
+				local target, targetOffset = Batcher.allocateForPlayer(player, id, size, def.reliable)
+				buffer.copy(target, targetOffset, source, sourceOffset, size)
+			end
+		end
+
+		Batcher.recordDebugGc("send", gcStart)
+	end
+
 	function self:listen(callback: (data: { [string]: any }, sender: Player?) -> ())
 		table.insert(def.listeners, callback)
+	end
+
+	function self:listenServer(callback: (player: Player, data: { [string]: any }) -> ())
+		assert(IS_SERVER, "[Satset] listenServer can only be called from the server")
+		table.insert(def.listeners, function(data, sender)
+			callback(sender :: Player, data)
+		end)
 	end
 
 	return self :: any

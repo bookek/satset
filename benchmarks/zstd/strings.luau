@@ -4,7 +4,7 @@ local serde = require("@lune/serde")
 
 local DEFAULT_FRAMES = 60
 local DEFAULT_EVENTS_PER_FRAME = 200
-local DEFAULT_OUTPUT = "benchmark/zstd/strings-result.json"
+local DEFAULT_OUTPUT = "benchmarks/zstd/strings-result.json"
 local DEFAULT_ZSTD_LEVEL = 1
 local TEXT_DELTA_MIN_ZERO_RATIO = 0.975
 

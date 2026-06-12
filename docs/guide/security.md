@@ -42,6 +42,6 @@ User-registered callbacks are protected before Satset calls them. `Packet:listen
 
 One broken game callback does not stop packet or channel dispatch.
 
-## Stateless Design
+## Declared Schemas
 
-Packets use fixed schemas. Clients cannot send arbitrary keys or nested tables into packet listeners.
+Packets use schemas shared by the server and client. The decoder reads only declared fields; extra table keys are not part of the wire format.

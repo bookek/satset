@@ -14,13 +14,14 @@ exclude = [
 	"DevPackages",
 	"package.json",
 	"Packages",
-    "docs",
+	"docs",
 	"README.md",
 	"references",
 	"rokit.toml",
 	"scratch",
 	"selene.toml",
 	"stylua.toml",
+	"tests",
 ]
 
 [dev-dependencies]

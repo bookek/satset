@@ -1,6 +1,8 @@
 -- This file is part of the Satset networking library and is licensed under MIT License; see LICENSE.txt for details
 -- Bridge owns Satset's RemoteEvent pair.
 
+local Transport = require(script.Parent.Transport)
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
@@ -13,6 +15,7 @@ local REMOTE_WAIT_TIMEOUT = 10
 
 local reliableRemote: RemoteEvent? = nil
 local unreliableRemote: UnreliableRemoteEvent? = nil
+local activeTransport: Transport.Transport? = nil
 local initialized = false
 
 local Bridge = {}
@@ -59,7 +62,35 @@ local function waitForBridgeChild(parent: Instance, name: string, className: str
 	return child
 end
 
-function Bridge.init()
+local function getRemote(reliable: boolean): RemoteEvent | UnreliableRemoteEvent
+	if reliable then
+		return reliableRemote :: RemoteEvent
+	end
+
+	return unreliableRemote :: UnreliableRemoteEvent
+end
+
+local function createRobloxTransport(): Transport.Transport
+	return {
+		sendToServer = function(_, reliable, payload)
+			getRemote(reliable):FireServer(payload)
+		end,
+		sendToClient = function(_, reliable, player, payload)
+			getRemote(reliable):FireClient(player, payload)
+		end,
+		sendToAllClients = function(_, reliable, payload)
+			getRemote(reliable):FireAllClients(payload)
+		end,
+		onServer = function(_, reliable, callback)
+			return getRemote(reliable).OnServerEvent:Connect(callback)
+		end,
+		onClient = function(_, reliable, callback)
+			return getRemote(reliable).OnClientEvent:Connect(callback)
+		end,
+	}
+end
+
+function Bridge.init(injectedTransport: Transport.Transport?)
 	if initialized then
 		return
 	end
@@ -74,25 +105,37 @@ function Bridge.init()
 		unreliableRemote = waitForBridgeChild(folder, UNRELIABLE_NAME, "UnreliableRemoteEvent") :: UnreliableRemoteEvent
 	end
 
+	activeTransport = if injectedTransport then Transport.assertValid(injectedTransport) else createRobloxTransport()
 	initialized = true
 end
 
-function Bridge.getReliable(): RemoteEvent
-	local remote = reliableRemote
-	if not remote then
-		error("[Satset] Bridge.init() must run before Bridge.getReliable()", 2)
+local function getTransport(): Transport.Transport
+	local transport = activeTransport
+	if not transport then
+		error("[Satset] Bridge.init() must run before using the transport", 3)
 	end
 
-	return remote
+	return transport
 end
 
-function Bridge.getUnreliable(): UnreliableRemoteEvent
-	local remote = unreliableRemote
-	if not remote then
-		error("[Satset] Bridge.init() must run before Bridge.getUnreliable()", 2)
-	end
+function Bridge.sendToServer(reliable: boolean, payload: buffer)
+	getTransport():sendToServer(reliable, payload)
+end
 
-	return remote
+function Bridge.sendToClient(reliable: boolean, player: Player, payload: buffer)
+	getTransport():sendToClient(reliable, player, payload)
+end
+
+function Bridge.sendToAllClients(reliable: boolean, payload: buffer)
+	getTransport():sendToAllClients(reliable, payload)
+end
+
+function Bridge.onServer(reliable: boolean, callback: (player: Player, payload: any) -> ()): Transport.Connection
+	return getTransport():onServer(reliable, callback)
+end
+
+function Bridge.onClient(reliable: boolean, callback: (payload: any) -> ()): Transport.Connection
+	return getTransport():onClient(reliable, callback)
 end
 
 return Bridge

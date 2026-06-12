@@ -10,10 +10,14 @@ Satset is organized into four layers:
 
 | Layer | Modules | Responsibility |
 | :--- | :--- | :--- |
-| **Networking** | `Packet`, `Channel` | Public-facing API. Handles definition, dispatch, and listener registration. |
+| **Networking** | `Packet`, `Group`, `Channel` | Public-facing API. Handles definitions, packet audiences, dispatch, and listener registration. |
 | **Serialization** | `SchemaCompiler`, `Serializer`, `Sanitizer`, `Types` | Converts Luau tables into flat binary buffers and back. |
-| **Core** | `Batcher`, `Guard`, `Bridge` | Frame-level batching, rate limiting, and RemoteEvent management. |
+| **Core** | `Batcher`, `Guard`, `Bridge`, `Transport` | Frame-level batching, rate limiting, and packet transport. |
 | **Transport** | `RemoteEvent`, `UnreliableRemoteEvent` | Roblox-native wire protocol. |
+
+`Bridge` uses Roblox remotes by default. Tests may pass a packet transport to
+`Satset.start({ transport = mock })`. The transport boundary carries committed
+buffers only; serialization and batching stay inside Satset.
 
 ## Packet Lifecycle (Stateless)
 
@@ -42,7 +46,7 @@ sequenceDiagram
 
     BT->>BT: commitStream(queue)
     BT->>BT: compact repeated packet-id runs
-    BT->>BT: encode same-size reliable delta
+    BT->>BT: choose raw, XOR, or transposed same-size delta
     Note right of BT: Wire: [u16 count+flags][entry...] or [run marker, id, count, payloads...]
     BT->>BR: getReliable()
     BR->>RE: FireServer(batchBuffer)
@@ -63,7 +67,7 @@ sequenceDiagram
             SR->>SN: sanitizeFloat(value) for floating-point fields
             SR->>SN: checkBounds(buffer, cursor, size)
             SR-->>PK: decoded data table
-            PK->>Dev: listener(data, sender) via pcall
+            PK->>Dev: listener(data, sender) or listenServer(player, data) via pcall
             Note over PK: data table constructed only if listeners exist
         end
     else Token exhausted
@@ -71,13 +75,23 @@ sequenceDiagram
     end
 ```
 
+## Group Fanout
+
+`Packet:fireGroup` resolves the current server-owned membership, encodes the
+payload into the first player's stream, and copies those encoded bytes into the
+remaining member streams. It does not infer audiences from previous sends.
+
+Each member still uses the normal per-player queue. This keeps reliable delta
+history and unreliable sequence tracking separate for every player.
+
 ### Wire Format (Reliable Batch)
 
-The reliable batch header stores a 14-bit item count plus two flags in the high bits:
+The reliable batch header stores a 13-bit item count plus three flags in the high bits:
 
+- `0x2000`: an XOR delta uses the bitpacked transpose layout;
 - `0x4000`: the batch is tracked for reliable delta state;
 - `0x8000`: the payload after the header is XOR delta data;
-- `0x3FFF`: count mask.
+- `0x1FFF`: count mask.
 
 ```luau
 [u16 packetCountAndFlags]
@@ -86,13 +100,25 @@ The reliable batch header stores a 14-bit item count plus two flags in the high 
   ...
 ```
 
-When a reliable batch contains repeated entries with the same packet id, Satset can compact that run:
+When a reliable batch contains repeated entries with the same packet id, Satset can compact that run. Runs up to 255 entries use a three-byte header:
 
 ```luau
-[u8 0][u8 packetId][u16 runCount][payload][payload]...
+[u8 0][u8 packetId][u8 runCount][payload][payload]...
 ```
 
-The run marker is `0`, which is reserved internally. Fixed-size payloads can be split by the compiled packet size. Variable-size payloads are decoded by the packet serializer, which returns the consumed byte count to the batcher.
+Longer runs use a five-byte header:
+
+```luau
+[u8 0][u8 0][u8 packetId][u16 runCount][payload][payload]...
+```
+
+Packet id `0` is reserved internally. Fixed-size payloads can be split by the compiled packet size. Variable-size payloads are decoded by the packet serializer, which returns the consumed byte count to the batcher.
+
+Direct same-size batches keep per-peer history. General payloads use XOR.
+Text payloads stay raw when their XOR result does not contain enough zero
+bytes. Eligible bitpacked payloads can transpose the XOR result before send.
+Broadcast reliable batches stay raw because they do not have one receiver
+history.
 
 ### Wire Format (Unreliable Batch)
 
