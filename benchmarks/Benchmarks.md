@@ -137,7 +137,8 @@ The static result shows how strongly repeated bytes affect Roblox transport comp
 | [BridgeNet2][bridgenet2] | 27,028.97 | 46.60 | ~2,266.000 | 10.17 | 21.75 | 56 | 120K / 120K |
 | Roblox | 108,222.58 | 14.97 | ~2,266.000 | 10.01 | 11.30 | 60 | 120K / 120K |
 
-> NOTE: ByteNet 0.4.6 repeatedly copies its growing buffer while writing strings and cannot finish this workload.
+> [!NOTE]
+ByteNet 0.4.6 repeatedly copies its growing buffer while writing strings and cannot finish this workload.
 
 ## Moving Results
 
