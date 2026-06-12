@@ -224,13 +224,16 @@ ByteNet 0.4.6 repeatedly copies its growing buffer while writing strings and can
 | **Satset** | 1,349.05 | 24.30 | 2,318.025 | 12.23 | 15.23 | 50 | 120K / 120K |
 | [Warp][warp] | 2,262.18 | 4,500.85 | 2,218.009 | 10.36 | 16.47 | 54 | 120K / 120K |
 | [QuickNet][quicknet] | 1,372.26 | 6,124.02 | ~2,319.010 | 10.00 | 15.60 | 60 | 120K / 120K |
-| [ByteNet][bytenet] | skipped | - | - | - | - | - | ByteNet 0.4.6 repeatedly copies its growing buffer while writing strings and cannot finish this workload |
+| [ByteNet][bytenet] | skipped | - | - | - | - | - | - |
 | [NetrayCompile][netray-compile] | 1,361.15 | 4,273.77 | 2,217.020 | 10.74 | 15.99 | 45 | 120K / 120K |
 | [Zap][zap] | 1,359.71 | 7,433.22 | 2,319.000 | 10.13 | 16.45 | 57 | 120K / 120K |
 | [Blink][blink] | 1,366.43 | 9,505.32 | 2,319.000 | 10.17 | 15.68 | 53 | 120K / 120K |
 | [Packet][packet] | 1,340.62 | 2,168.76 | ~2,266.000 | 10.16 | 15.32 | 58 | 120K / 120K |
 | [BridgeNet2][bridgenet2] | 27,836.51 | 35.23 | ~2,266.000 | 10.89 | 21.91 | 54 | 120K / 120K |
 | Roblox | 121,739.66 | 14.31 | ~2,266.000 | 12.98 | 10.76 | 43 | 120K / 120K |
+
+> [!NOTE]
+ByteNet 0.4.6 repeatedly copies its growing buffer while writing strings and cannot finish this workload.
 
 ## Method
 
