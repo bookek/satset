@@ -1,0 +1,4051 @@
+{
+    "Vectors": {
+        "warp": {
+            "DrainDuration": 3.998423045999516,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                2.940424742240478,
+                0.4682279828906557,
+                4.509882508643337,
+                4.630440042921364,
+                4.836324164561053,
+                4.836324164561053
+            ],
+            "Framerate": [
+                45,
+                36,
+                52,
+                58,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                1.9602830410003663,
+                0.3459997773170471,
+                4.122767925262451,
+                4.35955286026001,
+                4.630439758300781,
+                4.630439758300781
+            ],
+            "WireShape": {
+                "byteSource": "measured-buffer",
+                "encodedBytes": 72241146,
+                "rawBytesPerCommit": 126075.29842931938,
+                "encodedBytesPerCommit": 126075.29842931938,
+                "encodedZeroRatio": 0.9534100691038318,
+                "encodeCalls": 573,
+                "encodedZeroBytes": 68875436,
+                "encodedBytesPerPacket": 602.00955,
+                "bytesPerPacket": 602.00955,
+                "rawBytes": 72241146,
+                "rawBytesPerPacket": 602.00955
+            },
+            "DebugStats": {
+                "clientEncodeCalls": 573,
+                "clientEncodedZeroBytes": 68875436,
+                "clientEncodedBytes": 72241146,
+                "clientRawBytes": 72241146
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 1331.584,
+                "positiveGcBytesPerPacket": 1331.584,
+                "apiPositiveGcKb": 16796,
+                "cyclePositiveGcKb": 156045,
+                "cycleNetGcKb": 13784,
+                "apiNetGcKb": 5831,
+                "netGcKb": 13784,
+                "positiveGcKb": 156045,
+                "apiPositiveGcBytesPerPacket": 143.32586666666666,
+                "cycleSamples": 600
+            },
+            "Duration": 16.20051131299988,
+            "Recieve": 120000
+        },
+        "bridgenet2": {
+            "DrainDuration": 21.865859263998574,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                15671.932457979929,
+                11243.767538059086,
+                15740.361172486264,
+                15878.343274258143,
+                15883.153170706499,
+                15883.153170706499
+            ],
+            "Framerate": [
+                60,
+                53,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                15670.541015625,
+                9931.994140625,
+                15688.302734375,
+                15737.169921875,
+                15740.3603515625,
+                15740.3603515625
+            ],
+            "WireShape": {
+                "byteSource": "schema-estimate",
+                "bytesPerPacket": 1202,
+                "estimatedBytesPerPacket": 1202
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 36.5568,
+                "positiveGcBytesPerPacket": 36.5568,
+                "apiPositiveGcKb": 8,
+                "cyclePositiveGcKb": 4284,
+                "cycleNetGcKb": 4284,
+                "apiNetGcKb": 8,
+                "netGcKb": 4284,
+                "positiveGcKb": 4284,
+                "apiPositiveGcBytesPerPacket": 0.06826666666666667,
+                "cycleSamples": 600
+            },
+            "Duration": 10.281887514000119,
+            "Recieve": 120000
+        },
+        "quicknet": {
+            "DrainDuration": 8.134191633002047,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                38.92907536404962,
+                29.1156669542913,
+                39.07949651447282,
+                39.109094752100478,
+                39.324751043865408,
+                39.324751043865408
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                38.929073333740237,
+                29.115665435791017,
+                39.07949447631836,
+                39.109092712402347,
+                39.32474899291992,
+                39.32474899291992
+            ],
+            "WireShape": {
+                "byteSource": "schema-estimate",
+                "sendCalls": 600,
+                "rawBytesPerCommit": 120602,
+                "bytesPerPacket": 603.01,
+                "rawBytes": 72361200,
+                "rawBytesPerPacket": 603.01
+            },
+            "DebugStats": {
+                "clientRawBytes": 72361200,
+                "clientSendCalls": 600
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 63.75253333333333,
+                "positiveGcBytesPerPacket": 63.75253333333333,
+                "apiPositiveGcKb": 7192,
+                "cyclePositiveGcKb": 7471,
+                "cycleNetGcKb": -13430,
+                "apiNetGcKb": 2404,
+                "netGcKb": -13430,
+                "positiveGcKb": 7471,
+                "apiPositiveGcBytesPerPacket": 61.37173333333333,
+                "cycleSamples": 600
+            },
+            "Duration": 10.014304799999082,
+            "Recieve": 120000
+        },
+        "bytenet": {
+            "DrainDuration": 9.233492113002285,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                72.61276623822255,
+                58.35071105103907,
+                72.85698316990477,
+                73.15924453820799,
+                73.15924453820799,
+                73.15924453820799
+            ],
+            "Framerate": [
+                60,
+                60,
+                61,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                72.5526123046875,
+                58.3507080078125,
+                72.85697937011719,
+                73.15924072265625,
+                73.15924072265625,
+                73.15924072265625
+            ],
+            "WireShape": {
+                "byteSource": "schema-estimate",
+                "bytesPerPacket": 1202,
+                "estimatedBytesPerPacket": 1202
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 1195.6138666666666,
+                "positiveGcBytesPerPacket": 1195.6138666666666,
+                "apiPositiveGcKb": 513,
+                "cyclePositiveGcKb": 140111,
+                "cycleNetGcKb": 633,
+                "apiNetGcKb": 513,
+                "netGcKb": 633,
+                "positiveGcKb": 140111,
+                "apiPositiveGcBytesPerPacket": 4.3776,
+                "cycleSamples": 600
+            },
+            "Duration": 9.99978074200044,
+            "Recieve": 120000
+        },
+        "roblox": {
+            "DrainDuration": 9.53399663899836,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                88178.76645386583,
+                54084.79578949176,
+                103920.03862966926,
+                104181.52887098986,
+                113553.2637347639,
+                113553.2637347639
+            ],
+            "Framerate": [
+                60,
+                52,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                87553.640625,
+                54084.79296875,
+                103073.15625,
+                104181.5234375,
+                113553.2578125,
+                113553.2578125
+            ],
+            "WireShape": {
+                "byteSource": "schema-estimate",
+                "bytesPerPacket": 1202,
+                "estimatedBytesPerPacket": 1202
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 6.4512,
+                "positiveGcBytesPerPacket": 6.4512,
+                "apiPositiveGcKb": 0,
+                "cyclePositiveGcKb": 756,
+                "cycleNetGcKb": 756,
+                "apiNetGcKb": 0,
+                "netGcKb": 756,
+                "positiveGcKb": 756,
+                "apiPositiveGcBytesPerPacket": 0,
+                "cycleSamples": 600
+            },
+            "Duration": 11.148620271000255,
+            "Recieve": 120000
+        },
+        "satset": {
+            "DrainDuration": 3.6837889270027519,
+            "PayloadVariant": "static",
+            "ServerDebugStats": {
+                "deltaTransposed": 0,
+                "unreliableCommits": 0,
+                "receiveDecodeGcKb": 1,
+                "groupedRuns": 0,
+                "exactBufferPoolRejectedBySizeCap": 0,
+                "reliableCommits": 0,
+                "deltaSkipped": 1,
+                "listenerCallGcSamples": 120000,
+                "packetDecodeGcSamples": 120000,
+                "exactBufferPoolRejectedBySizeClassCap": 0,
+                "deltaEncoded": 0,
+                "exactBufferPoolHits": 0,
+                "adapterGcSamples": 0,
+                "sendGcSamples": 0,
+                "deltaTransposedBytes": 0,
+                "listenerDispatchGcKb": 0,
+                "exactBufferPoolBytes": 0,
+                "adapterGcKb": 0,
+                "exactBufferPoolSizeClasses": 0,
+                "deltaXorChosen": 0,
+                "reliableCommitBytes": 0,
+                "commitGcKb": 0,
+                "receiveDecodeGcSamples": 120600,
+                "commitGcSamples": 0,
+                "listenerCallGcKb": -5015,
+                "streamGrowths": 0,
+                "streamGrowthBytes": 0,
+                "listenerDispatchGcSamples": 0,
+                "packetDecodeGcKb": 202500,
+                "exactBufferPoolMisses": 0,
+                "groupedPackets": 0,
+                "ungroupedPackets": 0,
+                "groupedDecodeBytes": 72240000,
+                "deltaDecoded": 599,
+                "groupedHeaderBytesSaved": 0,
+                "exactBufferPoolRejectedByTotalByteCap": 0,
+                "exactBufferPoolRejectedByPerSizeCap": 0,
+                "deltaZeroBytes": 0,
+                "deltaStoredBytes": 72243000,
+                "deltaRawChosen": 0,
+                "sendGcKb": 0,
+                "unreliableCommitBytes": 0,
+                "deltaInputBytes": 0,
+                "exactBufferPoolAcceptedReleases": 0
+            },
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                2.5739795119900679,
+                2.136810175759125,
+                2.6063260007223567,
+                2.6191576893188275,
+                2.6191576893188275,
+                2.6191576893188275
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                2.573979377746582,
+                2.136810064315796,
+                2.60632586479187,
+                2.619157552719116,
+                2.619157552719116,
+                2.619157552719116
+            ],
+            "WireShape": {
+                "reliableCommitBytes": 72243000,
+                "deltaZeroBytes": 72121397,
+                "groupedRuns": 600,
+                "reliableCommits": 600,
+                "bytesPerPacket": 602.025,
+                "rawBytes": 72243000,
+                "rawBytesPerPacket": 602.025,
+                "byteSource": "measured-buffer",
+                "deltaRawChosen": 0,
+                "deltaTransposedBytes": 0,
+                "rawBytesPerCommit": 120405,
+                "groupedHeaderBytesSaved": 358200,
+                "groupedHeaderBytesSavedPerCommit": 597,
+                "deltaTransposed": 0,
+                "deltaXorChosen": 599,
+                "deltaZeroRatio": 0.9983167504118046,
+                "groupedPackets": 120000,
+                "deltaInputBytes": 72243000,
+                "bytesPerCommit": 120405
+            },
+            "DebugStats": {
+                "exactBufferPoolAcceptedReleases": 600,
+                "unreliableCommits": 0,
+                "receiveDecodeGcKb": 0,
+                "groupedRuns": 600,
+                "exactBufferPoolRejectedBySizeCap": 0,
+                "reliableCommits": 600,
+                "deltaSkipped": 1,
+                "listenerCallGcSamples": 0,
+                "packetDecodeGcSamples": 0,
+                "exactBufferPoolRejectedBySizeClassCap": 0,
+                "streamGrowths": 1,
+                "exactBufferPoolHits": 599,
+                "adapterGcSamples": 120000,
+                "sendGcSamples": 240001,
+                "deltaTransposedBytes": 0,
+                "listenerDispatchGcKb": 0,
+                "exactBufferPoolBytes": 120405,
+                "adapterGcKb": 0,
+                "exactBufferPoolSizeClasses": 1,
+                "deltaXorChosen": 599,
+                "reliableCommitBytes": 72243000,
+                "commitGcKb": 117,
+                "receiveDecodeGcSamples": 0,
+                "commitGcSamples": 600,
+                "packetDecodeGcKb": 0,
+                "deltaTransposed": 0,
+                "streamGrowthBytes": 131072,
+                "deltaRawChosen": 0,
+                "groupedPackets": 120000,
+                "exactBufferPoolMisses": 1,
+                "deltaZeroBytes": 72121397,
+                "listenerDispatchGcSamples": 0,
+                "deltaEncoded": 599,
+                "deltaDecoded": 0,
+                "groupedHeaderBytesSaved": 358200,
+                "groupedDecodeBytes": 0,
+                "exactBufferPoolRejectedByPerSizeCap": 0,
+                "ungroupedPackets": 0,
+                "deltaStoredBytes": 72243000,
+                "exactBufferPoolRejectedByTotalByteCap": 0,
+                "sendGcKb": 129,
+                "unreliableCommitBytes": 0,
+                "deltaInputBytes": 72243000,
+                "listenerCallGcKb": 0
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 8.302933333333334,
+                "positiveGcBytesPerPacket": 8.302933333333334,
+                "apiPositiveGcKb": 129,
+                "cyclePositiveGcKb": 973,
+                "cycleNetGcKb": 973,
+                "apiNetGcKb": 129,
+                "netGcKb": 973,
+                "positiveGcKb": 973,
+                "apiPositiveGcBytesPerPacket": 1.1008,
+                "cycleSamples": 600
+            },
+            "Duration": 10.047844128999714,
+            "Recieve": 120000
+        },
+        "netray_compile": {
+            "DrainDuration": 9.333824346998881,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                72.5656072305306,
+                55.62906936856706,
+                72.97365187716139,
+                73.2592835783108,
+                73.2592835783108,
+                73.2592835783108
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                72.63504791259766,
+                55.629066467285159,
+                72.9552993774414,
+                72.97364807128906,
+                72.97364807128906,
+                72.97364807128906
+            ],
+            "WireShape": {
+                "byteSource": "measured-buffer",
+                "sendCalls": 600,
+                "rawBytesPerCommit": 240204,
+                "bytesPerPacket": 1201.02,
+                "rawBytes": 144122400,
+                "rawBytesPerPacket": 1201.02
+            },
+            "DebugStats": {
+                "clientRawBytes": 144122400,
+                "clientSendCalls": 600
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 2351.991466666667,
+                "positiveGcBytesPerPacket": 2351.991466666667,
+                "apiPositiveGcKb": 385,
+                "cyclePositiveGcKb": 275624,
+                "cycleNetGcKb": -2436,
+                "apiNetGcKb": 385,
+                "netGcKb": -2436,
+                "positiveGcKb": 275624,
+                "apiPositiveGcBytesPerPacket": 3.2853333333333336,
+                "cycleSamples": 600
+            },
+            "Duration": 10.015984762998415,
+            "Recieve": 120000
+        },
+        "packet": {
+            "DrainDuration": 9.182956564000051,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                58.86893770160185,
+                28.84024921385627,
+                65.2079272900184,
+                68.93170287086224,
+                69.64799099814826,
+                69.64799099814826
+            ],
+            "Framerate": [
+                60,
+                57,
+                60,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                58.868934631347659,
+                27.284549713134767,
+                65.20792388916016,
+                68.64567565917969,
+                69.64798736572266,
+                69.64798736572266
+            ],
+            "WireShape": {
+                "byteSource": "schema-estimate",
+                "bytesPerPacket": 1202,
+                "estimatedBytesPerPacket": 1202
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 1263.0101333333335,
+                "positiveGcBytesPerPacket": 1263.0101333333335,
+                "apiPositiveGcKb": 8524,
+                "cyclePositiveGcKb": 148009,
+                "cycleNetGcKb": 4675,
+                "apiNetGcKb": 8524,
+                "netGcKb": 4675,
+                "positiveGcKb": 148009,
+                "apiPositiveGcBytesPerPacket": 72.73813333333334,
+                "cycleSamples": 600
+            },
+            "Duration": 11.981181643001037,
+            "Recieve": 120000
+        },
+        "blink": {
+            "DrainDuration": 8.983807851000165,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                72.27959819106133,
+                55.333880449363167,
+                72.67682861239499,
+                72.77244947408974,
+                73.07004467056959,
+                73.07004467056959
+            ],
+            "Framerate": [
+                60,
+                53,
+                60,
+                60,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                72.27959442138672,
+                55.23069763183594,
+                72.766845703125,
+                72.77244567871094,
+                72.97590637207031,
+                72.97590637207031
+            ],
+            "WireShape": {
+                "byteSource": "measured-buffer",
+                "sendCalls": 600,
+                "rawBytesPerCommit": 240600,
+                "bytesPerPacket": 1203,
+                "rawBytes": 144360000,
+                "rawBytesPerPacket": 1203
+            },
+            "DebugStats": {
+                "clientRawBytes": 144360000,
+                "clientSendCalls": 600
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 5679.138133333333,
+                "positiveGcBytesPerPacket": 5679.138133333333,
+                "apiPositiveGcKb": 558978,
+                "cyclePositiveGcKb": 665524,
+                "cycleNetGcKb": 11939,
+                "apiNetGcKb": 558978,
+                "netGcKb": 11939,
+                "positiveGcKb": 665524,
+                "apiPositiveGcBytesPerPacket": 4769.9456,
+                "cycleSamples": 600
+            },
+            "Duration": 10.148143310998421,
+            "Recieve": 120000
+        },
+        "zap": {
+            "DrainDuration": 8.949454853998759,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                72.18738169455264,
+                56.53365239303966,
+                73.10136794827543,
+                73.16185504437428,
+                73.16185504437428,
+                73.16185504437428
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                72.1873779296875,
+                56.53364944458008,
+                73.10136413574219,
+                73.46292877197266,
+                73.46292877197266,
+                73.46292877197266
+            ],
+            "WireShape": {
+                "byteSource": "measured-buffer",
+                "sendCalls": 600,
+                "rawBytesPerCommit": 240600,
+                "bytesPerPacket": 1203,
+                "rawBytes": 144360000,
+                "rawBytesPerPacket": 1203
+            },
+            "DebugStats": {
+                "clientRawBytes": 144360000,
+                "clientSendCalls": 600
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 3680.4693333333336,
+                "positiveGcBytesPerPacket": 3680.4693333333336,
+                "apiPositiveGcKb": 299399,
+                "cyclePositiveGcKb": 431305,
+                "cycleNetGcKb": 11294,
+                "apiNetGcKb": 54122,
+                "netGcKb": 11294,
+                "positiveGcKb": 431305,
+                "apiPositiveGcBytesPerPacket": 2554.8714666666667,
+                "cycleSamples": 600
+            },
+            "Duration": 10.015247655999702,
+            "Recieve": 120000
+        }
+    },
+    "Booleans": {
+        "warp": {
+            "DrainDuration": 3.766631189999316,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                2.858295462356973,
+                2.2164930454529125,
+                3.0920144740052537,
+                3.488894167708292,
+                5.719996264720615,
+                5.719996264720615
+            ],
+            "Framerate": [
+                60,
+                56,
+                60,
+                60,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                2.7759575843811037,
+                2.043186902999878,
+                3.0920143127441408,
+                3.488893985748291,
+                5.743535041809082,
+                5.743535041809082
+            ],
+            "WireShape": {
+                "byteSource": "measured-buffer",
+                "encodedBytes": 15361068,
+                "rawBytesPerCommit": 28766.044943820223,
+                "encodedBytesPerCommit": 28766.044943820223,
+                "encodedZeroRatio": 0.9166689451540739,
+                "encodeCalls": 534,
+                "encodedZeroBytes": 14081014,
+                "encodedBytesPerPacket": 128.0089,
+                "bytesPerPacket": 128.0089,
+                "rawBytes": 15361068,
+                "rawBytesPerPacket": 128.0089
+            },
+            "DebugStats": {
+                "clientEncodeCalls": 534,
+                "clientEncodedZeroBytes": 14081014,
+                "clientEncodedBytes": 15361068,
+                "clientRawBytes": 15361068
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 398.2592,
+                "positiveGcBytesPerPacket": 398.2592,
+                "apiPositiveGcKb": 16787,
+                "cyclePositiveGcKb": 46671,
+                "cycleNetGcKb": 2284,
+                "apiNetGcKb": 15295,
+                "netGcKb": 2284,
+                "positiveGcKb": 46671,
+                "apiPositiveGcBytesPerPacket": 143.24906666666667,
+                "cycleSamples": 600
+            },
+            "Duration": 10.880919995001023,
+            "Recieve": 120000
+        },
+        "bridgenet2": {
+            "DrainDuration": 21.53053992200148,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                24102.273516352932,
+                18962.399561620143,
+                24232.52921871659,
+                24251.052067278797,
+                24294.620721777796,
+                24294.620721777796
+            ],
+            "Framerate": [
+                58,
+                56,
+                59,
+                59,
+                59,
+                59
+            ],
+            "Bandwidth": [
+                23135.912109375,
+                17865.400390625,
+                23387.3515625,
+                23504.810546875,
+                23552.4609375,
+                23552.4609375
+            ],
+            "WireShape": {
+                "byteSource": "schema-estimate",
+                "bytesPerPacket": 1002,
+                "estimatedBytesPerPacket": 1002
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 44.98773333333333,
+                "positiveGcBytesPerPacket": 44.98773333333333,
+                "apiPositiveGcKb": 0,
+                "cyclePositiveGcKb": 5272,
+                "cycleNetGcKb": -17058,
+                "apiNetGcKb": 0,
+                "netGcKb": -17058,
+                "positiveGcKb": 5272,
+                "apiPositiveGcBytesPerPacket": 0,
+                "cycleSamples": 600
+            },
+            "Duration": 10.46708272700198,
+            "Recieve": 120000
+        },
+        "quicknet": {
+            "DrainDuration": 5.349833909000154,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                10.342999997742446,
+                8.022382200931553,
+                10.414370126281583,
+                10.436881609694418,
+                10.452539035437774,
+                10.452539035437774
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                10.342999458312989,
+                8.022381782531739,
+                10.414369583129883,
+                10.436881065368653,
+                10.45253849029541,
+                10.45253849029541
+            ],
+            "WireShape": {
+                "byteSource": "schema-estimate",
+                "sendCalls": 600,
+                "rawBytesPerCommit": 200602,
+                "bytesPerPacket": 1003.01,
+                "rawBytes": 120361200,
+                "rawBytesPerPacket": 1003.01
+            },
+            "DebugStats": {
+                "clientRawBytes": 120361200,
+                "clientSendCalls": 600
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 79.1808,
+                "positiveGcBytesPerPacket": 79.1808,
+                "apiPositiveGcKb": 7501,
+                "cyclePositiveGcKb": 9279,
+                "cycleNetGcKb": 9279,
+                "apiNetGcKb": 7501,
+                "netGcKb": 9279,
+                "positiveGcKb": 9279,
+                "apiPositiveGcBytesPerPacket": 64.00853333333333,
+                "cycleSamples": 600
+            },
+            "Duration": 10.016709753999749,
+            "Recieve": 120000
+        },
+        "bytenet": {
+            "DrainDuration": 6.695286870999553,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                18.977870023586477,
+                15.288630329224518,
+                19.02313713104988,
+                19.122508886461639,
+                19.122508886461639,
+                19.122508886461639
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                19.000486373901368,
+                15.288629531860352,
+                19.043161392211915,
+                19.047834396362306,
+                19.047834396362306,
+                19.047834396362306
+            ],
+            "WireShape": {
+                "byteSource": "schema-estimate",
+                "bytesPerPacket": 1002,
+                "estimatedBytesPerPacket": 1002
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 992.5546666666667,
+                "positiveGcBytesPerPacket": 992.5546666666667,
+                "apiPositiveGcKb": 0,
+                "cyclePositiveGcKb": 116315,
+                "cycleNetGcKb": -1596,
+                "apiNetGcKb": 0,
+                "netGcKb": -1596,
+                "positiveGcKb": 116315,
+                "apiPositiveGcBytesPerPacket": 0,
+                "cycleSamples": 600
+            },
+            "Duration": 10.005685495998478,
+            "Recieve": 120000
+        },
+        "roblox": {
+            "DrainDuration": 10.297342558998935,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                55823.76015541467,
+                45580.084330059726,
+                58820.97334129265,
+                58881.171230055996,
+                59073.56777706009,
+                59073.56777706009
+            ],
+            "Framerate": [
+                53,
+                47,
+                54,
+                54,
+                54,
+                54
+            ],
+            "Bandwidth": [
+                49394.13671875,
+                39604.23046875,
+                52011.69921875,
+                52071.0234375,
+                52509.8359375,
+                52509.8359375
+            ],
+            "WireShape": {
+                "byteSource": "schema-estimate",
+                "bytesPerPacket": 1002,
+                "estimatedBytesPerPacket": 1002
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 14.9504,
+                "positiveGcBytesPerPacket": 14.9504,
+                "apiPositiveGcKb": 0,
+                "cyclePositiveGcKb": 1752,
+                "cycleNetGcKb": 1752,
+                "apiNetGcKb": 0,
+                "netGcKb": 1752,
+                "positiveGcKb": 1752,
+                "apiPositiveGcBytesPerPacket": 0,
+                "cycleSamples": 600
+            },
+            "Duration": 11.652463833001093,
+            "Recieve": 120000
+        },
+        "satset": {
+            "DrainDuration": 3.5983499249996386,
+            "PayloadVariant": "static",
+            "ServerDebugStats": {
+                "deltaTransposed": 0,
+                "unreliableCommits": 0,
+                "receiveDecodeGcKb": 0,
+                "groupedRuns": 0,
+                "exactBufferPoolRejectedBySizeCap": 0,
+                "reliableCommits": 0,
+                "deltaSkipped": 1,
+                "listenerCallGcSamples": 120000,
+                "packetDecodeGcSamples": 120000,
+                "exactBufferPoolRejectedBySizeClassCap": 0,
+                "deltaEncoded": 0,
+                "exactBufferPoolHits": 0,
+                "adapterGcSamples": 0,
+                "sendGcSamples": 0,
+                "deltaTransposedBytes": 0,
+                "listenerDispatchGcKb": 0,
+                "exactBufferPoolBytes": 0,
+                "adapterGcKb": 0,
+                "exactBufferPoolSizeClasses": 0,
+                "deltaXorChosen": 0,
+                "reliableCommitBytes": 0,
+                "commitGcKb": 0,
+                "receiveDecodeGcSamples": 120600,
+                "commitGcSamples": 0,
+                "listenerCallGcKb": -39520,
+                "streamGrowths": 0,
+                "streamGrowthBytes": 0,
+                "listenerDispatchGcSamples": 0,
+                "packetDecodeGcKb": 24551,
+                "exactBufferPoolMisses": 0,
+                "groupedPackets": 0,
+                "ungroupedPackets": 0,
+                "groupedDecodeBytes": 15240000,
+                "deltaDecoded": 599,
+                "groupedHeaderBytesSaved": 0,
+                "exactBufferPoolRejectedByTotalByteCap": 0,
+                "exactBufferPoolRejectedByPerSizeCap": 0,
+                "deltaZeroBytes": 0,
+                "deltaStoredBytes": 15243000,
+                "deltaRawChosen": 0,
+                "sendGcKb": 0,
+                "unreliableCommitBytes": 0,
+                "deltaInputBytes": 0,
+                "exactBufferPoolAcceptedReleases": 0
+            },
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                2.3529619013572669,
+                1.9848482451881245,
+                2.5103691933496554,
+                2.5282198317165518,
+                2.556947603066506,
+                2.556947603066506
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                2.352961778640747,
+                1.984848141670227,
+                2.510369062423706,
+                2.528219699859619,
+                2.5569474697113039,
+                2.5569474697113039
+            ],
+            "WireShape": {
+                "reliableCommitBytes": 15243000,
+                "deltaZeroBytes": 15216397,
+                "groupedRuns": 600,
+                "reliableCommits": 600,
+                "bytesPerPacket": 127.025,
+                "rawBytes": 15243000,
+                "rawBytesPerPacket": 127.025,
+                "byteSource": "measured-buffer",
+                "deltaRawChosen": 0,
+                "deltaTransposedBytes": 0,
+                "rawBytesPerCommit": 25405,
+                "groupedHeaderBytesSaved": 358200,
+                "groupedHeaderBytesSavedPerCommit": 597,
+                "deltaTransposed": 0,
+                "deltaXorChosen": 599,
+                "deltaZeroRatio": 0.998254739880601,
+                "groupedPackets": 120000,
+                "deltaInputBytes": 15243000,
+                "bytesPerCommit": 25405
+            },
+            "DebugStats": {
+                "exactBufferPoolAcceptedReleases": 600,
+                "unreliableCommits": 0,
+                "receiveDecodeGcKb": 0,
+                "groupedRuns": 600,
+                "exactBufferPoolRejectedBySizeCap": 0,
+                "reliableCommits": 600,
+                "deltaSkipped": 1,
+                "listenerCallGcSamples": 0,
+                "packetDecodeGcSamples": 0,
+                "exactBufferPoolRejectedBySizeClassCap": 0,
+                "streamGrowths": 0,
+                "exactBufferPoolHits": 599,
+                "adapterGcSamples": 120000,
+                "sendGcSamples": 240000,
+                "deltaTransposedBytes": 0,
+                "listenerDispatchGcKb": 0,
+                "exactBufferPoolBytes": 145810,
+                "adapterGcKb": 0,
+                "exactBufferPoolSizeClasses": 2,
+                "deltaXorChosen": 599,
+                "reliableCommitBytes": 15243000,
+                "commitGcKb": 25,
+                "receiveDecodeGcSamples": 0,
+                "commitGcSamples": 600,
+                "packetDecodeGcKb": 0,
+                "deltaTransposed": 0,
+                "streamGrowthBytes": 0,
+                "deltaRawChosen": 0,
+                "groupedPackets": 120000,
+                "exactBufferPoolMisses": 1,
+                "deltaZeroBytes": 15216397,
+                "listenerDispatchGcSamples": 0,
+                "deltaEncoded": 599,
+                "deltaDecoded": 0,
+                "groupedHeaderBytesSaved": 358200,
+                "groupedDecodeBytes": 0,
+                "exactBufferPoolRejectedByPerSizeCap": 0,
+                "ungroupedPackets": 0,
+                "deltaStoredBytes": 15243000,
+                "exactBufferPoolRejectedByTotalByteCap": 0,
+                "sendGcKb": 1,
+                "unreliableCommitBytes": 0,
+                "deltaInputBytes": 15243000,
+                "listenerCallGcKb": 0
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 16.0768,
+                "positiveGcBytesPerPacket": 16.0768,
+                "apiPositiveGcKb": 1,
+                "cyclePositiveGcKb": 1884,
+                "cycleNetGcKb": 1884,
+                "apiNetGcKb": 1,
+                "netGcKb": 1884,
+                "positiveGcKb": 1884,
+                "apiPositiveGcBytesPerPacket": 0.008533333333333334,
+                "cycleSamples": 600
+            },
+            "Duration": 10.054939702979982,
+            "Recieve": 120000
+        },
+        "netray_compile": {
+            "DrainDuration": 5.764803941998252,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                10.301275494332339,
+                7.943926271851964,
+                10.352799362628858,
+                10.478124211332692,
+                10.478124211332692,
+                10.478124211332692
+            ],
+            "Framerate": [
+                60,
+                60,
+                61,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                10.307817459106446,
+                7.943925857543945,
+                10.343667030334473,
+                10.478123664855957,
+                10.478123664855957,
+                10.478123664855957
+            ],
+            "WireShape": {
+                "byteSource": "measured-buffer",
+                "sendCalls": 600,
+                "rawBytesPerCommit": 25404,
+                "bytesPerPacket": 127.02,
+                "rawBytes": 15242400,
+                "rawBytesPerPacket": 127.02
+            },
+            "DebugStats": {
+                "clientRawBytes": 15242400,
+                "clientSendCalls": 600
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 266.33386666666669,
+                "positiveGcBytesPerPacket": 266.33386666666669,
+                "apiPositiveGcKb": 0,
+                "cyclePositiveGcKb": 31211,
+                "cycleNetGcKb": 7546,
+                "apiNetGcKb": 0,
+                "netGcKb": 7546,
+                "positiveGcKb": 31211,
+                "apiPositiveGcBytesPerPacket": 0,
+                "cycleSamples": 600
+            },
+            "Duration": 10.054939702979982,
+            "Recieve": 120000
+        },
+        "packet": {
+            "DrainDuration": 7.34111521000159,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                29.303163358308013,
+                23.045150324244678,
+                29.39264832249677,
+                29.560441296617158,
+                29.77637347651711,
+                29.77637347651711
+            ],
+            "Framerate": [
+                60,
+                57,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                29.156633377075197,
+                22.76064109802246,
+                29.339841842651368,
+                29.39264678955078,
+                29.437782287597658,
+                29.437782287597658
+            ],
+            "WireShape": {
+                "byteSource": "schema-estimate",
+                "bytesPerPacket": 1002,
+                "estimatedBytesPerPacket": 1002
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 1063.3045333333335,
+                "positiveGcBytesPerPacket": 1063.3045333333335,
+                "apiPositiveGcKb": 7502,
+                "cyclePositiveGcKb": 124606,
+                "cycleNetGcKb": 9363,
+                "apiNetGcKb": 7502,
+                "netGcKb": 9363,
+                "positiveGcKb": 124606,
+                "apiPositiveGcBytesPerPacket": 64.01706666666667,
+                "cycleSamples": 600
+            },
+            "Duration": 10.116668782000489,
+            "Recieve": 120000
+        },
+        "blink": {
+            "DrainDuration": 7.1575341780007879,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                29.371301275484997,
+                22.691298714571319,
+                29.410230263111005,
+                29.418166741186057,
+                29.451634989391523,
+                29.451634989391523
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                29.371299743652345,
+                22.69129753112793,
+                29.410228729248048,
+                29.41816520690918,
+                29.45163345336914,
+                29.45163345336914
+            ],
+            "WireShape": {
+                "byteSource": "measured-buffer",
+                "sendCalls": 600,
+                "rawBytesPerCommit": 200600,
+                "bytesPerPacket": 1003,
+                "rawBytes": 120360000,
+                "rawBytesPerPacket": 1003
+            },
+            "DebugStats": {
+                "clientRawBytes": 120360000,
+                "clientSendCalls": 600
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 4042.7093333333334,
+                "positiveGcBytesPerPacket": 4042.7093333333334,
+                "apiPositiveGcKb": 359301,
+                "cyclePositiveGcKb": 473755,
+                "cycleNetGcKb": -9684,
+                "apiNetGcKb": -102968,
+                "netGcKb": -9684,
+                "positiveGcKb": 473755,
+                "apiPositiveGcBytesPerPacket": 3066.0352,
+                "cycleSamples": 600
+            },
+            "Duration": 10.01549567300026,
+            "Recieve": 120000
+        },
+        "zap": {
+            "DrainDuration": 7.300470188998588,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                29.335164646403059,
+                23.073159467519134,
+                29.3772560182272,
+                29.416305168823344,
+                29.416305168823344,
+                29.416305168823344
+            ],
+            "Framerate": [
+                60,
+                60,
+                61,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                29.335163116455079,
+                23.073158264160158,
+                29.377254486083986,
+                29.416303634643556,
+                29.416303634643556,
+                29.416303634643556
+            ],
+            "WireShape": {
+                "byteSource": "measured-buffer",
+                "sendCalls": 600,
+                "rawBytesPerCommit": 200600,
+                "bytesPerPacket": 1003,
+                "rawBytes": 120360000,
+                "rawBytesPerPacket": 1003
+            },
+            "DebugStats": {
+                "clientRawBytes": 120360000,
+                "clientSendCalls": 600
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 3500.091733333333,
+                "positiveGcBytesPerPacket": 3500.091733333333,
+                "apiPositiveGcKb": 304692,
+                "cyclePositiveGcKb": 410167,
+                "cycleNetGcKb": -15017,
+                "apiNetGcKb": 297390,
+                "netGcKb": -15017,
+                "positiveGcKb": 410167,
+                "apiPositiveGcBytesPerPacket": 2600.0384,
+                "cycleSamples": 600
+            },
+            "Duration": 10.0150758460004,
+            "Recieve": 120000
+        }
+    },
+    "Mixed": {
+        "warp": {
+            "DrainDuration": 3.8334480880002959,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                2.3710244938520388,
+                1.9436243594092862,
+                2.450180419916377,
+                2.474279055893067,
+                2.4959088673544018,
+                2.4959088673544018
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                2.3710243701934816,
+                1.9436242580413819,
+                2.4501802921295168,
+                2.4742789268493654,
+                2.495908737182617,
+                2.495908737182617
+            ],
+            "WireShape": {
+                "byteSource": "measured-buffer",
+                "encodedBytes": 3601154,
+                "rawBytesPerCommit": 6241.168110918544,
+                "encodedBytesPerCommit": 6241.168110918544,
+                "encodedZeroRatio": 0.9616611786110786,
+                "encodeCalls": 577,
+                "encodedZeroBytes": 3463090,
+                "encodedBytesPerPacket": 30.009616666666667,
+                "bytesPerPacket": 30.009616666666667,
+                "rawBytes": 3601154,
+                "rawBytesPerPacket": 30.009616666666667
+            },
+            "DebugStats": {
+                "clientEncodeCalls": 577,
+                "clientEncodedZeroBytes": 3463090,
+                "clientEncodedBytes": 3601154,
+                "clientRawBytes": 3601154
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 211.2512,
+                "positiveGcBytesPerPacket": 211.2512,
+                "apiPositiveGcKb": 16874,
+                "cyclePositiveGcKb": 24756,
+                "cycleNetGcKb": -765,
+                "apiNetGcKb": 16874,
+                "netGcKb": -765,
+                "positiveGcKb": 24756,
+                "apiPositiveGcBytesPerPacket": 143.99146666666668,
+                "cycleSamples": 600
+            },
+            "Duration": 10.015701907999756,
+            "Recieve": 120000
+        },
+        "bridgenet2": {
+            "DrainDuration": 17.48221623900099,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                1680.3433493554804,
+                1346.1435028240385,
+                1683.7480126189849,
+                1683.9738427088879,
+                1684.479213828995,
+                1684.479213828995
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                1680.34326171875,
+                1346.1434326171876,
+                1683.7479248046876,
+                1683.9737548828126,
+                1684.4791259765626,
+                1684.4791259765626
+            ],
+            "WireShape": {
+                "byteSource": "schema-estimate",
+                "bytesPerPacket": 42,
+                "estimatedBytesPerPacket": 42
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 47.2576,
+                "positiveGcBytesPerPacket": 47.2576,
+                "apiPositiveGcKb": 0,
+                "cyclePositiveGcKb": 5538,
+                "cycleNetGcKb": 5538,
+                "apiNetGcKb": 0,
+                "netGcKb": 5538,
+                "positiveGcKb": 5538,
+                "apiPositiveGcBytesPerPacket": 0,
+                "cycleSamples": 600
+            },
+            "Duration": 10.01494750799975,
+            "Recieve": 120000
+        },
+        "quicknet": {
+            "DrainDuration": 4.217028134000429,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                4.153479315894497,
+                3.206740784996631,
+                4.202159147077147,
+                4.216044645848207,
+                4.2236110982691958,
+                4.2236110982691958
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                4.153479099273682,
+                3.206740617752075,
+                4.2021589279174809,
+                4.2160444259643559,
+                4.223610877990723,
+                4.223610877990723
+            ],
+            "WireShape": {
+                "byteSource": "schema-estimate",
+                "sendCalls": 600,
+                "rawBytesPerCommit": 6202,
+                "bytesPerPacket": 31.01,
+                "rawBytes": 3721200,
+                "rawBytesPerPacket": 31.01
+            },
+            "DebugStats": {
+                "clientRawBytes": 3721200,
+                "clientSendCalls": 600
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 79.03573333333334,
+                "positiveGcBytesPerPacket": 79.03573333333334,
+                "apiPositiveGcKb": 7500,
+                "cyclePositiveGcKb": 9262,
+                "cycleNetGcKb": 9262,
+                "apiNetGcKb": 7500,
+                "netGcKb": 9262,
+                "positiveGcKb": 9262,
+                "apiPositiveGcBytesPerPacket": 64,
+                "cycleSamples": 600
+            },
+            "Duration": 10.016140395000548,
+            "Recieve": 120000
+        },
+        "bytenet": {
+            "DrainDuration": 4.633418651999818,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                4.877745882751192,
+                3.9550757086688916,
+                4.898601787464401,
+                4.9005654029842919,
+                4.9086315807731399,
+                4.9086315807731399
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                4.877745628356934,
+                3.95507550239563,
+                4.898601531982422,
+                4.900565147399902,
+                4.908631324768066,
+                4.908631324768066
+            ],
+            "WireShape": {
+                "byteSource": "schema-estimate",
+                "bytesPerPacket": 42,
+                "estimatedBytesPerPacket": 42
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 621.5168,
+                "positiveGcBytesPerPacket": 621.5168,
+                "apiPositiveGcKb": 30332838,
+                "cyclePositiveGcKb": 72834,
+                "cycleNetGcKb": -1865,
+                "apiNetGcKb": 30308675,
+                "netGcKb": -1865,
+                "positiveGcKb": 72834,
+                "apiPositiveGcBytesPerPacket": 258840.2176,
+                "cycleSamples": 600
+            },
+            "Duration": 10.000456729001599,
+            "Recieve": 120000
+        },
+        "roblox": {
+            "DrainDuration": 9.233221282000159,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                3100.008462459282,
+                3039.3588010930309,
+                3132.419851548618,
+                3143.9713553771255,
+                3143.9713553771255,
+                3143.9713553771255
+            ],
+            "Framerate": [
+                60,
+                60,
+                61,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                3100.00830078125,
+                3039.358642578125,
+                3143.97119140625,
+                3145.310302734375,
+                3145.310302734375,
+                3145.310302734375
+            ],
+            "WireShape": {
+                "byteSource": "schema-estimate",
+                "bytesPerPacket": 42,
+                "estimatedBytesPerPacket": 42
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 14.958933333333333,
+                "positiveGcBytesPerPacket": 14.958933333333333,
+                "apiPositiveGcKb": 0,
+                "cyclePositiveGcKb": 1753,
+                "cycleNetGcKb": 1753,
+                "apiNetGcKb": 0,
+                "netGcKb": 1753,
+                "positiveGcKb": 1753,
+                "apiPositiveGcBytesPerPacket": 0,
+                "cycleSamples": 600
+            },
+            "Duration": 10.0151140199996,
+            "Recieve": 120000
+        },
+        "satset": {
+            "DrainDuration": 3.732548029998725,
+            "PayloadVariant": "static",
+            "ServerDebugStats": {
+                "deltaTransposed": 0,
+                "unreliableCommits": 0,
+                "receiveDecodeGcKb": 2,
+                "groupedRuns": 0,
+                "exactBufferPoolRejectedBySizeCap": 0,
+                "reliableCommits": 0,
+                "deltaSkipped": 1,
+                "listenerCallGcSamples": 120000,
+                "packetDecodeGcSamples": 120000,
+                "exactBufferPoolRejectedBySizeClassCap": 0,
+                "deltaEncoded": 0,
+                "exactBufferPoolHits": 0,
+                "adapterGcSamples": 0,
+                "sendGcSamples": 0,
+                "deltaTransposedBytes": 0,
+                "listenerDispatchGcKb": 0,
+                "exactBufferPoolBytes": 0,
+                "adapterGcKb": 0,
+                "exactBufferPoolSizeClasses": 0,
+                "deltaXorChosen": 0,
+                "reliableCommitBytes": 0,
+                "commitGcKb": 0,
+                "receiveDecodeGcSamples": 120600,
+                "commitGcSamples": 0,
+                "listenerCallGcKb": -1786,
+                "streamGrowths": 0,
+                "streamGrowthBytes": 0,
+                "listenerDispatchGcSamples": 0,
+                "packetDecodeGcKb": 32574,
+                "exactBufferPoolMisses": 0,
+                "groupedPackets": 0,
+                "ungroupedPackets": 0,
+                "groupedDecodeBytes": 3480000,
+                "deltaDecoded": 599,
+                "groupedHeaderBytesSaved": 0,
+                "exactBufferPoolRejectedByTotalByteCap": 0,
+                "exactBufferPoolRejectedByPerSizeCap": 0,
+                "deltaZeroBytes": 0,
+                "deltaStoredBytes": 3483000,
+                "deltaRawChosen": 0,
+                "sendGcKb": 0,
+                "unreliableCommitBytes": 0,
+                "deltaInputBytes": 0,
+                "exactBufferPoolAcceptedReleases": 0
+            },
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                2.2857304811486047,
+                1.8548978342435075,
+                2.3212934750993066,
+                2.3432210713814696,
+                2.3432210713814696,
+                2.3432210713814696
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                2.2857303619384767,
+                1.8548977375030518,
+                2.321293354034424,
+                2.3432209491729738,
+                2.3432209491729738,
+                2.3432209491729738
+            ],
+            "WireShape": {
+                "reliableCommitBytes": 3483000,
+                "deltaZeroBytes": 3475997,
+                "groupedRuns": 600,
+                "reliableCommits": 600,
+                "bytesPerPacket": 29.025,
+                "rawBytes": 3483000,
+                "rawBytesPerPacket": 29.025,
+                "byteSource": "measured-buffer",
+                "deltaRawChosen": 0,
+                "deltaTransposedBytes": 0,
+                "rawBytesPerCommit": 5805,
+                "groupedHeaderBytesSaved": 358200,
+                "groupedHeaderBytesSavedPerCommit": 597,
+                "deltaTransposed": 0,
+                "deltaXorChosen": 599,
+                "deltaZeroRatio": 0.9979893769738731,
+                "groupedPackets": 120000,
+                "deltaInputBytes": 3483000,
+                "bytesPerCommit": 5805
+            },
+            "DebugStats": {
+                "exactBufferPoolAcceptedReleases": 600,
+                "unreliableCommits": 0,
+                "receiveDecodeGcKb": 0,
+                "groupedRuns": 600,
+                "exactBufferPoolRejectedBySizeCap": 0,
+                "reliableCommits": 600,
+                "deltaSkipped": 1,
+                "listenerCallGcSamples": 0,
+                "packetDecodeGcSamples": 0,
+                "exactBufferPoolRejectedBySizeClassCap": 0,
+                "streamGrowths": 0,
+                "exactBufferPoolHits": 599,
+                "adapterGcSamples": 120000,
+                "sendGcSamples": 240000,
+                "deltaTransposedBytes": 0,
+                "listenerDispatchGcKb": 0,
+                "exactBufferPoolBytes": 151615,
+                "adapterGcKb": 0,
+                "exactBufferPoolSizeClasses": 3,
+                "deltaXorChosen": 599,
+                "reliableCommitBytes": 3483000,
+                "commitGcKb": 7,
+                "receiveDecodeGcSamples": 0,
+                "commitGcSamples": 600,
+                "packetDecodeGcKb": 0,
+                "deltaTransposed": 0,
+                "streamGrowthBytes": 0,
+                "deltaRawChosen": 0,
+                "groupedPackets": 120000,
+                "exactBufferPoolMisses": 1,
+                "deltaZeroBytes": 3475997,
+                "listenerDispatchGcSamples": 0,
+                "deltaEncoded": 599,
+                "deltaDecoded": 0,
+                "groupedHeaderBytesSaved": 358200,
+                "groupedDecodeBytes": 0,
+                "exactBufferPoolRejectedByPerSizeCap": 0,
+                "ungroupedPackets": 0,
+                "deltaStoredBytes": 3483000,
+                "exactBufferPoolRejectedByTotalByteCap": 0,
+                "sendGcKb": 1,
+                "unreliableCommitBytes": 0,
+                "deltaInputBytes": 3483000,
+                "listenerCallGcKb": 0
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 13.44,
+                "positiveGcBytesPerPacket": 13.44,
+                "apiPositiveGcKb": 2,
+                "cyclePositiveGcKb": 1575,
+                "cycleNetGcKb": -24594,
+                "apiNetGcKb": 2,
+                "netGcKb": -24594,
+                "positiveGcKb": 1575,
+                "apiPositiveGcBytesPerPacket": 0.017066666666666669,
+                "cycleSamples": 600
+            },
+            "Duration": 10.048978325998178,
+            "Recieve": 120000
+        },
+        "netray_compile": {
+            "DrainDuration": 4.766957465002633,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                4.95653702837048,
+                3.884437763624362,
+                5.000520966974236,
+                5.024622225555433,
+                5.046416545844927,
+                5.046416545844927
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                4.956536769866943,
+                3.8844375610351564,
+                5.000520706176758,
+                5.024621963500977,
+                5.046416282653809,
+                5.046416282653809
+            ],
+            "WireShape": {
+                "byteSource": "measured-buffer",
+                "sendCalls": 600,
+                "rawBytesPerCommit": 8204,
+                "bytesPerPacket": 41.02,
+                "rawBytes": 4922400,
+                "rawBytesPerPacket": 41.02
+            },
+            "DebugStats": {
+                "clientRawBytes": 4922400,
+                "clientSendCalls": 600
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 98.06506666666667,
+                "positiveGcBytesPerPacket": 98.06506666666667,
+                "apiPositiveGcKb": 1,
+                "cyclePositiveGcKb": 11492,
+                "cycleNetGcKb": 11492,
+                "apiNetGcKb": 1,
+                "netGcKb": 11492,
+                "positiveGcKb": 11492,
+                "apiPositiveGcBytesPerPacket": 0.008533333333333334,
+                "cycleSamples": 600
+            },
+            "Duration": 10.015812764002476,
+            "Recieve": 120000
+        },
+        "packet": {
+            "DrainDuration": 4.730603894000524,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                4.1803648267876529,
+                3.3370704007110865,
+                4.359846819333182,
+                4.565434217140361,
+                4.842565312221314,
+                4.842565312221314
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                4.180364608764648,
+                3.3370702266693117,
+                4.359846591949463,
+                4.565433979034424,
+                4.842565059661865,
+                4.842565059661865
+            ],
+            "WireShape": {
+                "byteSource": "schema-estimate",
+                "bytesPerPacket": 42,
+                "estimatedBytesPerPacket": 42
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 112.9216,
+                "positiveGcBytesPerPacket": 112.9216,
+                "apiPositiveGcKb": 7492,
+                "cyclePositiveGcKb": 13233,
+                "cycleNetGcKb": -2106,
+                "apiNetGcKb": 7492,
+                "netGcKb": -2106,
+                "positiveGcKb": 13233,
+                "apiPositiveGcBytesPerPacket": 63.931733333333337,
+                "cycleSamples": 600
+            },
+            "Duration": 10.017824530998042,
+            "Recieve": 120000
+        },
+        "blink": {
+            "DrainDuration": 4.766502260001289,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                4.9774654123355159,
+                3.8966750746721336,
+                5.015086435568357,
+                5.0434558637752329,
+                5.05358007084622,
+                5.05358007084622
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                4.9774651527404789,
+                3.896674871444702,
+                5.0150861740112309,
+                5.043455600738525,
+                5.053579807281494,
+                5.053579807281494
+            ],
+            "WireShape": {
+                "byteSource": "measured-buffer",
+                "sendCalls": 600,
+                "rawBytesPerCommit": 8600,
+                "bytesPerPacket": 43,
+                "rawBytes": 5160000,
+                "rawBytesPerPacket": 43
+            },
+            "DebugStats": {
+                "clientRawBytes": 5160000,
+                "clientSendCalls": 600
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 231.90186666666669,
+                "positiveGcBytesPerPacket": 231.90186666666669,
+                "apiPositiveGcKb": 21829,
+                "cyclePositiveGcKb": 27176,
+                "cycleNetGcKb": 6112,
+                "apiNetGcKb": 21829,
+                "netGcKb": 6112,
+                "positiveGcKb": 27176,
+                "apiPositiveGcBytesPerPacket": 186.27413333333335,
+                "cycleSamples": 600
+            },
+            "Duration": 10.015117358998396,
+            "Recieve": 120000
+        },
+        "zap": {
+            "DrainDuration": 4.366566343000159,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                4.9621989930822789,
+                3.9455115468694226,
+                5.007023118802607,
+                5.012826704157778,
+                5.0376575236290759,
+                5.0376575236290759
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                4.962198734283447,
+                3.9455113410949709,
+                5.007022857666016,
+                5.012826442718506,
+                5.037657260894775,
+                5.037657260894775
+            ],
+            "WireShape": {
+                "byteSource": "measured-buffer",
+                "sendCalls": 600,
+                "rawBytesPerCommit": 8600,
+                "bytesPerPacket": 43,
+                "rawBytes": 5160000,
+                "rawBytesPerPacket": 43
+            },
+            "DebugStats": {
+                "clientRawBytes": 5160000,
+                "clientSendCalls": 600
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 205.20106666666667,
+                "positiveGcBytesPerPacket": 205.20106666666667,
+                "apiPositiveGcKb": 17952,
+                "cyclePositiveGcKb": 24047,
+                "cycleNetGcKb": 2153,
+                "apiNetGcKb": 15853,
+                "netGcKb": 2153,
+                "positiveGcKb": 24047,
+                "apiPositiveGcBytesPerPacket": 153.1904,
+                "cycleSamples": 600
+            },
+            "Duration": 10.015174893000222,
+            "Recieve": 120000
+        }
+    },
+    "Entities": {
+        "warp": {
+            "DrainDuration": 4.249672783000278,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                2.5239488010677748,
+                2.460761437008747,
+                2.560718669928832,
+                2.5754827412097027,
+                2.592596904547344,
+                2.592596904547344
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                2.5239486694335939,
+                2.460761308670044,
+                2.560718536376953,
+                2.5754826068878176,
+                2.5925967693328859,
+                2.5925967693328859
+            ],
+            "WireShape": {
+                "byteSource": "measured-buffer",
+                "encodedBytes": 72241200,
+                "rawBytesPerCommit": 120402,
+                "encodedBytesPerCommit": 120402,
+                "encodedZeroRatio": 0.9983336517112119,
+                "encodeCalls": 600,
+                "encodedZeroBytes": 72120821,
+                "encodedBytesPerPacket": 602.01,
+                "bytesPerPacket": 602.01,
+                "rawBytes": 72241200,
+                "rawBytesPerPacket": 602.01
+            },
+            "DebugStats": {
+                "clientEncodeCalls": 600,
+                "clientEncodedZeroBytes": 72120821,
+                "clientEncodedBytes": 72241200,
+                "clientRawBytes": 72241200
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 1313.5189333333333,
+                "positiveGcBytesPerPacket": 1313.5189333333333,
+                "apiPositiveGcKb": 16789,
+                "cyclePositiveGcKb": 153928,
+                "cycleNetGcKb": -14307,
+                "apiNetGcKb": 15947,
+                "netGcKb": -14307,
+                "positiveGcKb": 153928,
+                "apiPositiveGcBytesPerPacket": 143.26613333333334,
+                "cycleSamples": 600
+            },
+            "Duration": 10.01404056300089,
+            "Recieve": 120000
+        },
+        "bridgenet2": {
+            "DrainDuration": 24.857758492002178,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                83206.58246456122,
+                43594.050110525975,
+                103034.9013664931,
+                104401.32938462733,
+                104682.43881105837,
+                104814.19880838605
+            ],
+            "Framerate": [
+                15,
+                15,
+                17,
+                17,
+                18,
+                18
+            ],
+            "Bandwidth": [
+                20801.64453125,
+                11953.20703125,
+                28225.126953125,
+                29457.634765625,
+                29622.44921875,
+                29734.533203125
+            ],
+            "WireShape": {
+                "byteSource": "schema-estimate",
+                "bytesPerPacket": 602,
+                "estimatedBytesPerPacket": 602
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 47.35146666666667,
+                "positiveGcBytesPerPacket": 47.35146666666667,
+                "apiPositiveGcKb": 0,
+                "cyclePositiveGcKb": 5549,
+                "cycleNetGcKb": 5549,
+                "apiNetGcKb": 0,
+                "netGcKb": 5549,
+                "positiveGcKb": 5549,
+                "apiPositiveGcBytesPerPacket": 0,
+                "cycleSamples": 600
+            },
+            "Duration": 48.09142715499911,
+            "Recieve": 120000
+        },
+        "quicknet": {
+            "DrainDuration": 7.866199203999713,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                38.96347630578518,
+                29.63804399569554,
+                39.10714925639354,
+                39.20320589529271,
+                39.20320589529271,
+                39.20320589529271
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                38.96347427368164,
+                29.638042449951173,
+                39.04053497314453,
+                39.107147216796878,
+                39.107147216796878,
+                39.107147216796878
+            ],
+            "WireShape": {
+                "byteSource": "schema-estimate",
+                "sendCalls": 600,
+                "rawBytesPerCommit": 120602,
+                "bytesPerPacket": 603.01,
+                "rawBytes": 72361200,
+                "rawBytesPerPacket": 603.01
+            },
+            "DebugStats": {
+                "clientRawBytes": 72361200,
+                "clientSendCalls": 600
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 78.98453333333333,
+                "positiveGcBytesPerPacket": 78.98453333333333,
+                "apiPositiveGcKb": 7501,
+                "cyclePositiveGcKb": 9256,
+                "cycleNetGcKb": 9256,
+                "apiNetGcKb": 7501,
+                "netGcKb": 9256,
+                "positiveGcKb": 9256,
+                "apiPositiveGcBytesPerPacket": 64.00853333333333,
+                "cycleSamples": 600
+            },
+            "Duration": 10.015179863999947,
+            "Recieve": 120000
+        },
+        "bytenet": {
+            "DrainDuration": 7.719122233000235,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                38.93080783306153,
+                31.08022088975858,
+                39.05051625783443,
+                39.061838279909299,
+                39.2100435020762,
+                39.2100435020762
+            ],
+            "Framerate": [
+                60,
+                59,
+                60,
+                60,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                38.960670471191409,
+                31.080219268798829,
+                39.050514221191409,
+                39.06183624267578,
+                39.09101486206055,
+                39.09101486206055
+            ],
+            "WireShape": {
+                "byteSource": "schema-estimate",
+                "bytesPerPacket": 602,
+                "estimatedBytesPerPacket": 602
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 592.1792,
+                "positiveGcBytesPerPacket": 592.1792,
+                "apiPositiveGcKb": 0,
+                "cyclePositiveGcKb": 69396,
+                "cycleNetGcKb": -4978,
+                "apiNetGcKb": 0,
+                "netGcKb": -4978,
+                "positiveGcKb": 69396,
+                "apiPositiveGcBytesPerPacket": 0,
+                "cycleSamples": 600
+            },
+            "Duration": 10.014689575000375,
+            "Recieve": 120000
+        },
+        "roblox": {
+            "DrainDuration": 13.595061535997957,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                367433.3941631438,
+                266186.13888268827,
+                441945.30429924259,
+                471459.85819471339,
+                488660.33527495528,
+                496274.1304586499
+            ],
+            "Framerate": [
+                15,
+                15,
+                20,
+                21,
+                21,
+                21
+            ],
+            "Bandwidth": [
+                91858.34375,
+                66546.53125,
+                140617.5,
+                151380.453125,
+                160310.21875,
+                172975.203125
+            ],
+            "WireShape": {
+                "byteSource": "schema-estimate",
+                "bytesPerPacket": 602,
+                "estimatedBytesPerPacket": 602
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 15.0528,
+                "positiveGcBytesPerPacket": 15.0528,
+                "apiPositiveGcKb": 0,
+                "cyclePositiveGcKb": 1764,
+                "cycleNetGcKb": 1764,
+                "apiNetGcKb": 0,
+                "netGcKb": 1764,
+                "positiveGcKb": 1764,
+                "apiPositiveGcBytesPerPacket": 0,
+                "cycleSamples": 600
+            },
+            "Duration": 43.37046671999997,
+            "Recieve": 120000
+        },
+        "satset": {
+            "DrainDuration": 3.682851344001392,
+            "PayloadVariant": "static",
+            "ServerDebugStats": {
+                "deltaTransposed": 0,
+                "unreliableCommits": 0,
+                "receiveDecodeGcKb": 0,
+                "groupedRuns": 0,
+                "exactBufferPoolRejectedBySizeCap": 0,
+                "reliableCommits": 0,
+                "deltaSkipped": 1,
+                "listenerCallGcSamples": 120000,
+                "packetDecodeGcSamples": 120000,
+                "exactBufferPoolRejectedBySizeClassCap": 0,
+                "deltaEncoded": 0,
+                "exactBufferPoolHits": 0,
+                "adapterGcSamples": 0,
+                "sendGcSamples": 0,
+                "deltaTransposedBytes": 0,
+                "listenerDispatchGcKb": 0,
+                "exactBufferPoolBytes": 0,
+                "adapterGcKb": 0,
+                "exactBufferPoolSizeClasses": 0,
+                "deltaXorChosen": 0,
+                "reliableCommitBytes": 0,
+                "commitGcKb": 0,
+                "receiveDecodeGcSamples": 120600,
+                "commitGcSamples": 0,
+                "listenerCallGcKb": -927,
+                "streamGrowths": 0,
+                "streamGrowthBytes": 0,
+                "listenerDispatchGcSamples": 0,
+                "packetDecodeGcKb": -61671,
+                "exactBufferPoolMisses": 0,
+                "groupedPackets": 0,
+                "ungroupedPackets": 0,
+                "groupedDecodeBytes": 72240000,
+                "deltaDecoded": 599,
+                "groupedHeaderBytesSaved": 0,
+                "exactBufferPoolRejectedByTotalByteCap": 0,
+                "exactBufferPoolRejectedByPerSizeCap": 0,
+                "deltaZeroBytes": 0,
+                "deltaStoredBytes": 72243000,
+                "deltaRawChosen": 0,
+                "sendGcKb": 0,
+                "unreliableCommitBytes": 0,
+                "deltaInputBytes": 0,
+                "exactBufferPoolAcceptedReleases": 0
+            },
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                2.658332963349892,
+                2.146221749660011,
+                2.738037729011946,
+                2.741439247057391,
+                2.741439247057391,
+                2.741439247057391
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                2.6583328247070314,
+                2.14622163772583,
+                2.738037586212158,
+                2.7414391040802,
+                2.7414391040802,
+                2.7414391040802
+            ],
+            "WireShape": {
+                "reliableCommitBytes": 72243000,
+                "deltaZeroBytes": 72121397,
+                "groupedRuns": 600,
+                "reliableCommits": 600,
+                "bytesPerPacket": 602.025,
+                "rawBytes": 72243000,
+                "rawBytesPerPacket": 602.025,
+                "byteSource": "measured-buffer",
+                "deltaRawChosen": 0,
+                "deltaTransposedBytes": 0,
+                "rawBytesPerCommit": 120405,
+                "groupedHeaderBytesSaved": 358200,
+                "groupedHeaderBytesSavedPerCommit": 597,
+                "deltaTransposed": 0,
+                "deltaXorChosen": 599,
+                "deltaZeroRatio": 0.9983167504118046,
+                "groupedPackets": 120000,
+                "deltaInputBytes": 72243000,
+                "bytesPerCommit": 120405
+            },
+            "DebugStats": {
+                "exactBufferPoolAcceptedReleases": 600,
+                "unreliableCommits": 0,
+                "receiveDecodeGcKb": 0,
+                "groupedRuns": 600,
+                "exactBufferPoolRejectedBySizeCap": 0,
+                "reliableCommits": 600,
+                "deltaSkipped": 1,
+                "listenerCallGcSamples": 0,
+                "packetDecodeGcSamples": 0,
+                "exactBufferPoolRejectedBySizeClassCap": 0,
+                "streamGrowths": 0,
+                "exactBufferPoolHits": 600,
+                "adapterGcSamples": 120000,
+                "sendGcSamples": 240000,
+                "deltaTransposedBytes": 0,
+                "listenerDispatchGcKb": 0,
+                "exactBufferPoolBytes": 151615,
+                "adapterGcKb": 0,
+                "exactBufferPoolSizeClasses": 3,
+                "deltaXorChosen": 599,
+                "reliableCommitBytes": 72243000,
+                "commitGcKb": 1,
+                "receiveDecodeGcSamples": 0,
+                "commitGcSamples": 600,
+                "packetDecodeGcKb": 0,
+                "deltaTransposed": 0,
+                "streamGrowthBytes": 0,
+                "deltaRawChosen": 0,
+                "groupedPackets": 120000,
+                "exactBufferPoolMisses": 0,
+                "deltaZeroBytes": 72121397,
+                "listenerDispatchGcSamples": 0,
+                "deltaEncoded": 599,
+                "deltaDecoded": 0,
+                "groupedHeaderBytesSaved": 358200,
+                "groupedDecodeBytes": 0,
+                "exactBufferPoolRejectedByPerSizeCap": 0,
+                "ungroupedPackets": 0,
+                "deltaStoredBytes": 72243000,
+                "exactBufferPoolRejectedByTotalByteCap": 0,
+                "sendGcKb": 1,
+                "unreliableCommitBytes": 0,
+                "deltaInputBytes": 72243000,
+                "listenerCallGcKb": 0
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 14.984533333333334,
+                "positiveGcBytesPerPacket": 14.984533333333334,
+                "apiPositiveGcKb": 1,
+                "cyclePositiveGcKb": 1756,
+                "cycleNetGcKb": 1756,
+                "apiNetGcKb": 1,
+                "netGcKb": 1756,
+                "positiveGcKb": 1756,
+                "apiPositiveGcBytesPerPacket": 0.008533333333333334,
+                "cycleSamples": 600
+            },
+            "Duration": 10.034824530998042,
+            "Recieve": 120000
+        },
+        "netray_compile": {
+            "DrainDuration": 7.683839995002927,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                38.96520436373663,
+                30.115060469548497,
+                39.0245343534032,
+                39.22218145843786,
+                39.22778906371079,
+                39.22778906371079
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                38.96520233154297,
+                30.11505889892578,
+                39.024532318115237,
+                39.2221794128418,
+                39.227787017822269,
+                39.227787017822269
+            ],
+            "WireShape": {
+                "byteSource": "measured-buffer",
+                "sendCalls": 600,
+                "rawBytesPerCommit": 120204,
+                "bytesPerPacket": 601.02,
+                "rawBytes": 72122400,
+                "rawBytesPerPacket": 601.02
+            },
+            "DebugStats": {
+                "clientRawBytes": 72122400,
+                "clientSendCalls": 600
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 1203.7461333333334,
+                "positiveGcBytesPerPacket": 1203.7461333333334,
+                "apiPositiveGcKb": 0,
+                "cyclePositiveGcKb": 141064,
+                "cycleNetGcKb": 2341,
+                "apiNetGcKb": 0,
+                "netGcKb": 2341,
+                "positiveGcKb": 141064,
+                "apiPositiveGcBytesPerPacket": 0,
+                "cycleSamples": 600
+            },
+            "Duration": 10.013964942998428,
+            "Recieve": 120000
+        },
+        "packet": {
+            "DrainDuration": 7.682748975999857,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                39.039565823063558,
+                22.102834784534328,
+                39.21609675526355,
+                39.283234696966939,
+                39.32083367726976,
+                39.32083367726976
+            ],
+            "Framerate": [
+                39,
+                33,
+                50,
+                50,
+                50,
+                50
+            ],
+            "Bandwidth": [
+                25.226028442382814,
+                11.908465385437012,
+                32.14434051513672,
+                32.5329704284668,
+                32.59013748168945,
+                32.59013748168945
+            ],
+            "WireShape": {
+                "byteSource": "schema-estimate",
+                "bytesPerPacket": 602,
+                "estimatedBytesPerPacket": 602
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 667.8357333333333,
+                "positiveGcBytesPerPacket": 667.8357333333333,
+                "apiPositiveGcKb": 7498,
+                "cyclePositiveGcKb": 78262,
+                "cycleNetGcKb": -6163,
+                "apiNetGcKb": 7498,
+                "netGcKb": -6163,
+                "positiveGcKb": 78262,
+                "apiPositiveGcBytesPerPacket": 63.982933333333338,
+                "cycleSamples": 600
+            },
+            "Duration": 14.399517277000996,
+            "Recieve": 120000
+        },
+        "blink": {
+            "DrainDuration": 7.636814104000223,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                39.134075385690199,
+                26.907716950173425,
+                39.27554823269433,
+                39.28794088808297,
+                39.33017884540418,
+                39.33017884540418
+            ],
+            "Framerate": [
+                39,
+                39,
+                45,
+                46,
+                48,
+                48
+            ],
+            "Bandwidth": [
+                25.353336334228517,
+                21.526172637939454,
+                27.728296279907228,
+                28.69436264038086,
+                29.107988357543947,
+                29.107988357543947
+            ],
+            "WireShape": {
+                "byteSource": "measured-buffer",
+                "sendCalls": 600,
+                "rawBytesPerCommit": 120600,
+                "bytesPerPacket": 603,
+                "rawBytes": 72360000,
+                "rawBytesPerPacket": 603
+            },
+            "DebugStats": {
+                "clientRawBytes": 72360000,
+                "clientSendCalls": 600
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 2664.1408,
+                "positiveGcBytesPerPacket": 2664.1408,
+                "apiPositiveGcKb": 247539,
+                "cyclePositiveGcKb": 312204,
+                "cycleNetGcKb": -6998,
+                "apiNetGcKb": 247451,
+                "netGcKb": -6998,
+                "positiveGcKb": 312204,
+                "apiPositiveGcBytesPerPacket": 2112.3328,
+                "cycleSamples": 600
+            },
+            "Duration": 14.728847665999638,
+            "Recieve": 120000
+        },
+        "zap": {
+            "DrainDuration": 7.815737837001507,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                38.98355687323871,
+                29.78575671091889,
+                39.04658330474845,
+                39.06530202520713,
+                39.06703389785605,
+                39.06703389785605
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                38.98355484008789,
+                29.785755157470704,
+                39.04658126831055,
+                39.06529998779297,
+                39.06703186035156,
+                39.06703186035156
+            ],
+            "WireShape": {
+                "byteSource": "measured-buffer",
+                "sendCalls": 600,
+                "rawBytesPerCommit": 120600,
+                "bytesPerPacket": 603,
+                "rawBytes": 72360000,
+                "rawBytesPerPacket": 603
+            },
+            "DebugStats": {
+                "clientRawBytes": 72360000,
+                "clientSendCalls": 600
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 1887.4026666666667,
+                "positiveGcBytesPerPacket": 1887.4026666666667,
+                "apiPositiveGcKb": 153407,
+                "cyclePositiveGcKb": 221180,
+                "cycleNetGcKb": -11581,
+                "apiNetGcKb": 153407,
+                "netGcKb": -11581,
+                "positiveGcKb": 221180,
+                "apiPositiveGcBytesPerPacket": 1309.0730666666667,
+                "cycleSamples": 600
+            },
+            "Duration": 10.015789746001247,
+            "Recieve": 120000
+        }
+    },
+    "SingleValue": {
+        "warp": {
+            "DrainDuration": 3.832870168000227,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                2.3150378480945834,
+                1.8401050335223568,
+                2.3467925818826798,
+                2.37226021741197,
+                2.451448568404757,
+                2.451448568404757
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                2.315037727355957,
+                1.8401049375534058,
+                2.346792459487915,
+                2.372260093688965,
+                2.451448440551758,
+                2.451448440551758
+            ],
+            "WireShape": {
+                "byteSource": "measured-buffer",
+                "encodedBytes": 241164,
+                "rawBytesPerCommit": 414.37113402061859,
+                "encodedBytesPerCommit": 414.37113402061859,
+                "encodedZeroRatio": 0.9681876233600372,
+                "encodeCalls": 582,
+                "encodedZeroBytes": 233492,
+                "encodedBytesPerPacket": 2.0097,
+                "bytesPerPacket": 2.0097,
+                "rawBytes": 241164,
+                "rawBytesPerPacket": 2.0097
+            },
+            "DebugStats": {
+                "clientEncodeCalls": 582,
+                "clientEncodedZeroBytes": 233492,
+                "clientEncodedBytes": 241164,
+                "clientRawBytes": 241164
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 157.9008,
+                "positiveGcBytesPerPacket": 157.9008,
+                "apiPositiveGcKb": 16447,
+                "cyclePositiveGcKb": 18504,
+                "cycleNetGcKb": 12889,
+                "apiNetGcKb": 15552,
+                "netGcKb": 12889,
+                "positiveGcKb": 18504,
+                "apiPositiveGcBytesPerPacket": 140.34773333333335,
+                "cycleSamples": 600
+            },
+            "Duration": 10.016276518999803,
+            "Recieve": 120000
+        },
+        "bridgenet2": {
+            "DrainDuration": 10.916787342001044,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                144.8641890738105,
+                114.18414139217845,
+                145.08322900222653,
+                145.21393579615279,
+                145.41136927812944,
+                145.41136927812944
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                144.8641815185547,
+                114.18413543701172,
+                145.08322143554688,
+                145.21392822265626,
+                145.41136169433595,
+                145.41136169433595
+            ],
+            "WireShape": {
+                "byteSource": "schema-estimate",
+                "bytesPerPacket": 1,
+                "estimatedBytesPerPacket": 1
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 47.266133333333339,
+                "positiveGcBytesPerPacket": 47.266133333333339,
+                "apiPositiveGcKb": 0,
+                "cyclePositiveGcKb": 5539,
+                "cycleNetGcKb": 5539,
+                "apiNetGcKb": 0,
+                "netGcKb": 5539,
+                "positiveGcKb": 5539,
+                "apiPositiveGcBytesPerPacket": 0,
+                "cycleSamples": 600
+            },
+            "Duration": 10.015435160999914,
+            "Recieve": 120000
+        },
+        "quicknet": {
+            "DrainDuration": 3.766469423997478,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                2.3761729049176685,
+                1.7887427547663349,
+                2.411048776487563,
+                2.434301264882892,
+                2.45834363407198,
+                2.45834363407198
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                2.3761727809906008,
+                1.7887426614761353,
+                2.411048650741577,
+                2.4343011379241945,
+                2.458343505859375,
+                2.458343505859375
+            ],
+            "WireShape": {
+                "byteSource": "schema-estimate",
+                "sendCalls": 600,
+                "rawBytesPerCommit": 402,
+                "bytesPerPacket": 2.01,
+                "rawBytes": 241200,
+                "rawBytesPerPacket": 2.01
+            },
+            "DebugStats": {
+                "clientRawBytes": 241200,
+                "clientSendCalls": 600
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 78.976,
+                "positiveGcBytesPerPacket": 78.976,
+                "apiPositiveGcKb": 7502,
+                "cyclePositiveGcKb": 9255,
+                "cycleNetGcKb": 9255,
+                "apiNetGcKb": 7502,
+                "netGcKb": 9255,
+                "positiveGcKb": 9255,
+                "apiPositiveGcBytesPerPacket": 64.01706666666667,
+                "cycleSamples": 600
+            },
+            "Duration": 10.01507541400133,
+            "Recieve": 120000
+        },
+        "bytenet": {
+            "DrainDuration": 3.6657349500019338,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                2.2873867751040057,
+                1.8565982356383426,
+                2.325476290869215,
+                2.3309193873139835,
+                2.343517902527932,
+                2.343517902527932
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                2.287386655807495,
+                1.856598138809204,
+                2.3254761695861818,
+                2.3309192657470705,
+                2.343517780303955,
+                2.343517780303955
+            ],
+            "WireShape": {
+                "byteSource": "schema-estimate",
+                "bytesPerPacket": 1,
+                "estimatedBytesPerPacket": 1
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 16.989866666666669,
+                "positiveGcBytesPerPacket": 16.989866666666669,
+                "apiPositiveGcKb": 0,
+                "cyclePositiveGcKb": 1991,
+                "cycleNetGcKb": 1991,
+                "apiNetGcKb": 0,
+                "netGcKb": 1991,
+                "positiveGcKb": 1991,
+                "apiPositiveGcBytesPerPacket": 0,
+                "cycleSamples": 600
+            },
+            "Duration": 10.000681163997797,
+            "Recieve": 120000
+        },
+        "roblox": {
+            "DrainDuration": 10.765988871000446,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                227.0343940469864,
+                225.3429225191502,
+                228.4785885762426,
+                229.0775399045504,
+                229.0775399045504,
+                229.0775399045504
+            ],
+            "Framerate": [
+                60,
+                60,
+                61,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                227.2503662109375,
+                225.34291076660157,
+                228.3379669189453,
+                228.47857666015626,
+                228.47857666015626,
+                228.47857666015626
+            ],
+            "WireShape": {
+                "byteSource": "schema-estimate",
+                "bytesPerPacket": 1,
+                "estimatedBytesPerPacket": 1
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 14.967466666666667,
+                "positiveGcBytesPerPacket": 14.967466666666667,
+                "apiPositiveGcKb": 0,
+                "cyclePositiveGcKb": 1754,
+                "cycleNetGcKb": 1754,
+                "apiNetGcKb": 0,
+                "netGcKb": 1754,
+                "positiveGcKb": 1754,
+                "apiPositiveGcBytesPerPacket": 0,
+                "cycleSamples": 600
+            },
+            "Duration": 10.016168101999938,
+            "Recieve": 120000
+        },
+        "satset": {
+            "DrainDuration": 3.7156183919978504,
+            "PayloadVariant": "static",
+            "ServerDebugStats": {
+                "deltaTransposed": 0,
+                "unreliableCommits": 0,
+                "receiveDecodeGcKb": 0,
+                "groupedRuns": 0,
+                "exactBufferPoolRejectedBySizeCap": 0,
+                "reliableCommits": 0,
+                "deltaSkipped": 1,
+                "listenerCallGcSamples": 120000,
+                "packetDecodeGcSamples": 120000,
+                "exactBufferPoolRejectedBySizeClassCap": 0,
+                "deltaEncoded": 0,
+                "exactBufferPoolHits": 0,
+                "adapterGcSamples": 0,
+                "sendGcSamples": 0,
+                "deltaTransposedBytes": 0,
+                "listenerDispatchGcKb": 0,
+                "exactBufferPoolBytes": 0,
+                "adapterGcKb": 0,
+                "exactBufferPoolSizeClasses": 0,
+                "deltaXorChosen": 0,
+                "reliableCommitBytes": 0,
+                "commitGcKb": 0,
+                "receiveDecodeGcSamples": 120600,
+                "commitGcSamples": 0,
+                "listenerCallGcKb": -2968,
+                "streamGrowths": 0,
+                "streamGrowthBytes": 0,
+                "listenerDispatchGcSamples": 0,
+                "packetDecodeGcKb": 5992,
+                "exactBufferPoolMisses": 0,
+                "groupedPackets": 0,
+                "ungroupedPackets": 0,
+                "groupedDecodeBytes": 120000,
+                "deltaDecoded": 599,
+                "groupedHeaderBytesSaved": 0,
+                "exactBufferPoolRejectedByTotalByteCap": 0,
+                "exactBufferPoolRejectedByPerSizeCap": 0,
+                "deltaZeroBytes": 0,
+                "deltaStoredBytes": 123000,
+                "deltaRawChosen": 0,
+                "sendGcKb": 0,
+                "unreliableCommitBytes": 0,
+                "deltaInputBytes": 0,
+                "exactBufferPoolAcceptedReleases": 0
+            },
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                2.2358816836116537,
+                1.7786375019733747,
+                2.277273058451046,
+                2.2826374767606074,
+                2.3044868717447466,
+                2.3044868717447466
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                2.2358815670013429,
+                1.778637409210205,
+                2.277272939682007,
+                2.282637357711792,
+                2.3044867515563967,
+                2.3044867515563967
+            ],
+            "WireShape": {
+                "reliableCommitBytes": 123000,
+                "deltaZeroBytes": 121597,
+                "groupedRuns": 600,
+                "reliableCommits": 600,
+                "bytesPerPacket": 1.025,
+                "rawBytes": 123000,
+                "rawBytesPerPacket": 1.025,
+                "byteSource": "measured-buffer",
+                "deltaRawChosen": 0,
+                "deltaTransposedBytes": 0,
+                "rawBytesPerCommit": 205,
+                "groupedHeaderBytesSaved": 118200,
+                "groupedHeaderBytesSavedPerCommit": 197,
+                "deltaTransposed": 0,
+                "deltaXorChosen": 599,
+                "deltaZeroRatio": 0.9885934959349594,
+                "groupedPackets": 120000,
+                "deltaInputBytes": 123000,
+                "bytesPerCommit": 205
+            },
+            "DebugStats": {
+                "exactBufferPoolAcceptedReleases": 600,
+                "unreliableCommits": 0,
+                "receiveDecodeGcKb": 0,
+                "groupedRuns": 600,
+                "exactBufferPoolRejectedBySizeCap": 0,
+                "reliableCommits": 600,
+                "deltaSkipped": 1,
+                "listenerCallGcSamples": 0,
+                "packetDecodeGcSamples": 0,
+                "exactBufferPoolRejectedBySizeClassCap": 0,
+                "streamGrowths": 0,
+                "exactBufferPoolHits": 599,
+                "adapterGcSamples": 120000,
+                "sendGcSamples": 240000,
+                "deltaTransposedBytes": 0,
+                "listenerDispatchGcKb": 0,
+                "exactBufferPoolBytes": 605025,
+                "adapterGcKb": 0,
+                "exactBufferPoolSizeClasses": 5,
+                "deltaXorChosen": 599,
+                "reliableCommitBytes": 123000,
+                "commitGcKb": 1,
+                "receiveDecodeGcSamples": 0,
+                "commitGcSamples": 600,
+                "packetDecodeGcKb": 0,
+                "deltaTransposed": 0,
+                "streamGrowthBytes": 0,
+                "deltaRawChosen": 0,
+                "groupedPackets": 120000,
+                "exactBufferPoolMisses": 1,
+                "deltaZeroBytes": 121597,
+                "listenerDispatchGcSamples": 0,
+                "deltaEncoded": 599,
+                "deltaDecoded": 0,
+                "groupedHeaderBytesSaved": 118200,
+                "groupedDecodeBytes": 0,
+                "exactBufferPoolRejectedByPerSizeCap": 0,
+                "ungroupedPackets": 0,
+                "deltaStoredBytes": 123000,
+                "exactBufferPoolRejectedByTotalByteCap": 0,
+                "sendGcKb": 0,
+                "unreliableCommitBytes": 0,
+                "deltaInputBytes": 123000,
+                "listenerCallGcKb": 0
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 7.7994666666666669,
+                "positiveGcBytesPerPacket": 7.7994666666666669,
+                "apiPositiveGcKb": 1,
+                "cyclePositiveGcKb": 914,
+                "cycleNetGcKb": -18768,
+                "apiNetGcKb": 1,
+                "netGcKb": -18768,
+                "positiveGcKb": 914,
+                "apiPositiveGcBytesPerPacket": 0.008533333333333334,
+                "cycleSamples": 600
+            },
+            "Duration": 10.049729434002075,
+            "Recieve": 120000
+        },
+        "netray_compile": {
+            "DrainDuration": 3.7663684709987139,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                2.393148785472219,
+                1.8979625499675957,
+                2.4466587389007978,
+                2.4614425989247659,
+                2.4771229128529095,
+                2.4771229128529095
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                2.39314866065979,
+                1.8979624509811402,
+                2.4466586112976076,
+                2.461442470550537,
+                2.4771227836608888,
+                2.4771227836608888
+            ],
+            "WireShape": {
+                "byteSource": "measured-buffer",
+                "sendCalls": 600,
+                "rawBytesPerCommit": 204,
+                "bytesPerPacket": 1.02,
+                "rawBytes": 122400,
+                "rawBytesPerPacket": 1.02
+            },
+            "DebugStats": {
+                "clientRawBytes": 122400,
+                "clientSendCalls": 600
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 18.065066666666668,
+                "positiveGcBytesPerPacket": 18.065066666666668,
+                "apiPositiveGcKb": 0,
+                "cyclePositiveGcKb": 2117,
+                "cycleNetGcKb": 2117,
+                "apiNetGcKb": 0,
+                "netGcKb": 2117,
+                "positiveGcKb": 2117,
+                "apiPositiveGcBytesPerPacket": 0,
+                "cycleSamples": 600
+            },
+            "Duration": 10.015714260000096,
+            "Recieve": 120000
+        },
+        "packet": {
+            "DrainDuration": 3.783930582998437,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                2.3051086674314726,
+                1.8307710648730158,
+                2.3598266878633646,
+                2.380507354911794,
+                2.405960685325592,
+                2.405960685325592
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                2.3051085472106935,
+                1.8307709693908692,
+                2.3598265647888185,
+                2.380507230758667,
+                2.4059605598449709,
+                2.4059605598449709
+            ],
+            "WireShape": {
+                "byteSource": "schema-estimate",
+                "bytesPerPacket": 1,
+                "estimatedBytesPerPacket": 1
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 80.9984,
+                "positiveGcBytesPerPacket": 80.9984,
+                "apiPositiveGcKb": 7501,
+                "cyclePositiveGcKb": 9492,
+                "cycleNetGcKb": 9492,
+                "apiNetGcKb": 7501,
+                "netGcKb": 9492,
+                "positiveGcKb": 9492,
+                "apiPositiveGcBytesPerPacket": 64.00853333333333,
+                "cycleSamples": 600
+            },
+            "Duration": 10.014899104000506,
+            "Recieve": 120000
+        },
+        "blink": {
+            "DrainDuration": 3.700139782999031,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                2.405972129417986,
+                1.9050130645565,
+                2.4268077685509139,
+                2.459339985366009,
+                2.4885186062725586,
+                2.4885186062725586
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                2.4059720039367677,
+                1.9050129652023316,
+                2.4268076419830324,
+                2.4593398571014406,
+                2.488518476486206,
+                2.488518476486206
+            ],
+            "WireShape": {
+                "byteSource": "measured-buffer",
+                "sendCalls": 600,
+                "rawBytesPerCommit": 400,
+                "bytesPerPacket": 2,
+                "rawBytes": 240000,
+                "rawBytesPerPacket": 2
+            },
+            "DebugStats": {
+                "clientRawBytes": 240000,
+                "clientSendCalls": 600
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 23.927466666666669,
+                "positiveGcBytesPerPacket": 23.927466666666669,
+                "apiPositiveGcKb": 768,
+                "cyclePositiveGcKb": 2804,
+                "cycleNetGcKb": 2804,
+                "apiNetGcKb": 768,
+                "netGcKb": 2804,
+                "positiveGcKb": 2804,
+                "apiPositiveGcBytesPerPacket": 6.5536,
+                "cycleSamples": 600
+            },
+            "Duration": 10.015663597998355,
+            "Recieve": 120000
+        },
+        "zap": {
+            "DrainDuration": 3.698868424999091,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                2.352665308629396,
+                1.8969841992772275,
+                2.383830194822032,
+                2.3932327088164397,
+                2.3932327088164397,
+                2.3932327088164397
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                2.3526651859283449,
+                1.8969841003417969,
+                2.3838300704956056,
+                2.393232583999634,
+                2.393232583999634,
+                2.393232583999634
+            ],
+            "WireShape": {
+                "byteSource": "measured-buffer",
+                "sendCalls": 600,
+                "rawBytesPerCommit": 400,
+                "bytesPerPacket": 2,
+                "rawBytes": 240000,
+                "rawBytesPerPacket": 2
+            },
+            "DebugStats": {
+                "clientRawBytes": 240000,
+                "clientSendCalls": 600
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 21.973333333333334,
+                "positiveGcBytesPerPacket": 21.973333333333334,
+                "apiPositiveGcKb": 541,
+                "cyclePositiveGcKb": 2575,
+                "cycleNetGcKb": 2575,
+                "apiNetGcKb": 541,
+                "netGcKb": 2575,
+                "positiveGcKb": 2575,
+                "apiPositiveGcBytesPerPacket": 4.616533333333333,
+                "cycleSamples": 600
+            },
+            "Duration": 10.015725315002783,
+            "Recieve": 120000
+        }
+    },
+    "Strings": {
+        "warp": {
+            "DrainDuration": 4.068132794000121,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                3.4075307239049215,
+                3.2487258221289485,
+                3.500925008255793,
+                4.000215262185822,
+                17.260765975902645,
+                17.260765975902645
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                3.4075305461883547,
+                3.248725652694702,
+                3.500924825668335,
+                4.00021505355835,
+                17.260765075683595,
+                17.260765075683595
+            ],
+            "WireShape": {
+                "byteSource": "measured-buffer",
+                "encodedBytes": 259921198,
+                "rawBytesPerCommit": 433925.2053422371,
+                "encodedBytesPerCommit": 433925.2053422371,
+                "encodedZeroRatio": 0.9966684171715767,
+                "encodeCalls": 599,
+                "encodedZeroBytes": 259055249,
+                "encodedBytesPerPacket": 2166.0099833333335,
+                "bytesPerPacket": 2166.0099833333335,
+                "rawBytes": 259921198,
+                "rawBytesPerPacket": 2166.0099833333335
+            },
+            "DebugStats": {
+                "clientEncodeCalls": 599,
+                "clientEncodedZeroBytes": 259055249,
+                "clientEncodedBytes": 259921198,
+                "clientRawBytes": 259921198
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 4361.4293333333339,
+                "positiveGcBytesPerPacket": 4361.4293333333339,
+                "apiPositiveGcKb": 16283,
+                "cyclePositiveGcKb": 511105,
+                "cycleNetGcKb": 11624,
+                "apiNetGcKb": -501027,
+                "netGcKb": 11624,
+                "positiveGcKb": 511105,
+                "apiPositiveGcBytesPerPacket": 138.94826666666666,
+                "cycleSamples": 600
+            },
+            "Duration": 10.014447059002123,
+            "Recieve": 120000
+        },
+        "bridgenet2": {
+            "DrainDuration": 21.747473916999298,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                27028.96642594355,
+                21726.544101877516,
+                27186.020949111407,
+                27205.825637644302,
+                27256.893999682725,
+                27256.893999682725
+            ],
+            "Framerate": [
+                60,
+                56,
+                60,
+                60,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                26989.7734375,
+                21726.54296875,
+                27186.01953125,
+                27205.82421875,
+                27256.892578125,
+                27256.892578125
+            ],
+            "WireShape": {
+                "byteSource": "schema-estimate",
+                "bytesPerPacket": 2266,
+                "estimatedBytesPerPacket": 2266
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 46.60053333333333,
+                "positiveGcBytesPerPacket": 46.60053333333333,
+                "apiPositiveGcKb": 0,
+                "cyclePositiveGcKb": 5461,
+                "cycleNetGcKb": -15990,
+                "apiNetGcKb": 0,
+                "netGcKb": -15990,
+                "positiveGcKb": 5461,
+                "apiPositiveGcBytesPerPacket": 0,
+                "cycleSamples": 600
+            },
+            "Duration": 10.166193545999704,
+            "Recieve": 120000
+        },
+        "quicknet": {
+            "DrainDuration": 9.767681588000415,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                96.51042678634042,
+                75.92229857635545,
+                96.73355607043846,
+                96.80097703342739,
+                96.80097703342739,
+                96.80097703342739
+            ],
+            "Framerate": [
+                60,
+                60,
+                61,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                96.51042175292969,
+                75.92229461669922,
+                96.73355102539063,
+                96.80097198486328,
+                96.80097198486328,
+                96.80097198486328
+            ],
+            "WireShape": {
+                "byteSource": "schema-estimate",
+                "sendCalls": 600,
+                "rawBytesPerCommit": 453402,
+                "bytesPerPacket": 2267.01,
+                "rawBytes": 272041200,
+                "rawBytesPerPacket": 2267.01
+            },
+            "DebugStats": {
+                "clientRawBytes": 272041200,
+                "clientSendCalls": 600
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 6090.948266666666,
+                "positiveGcBytesPerPacket": 6090.948266666666,
+                "apiPositiveGcKb": 711664,
+                "cyclePositiveGcKb": 713783,
+                "cycleNetGcKb": -3076,
+                "apiNetGcKb": -5288,
+                "netGcKb": -3076,
+                "positiveGcKb": 713783,
+                "apiPositiveGcBytesPerPacket": 6072.866133333333,
+                "cycleSamples": 600
+            },
+            "Duration": 10.032238902997051,
+            "Recieve": 120000
+        },
+        "bytenet": {
+            "Framerate": [],
+            "Bandwidth": [],
+            "SkipReason": "ByteNet 0.4.6 repeatedly copies its growing buffer while writing strings and cannot finish this workload",
+            "DrainDuration": 0,
+            "Status": "skipped",
+            "Sent": 0,
+            "Recieve": 0,
+            "NormalizedBandwidth": []
+        },
+        "roblox": {
+            "DrainDuration": 11.301083731003019,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                108222.58376924729,
+                90920.56724187685,
+                114344.49033852958,
+                118517.32649365993,
+                118517.32649365993,
+                118517.32649365993
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                108222.578125,
+                90920.5625,
+                114344.484375,
+                118517.3203125,
+                118517.3203125,
+                118517.3203125
+            ],
+            "WireShape": {
+                "byteSource": "schema-estimate",
+                "bytesPerPacket": 2266,
+                "estimatedBytesPerPacket": 2266
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 14.967466666666667,
+                "positiveGcBytesPerPacket": 14.967466666666667,
+                "apiPositiveGcKb": 0,
+                "cyclePositiveGcKb": 1754,
+                "cycleNetGcKb": 1754,
+                "apiNetGcKb": 0,
+                "netGcKb": 1754,
+                "positiveGcKb": 1754,
+                "apiPositiveGcBytesPerPacket": 0,
+                "cycleSamples": 600
+            },
+            "Duration": 10.01305466100166,
+            "Recieve": 120000
+        },
+        "satset": {
+            "DrainDuration": 5.123973314999603,
+            "PayloadVariant": "static",
+            "ServerDebugStats": {
+                "deltaTransposed": 0,
+                "unreliableCommits": 0,
+                "receiveDecodeGcKb": 11,
+                "groupedRuns": 0,
+                "exactBufferPoolRejectedBySizeCap": 0,
+                "reliableCommits": 0,
+                "deltaSkipped": 1,
+                "listenerCallGcSamples": 120000,
+                "packetDecodeGcSamples": 120000,
+                "exactBufferPoolRejectedBySizeClassCap": 0,
+                "deltaEncoded": 0,
+                "exactBufferPoolHits": 0,
+                "adapterGcSamples": 0,
+                "sendGcSamples": 0,
+                "deltaTransposedBytes": 0,
+                "listenerDispatchGcKb": 0,
+                "exactBufferPoolBytes": 0,
+                "adapterGcKb": 0,
+                "exactBufferPoolSizeClasses": 0,
+                "deltaXorChosen": 0,
+                "reliableCommitBytes": 0,
+                "commitGcKb": 0,
+                "receiveDecodeGcSamples": 120600,
+                "commitGcSamples": 0,
+                "listenerCallGcKb": 2,
+                "streamGrowths": 0,
+                "streamGrowthBytes": 0,
+                "listenerDispatchGcSamples": 0,
+                "packetDecodeGcKb": 197179,
+                "exactBufferPoolMisses": 0,
+                "groupedPackets": 0,
+                "ungroupedPackets": 0,
+                "groupedDecodeBytes": 271920000,
+                "deltaDecoded": 599,
+                "groupedHeaderBytesSaved": 0,
+                "exactBufferPoolRejectedByTotalByteCap": 0,
+                "exactBufferPoolRejectedByPerSizeCap": 0,
+                "deltaZeroBytes": 0,
+                "deltaStoredBytes": 271923000,
+                "deltaRawChosen": 0,
+                "sendGcKb": 0,
+                "unreliableCommitBytes": 0,
+                "deltaInputBytes": 0,
+                "exactBufferPoolAcceptedReleases": 0
+            },
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                3.2655257497629455,
+                2.689750811668148,
+                3.312222891938381,
+                3.3341698001264588,
+                3.3848742819884327,
+                3.3848742819884327
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                3.2655255794525148,
+                2.6897506713867189,
+                3.312222719192505,
+                3.334169626235962,
+                3.384874105453491,
+                3.384874105453491
+            ],
+            "WireShape": {
+                "reliableCommitBytes": 271923000,
+                "deltaZeroBytes": 271468597,
+                "groupedRuns": 600,
+                "reliableCommits": 600,
+                "bytesPerPacket": 2266.025,
+                "rawBytes": 271923000,
+                "rawBytesPerPacket": 2266.025,
+                "byteSource": "measured-buffer",
+                "deltaRawChosen": 0,
+                "deltaTransposedBytes": 0,
+                "rawBytesPerCommit": 453205,
+                "groupedHeaderBytesSaved": 358200,
+                "groupedHeaderBytesSavedPerCommit": 597,
+                "deltaTransposed": 0,
+                "deltaXorChosen": 599,
+                "deltaZeroRatio": 0.9983289276743784,
+                "groupedPackets": 120000,
+                "deltaInputBytes": 271923000,
+                "bytesPerCommit": 453205
+            },
+            "DebugStats": {
+                "exactBufferPoolAcceptedReleases": 600,
+                "unreliableCommits": 0,
+                "receiveDecodeGcKb": 0,
+                "groupedRuns": 600,
+                "exactBufferPoolRejectedBySizeCap": 0,
+                "reliableCommits": 600,
+                "deltaSkipped": 1,
+                "listenerCallGcSamples": 0,
+                "packetDecodeGcSamples": 0,
+                "exactBufferPoolRejectedBySizeClassCap": 0,
+                "streamGrowths": 2,
+                "exactBufferPoolHits": 599,
+                "adapterGcSamples": 120000,
+                "sendGcSamples": 240002,
+                "deltaTransposedBytes": 0,
+                "listenerDispatchGcKb": 0,
+                "exactBufferPoolBytes": 604820,
+                "adapterGcKb": 0,
+                "exactBufferPoolSizeClasses": 4,
+                "deltaXorChosen": 599,
+                "reliableCommitBytes": 271923000,
+                "commitGcKb": 442,
+                "receiveDecodeGcSamples": 0,
+                "commitGcSamples": 600,
+                "packetDecodeGcKb": 0,
+                "deltaTransposed": 0,
+                "streamGrowthBytes": 786432,
+                "deltaRawChosen": 0,
+                "groupedPackets": 120000,
+                "exactBufferPoolMisses": 1,
+                "deltaZeroBytes": 271468597,
+                "listenerDispatchGcSamples": 0,
+                "deltaEncoded": 599,
+                "deltaDecoded": 0,
+                "groupedHeaderBytesSaved": 358200,
+                "groupedDecodeBytes": 0,
+                "exactBufferPoolRejectedByPerSizeCap": 0,
+                "ungroupedPackets": 0,
+                "deltaStoredBytes": 271923000,
+                "exactBufferPoolRejectedByTotalByteCap": 0,
+                "sendGcKb": 769,
+                "unreliableCommitBytes": 0,
+                "deltaInputBytes": 271923000,
+                "listenerCallGcKb": 0
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 32.88746666666667,
+                "positiveGcBytesPerPacket": 32.88746666666667,
+                "apiPositiveGcKb": 769,
+                "cyclePositiveGcKb": 3854,
+                "cycleNetGcKb": 3854,
+                "apiNetGcKb": 769,
+                "netGcKb": 3854,
+                "positiveGcKb": 3854,
+                "apiPositiveGcBytesPerPacket": 6.562133333333334,
+                "cycleSamples": 600
+            },
+            "Duration": 10.049239340001805,
+            "Recieve": 120000
+        },
+        "netray_compile": {
+            "DrainDuration": 9.666980550999142,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                96.53825881904197,
+                73.81631854708644,
+                96.63407638995722,
+                96.7558644212113,
+                96.76561478793076,
+                96.76561478793076
+            ],
+            "Framerate": [
+                60,
+                58,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                96.53825378417969,
+                73.81631469726563,
+                96.63407135009766,
+                96.755859375,
+                96.76560974121094,
+                96.76560974121094
+            ],
+            "WireShape": {
+                "byteSource": "measured-buffer",
+                "sendCalls": 600,
+                "rawBytesPerCommit": 433004,
+                "bytesPerPacket": 2165.02,
+                "rawBytes": 259802400,
+                "rawBytesPerPacket": 2165.02
+            },
+            "DebugStats": {
+                "clientRawBytes": 259802400,
+                "clientSendCalls": 600
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 4200.5418666666669,
+                "positiveGcBytesPerPacket": 4200.5418666666669,
+                "apiPositiveGcKb": 514,
+                "cyclePositiveGcKb": 492251,
+                "cycleNetGcKb": 2766,
+                "apiNetGcKb": 514,
+                "netGcKb": 2766,
+                "positiveGcKb": 492251,
+                "apiPositiveGcBytesPerPacket": 4.386133333333333,
+                "cycleSamples": 600
+            },
+            "Duration": 10.049266563997663,
+            "Recieve": 120000
+        },
+        "packet": {
+            "DrainDuration": 9.87607197699981,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                95.8936359826879,
+                71.97503287955344,
+                96.13302350737996,
+                96.20284772977158,
+                96.24083448712384,
+                96.24083448712384
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                95.89363098144531,
+                71.97502899169922,
+                96.13301849365235,
+                96.20284271240235,
+                96.24082946777344,
+                96.24082946777344
+            ],
+            "WireShape": {
+                "byteSource": "schema-estimate",
+                "bytesPerPacket": 2266,
+                "estimatedBytesPerPacket": 2266
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 2217.2672,
+                "positiveGcBytesPerPacket": 2217.2672,
+                "apiPositiveGcKb": 8502,
+                "cyclePositiveGcKb": 259836,
+                "cycleNetGcKb": 12258,
+                "apiNetGcKb": -4213,
+                "netGcKb": 12258,
+                "positiveGcKb": 259836,
+                "apiPositiveGcBytesPerPacket": 72.5504,
+                "cycleSamples": 600
+            },
+            "Duration": 10.015804468999704,
+            "Recieve": 120000
+        },
+        "blink": {
+            "DrainDuration": 9.850518812996598,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                100.29967258943373,
+                52.91316315673929,
+                100.43070744734195,
+                100.6201605822227,
+                100.76808692050406,
+                100.76808692050406
+            ],
+            "Framerate": [
+                60,
+                54,
+                60,
+                60,
+                60,
+                60
+            ],
+            "Bandwidth": [
+                100.29966735839844,
+                47.03392028808594,
+                100.43070220947266,
+                100.62015533447266,
+                100.76808166503906,
+                100.76808166503906
+            ],
+            "WireShape": {
+                "byteSource": "measured-buffer",
+                "sendCalls": 600,
+                "rawBytesPerCommit": 453400,
+                "bytesPerPacket": 2267,
+                "rawBytes": 272040000,
+                "rawBytesPerPacket": 2267
+            },
+            "DebugStats": {
+                "clientRawBytes": 272040000,
+                "clientSendCalls": 600
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 8787.2768,
+                "positiveGcBytesPerPacket": 8787.2768,
+                "apiPositiveGcKb": 839809,
+                "cyclePositiveGcKb": 1029759,
+                "cycleNetGcKb": 2759,
+                "apiNetGcKb": 839809,
+                "netGcKb": 2759,
+                "positiveGcKb": 1029759,
+                "apiPositiveGcBytesPerPacket": 7166.370133333333,
+                "cycleSamples": 600
+            },
+            "Duration": 11.83825046399943,
+            "Recieve": 120000
+        },
+        "zap": {
+            "DrainDuration": 9.568097930001386,
+            "PayloadVariant": "static",
+            "Sent": 120000,
+            "Frames": 600,
+            "NormalizedBandwidth": [
+                100.71978522120759,
+                79.73373335435429,
+                101.03219368476658,
+                101.1192374515133,
+                101.1192374515133,
+                101.1192374515133
+            ],
+            "Framerate": [
+                60,
+                60,
+                60,
+                61,
+                61,
+                61
+            ],
+            "Bandwidth": [
+                100.71977996826172,
+                80.06185150146485,
+                101.03218841552735,
+                101.11923217773438,
+                101.11923217773438,
+                101.11923217773438
+            ],
+            "WireShape": {
+                "byteSource": "measured-buffer",
+                "sendCalls": 600,
+                "rawBytesPerCommit": 453400,
+                "bytesPerPacket": 2267,
+                "rawBytes": 272040000,
+                "rawBytesPerPacket": 2267
+            },
+            "DebugStats": {
+                "clientRawBytes": 272040000,
+                "clientSendCalls": 600
+            },
+            "EventsPerFrame": 200,
+            "GcShape": {
+                "apiSamples": 600,
+                "scope": "client-api-call-and-frame-cycle",
+                "samples": 600,
+                "cyclePositiveGcBytesPerPacket": 7110.4256,
+                "positiveGcBytesPerPacket": 7110.4256,
+                "apiPositiveGcKb": 581507,
+                "cyclePositiveGcKb": 833253,
+                "cycleNetGcKb": 19789,
+                "apiNetGcKb": -217890,
+                "netGcKb": 19789,
+                "positiveGcKb": 833253,
+                "apiPositiveGcBytesPerPacket": 4962.193066666667,
+                "cycleSamples": 600
+            },
+            "Duration": 10.014356257001055,
+            "Recieve": 120000
+        }
+    }
+}

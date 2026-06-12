@@ -22,16 +22,29 @@ local EXACT_BUFFER_POOL_MAX_SIZE_CLASSES = 64
 local EXACT_BUFFER_POOL_MAX_BYTES = 4 * 1024 * 1024
 local EXACT_BUFFER_POOL_MAX_BUFFER_SIZE = 512 * 1024
 local RELIABLE_RUN_MARKER = 0
-local RELIABLE_GROUP_HEADER_SIZE = 4
--- I do not love hiding meaning in header bits, but it keeps delta explicit without growing the batch
+local RELIABLE_LONG_RUN_MARKER = 0
+local RELIABLE_SHORT_RUN_MAX = 255
+local RELIABLE_SHORT_GROUP_HEADER_SIZE = 3
+local RELIABLE_LONG_GROUP_HEADER_SIZE = 5
+-- One count bit buys a reversible bitpacked layout; 8191 items is still far beyond sane frame work
 local RELIABLE_DELTA_FLAG = 0x8000
 local RELIABLE_TRACKED_FLAG = 0x4000
-local RELIABLE_COUNT_MASK = 0x3FFF
+local RELIABLE_TRANSPOSED_FLAG = 0x2000
+local RELIABLE_COUNT_MASK = 0x1FFF
+local COMPRESSION_GENERAL = 0
+local COMPRESSION_TEXT = 1
+local COMPRESSION_BITPACKED = 2
+local TEXT_DELTA_MIN_ZERO_RATIO = 0.975
+local BITPACKED_TRANSPOSE_MIN_ROWS = 16
+local BITPACKED_TRANSPOSE_MIN_BYTES = 512
+local BITPACKED_TRANSPOSE_MIN_ZERO_RATIO = 0.25
 
 type Stream = {
 	b: buffer,
 	cursor: number,
 	count: number,
+	textBytes: number,
+	bitpackedBytes: number,
 }
 
 type DeltaEntry = {
@@ -39,6 +52,22 @@ type DeltaEntry = {
 	scratch: buffer?,
 	len: number,
 }
+
+type TransposeShape = {
+	offset: number,
+	width: number,
+	rows: number,
+}
+
+local function newStream(cursor: number): Stream
+	return {
+		b = buffer.create(INITIAL_WORKING_SIZE),
+		cursor = cursor,
+		count = 0,
+		textBytes = 0,
+		bitpackedBytes = 0,
+	}
+end
 
 export type DebugStats = {
 	reliableCommits: number,
@@ -81,6 +110,10 @@ export type DebugStats = {
 	deltaInputBytes: number,
 	deltaZeroBytes: number,
 	deltaStoredBytes: number,
+	deltaRawChosen: number,
+	deltaXorChosen: number,
+	deltaTransposed: number,
+	deltaTransposedBytes: number,
 }
 
 export type DebugGcBucket =
@@ -92,8 +125,8 @@ export type DebugGcBucket =
 	| "listenerCall"
 	| "listenerDispatch"
 
-local serverReliableStream: Stream = { b = buffer.create(INITIAL_WORKING_SIZE), cursor = 2, count = 0 }
-local serverUnreliableStream: Stream = { b = buffer.create(INITIAL_WORKING_SIZE), cursor = 4, count = 0 }
+local serverReliableStream = newStream(2)
+local serverUnreliableStream = newStream(4)
 local serverReliableBatches: { buffer } = {}
 local serverUnreliableBatches: { buffer } = {}
 
@@ -102,7 +135,7 @@ local clientUnreliableStreams: { [Player]: Stream } = {}
 local clientReliableBatches: { [Player]: { buffer } } = {}
 local clientUnreliableBatches: { [Player]: { buffer } } = {}
 
-local broadcastReliableStream: Stream = { b = buffer.create(INITIAL_WORKING_SIZE), cursor = 2, count = 0 }
+local broadcastReliableStream = newStream(2)
 local broadcastReliableBatches: { buffer } = {}
 
 local serverSeqCounters: { [Player]: number } = {}
@@ -116,6 +149,9 @@ local serverReliableOutDeltaByPlayer: { [Player]: DeltaEntry } = {}
 local serverReliableInDelta: DeltaEntry? = nil
 
 local packetFixedSizes: { [number]: number } = {}
+local packetCompressionProfiles: { [number]: number } = {}
+local batchCompressionProfiles: { [buffer]: number } = {}
+local batchTransposeShapes: { [buffer]: TransposeShape } = {}
 local exactBufferPool: { [number]: { buffer } } = {}
 local exactBufferReleaseQueue: { buffer } = {}
 local exactBufferPoolBytes = 0
@@ -164,6 +200,10 @@ local function freshDebugStats(): DebugStats
 		deltaInputBytes = 0,
 		deltaZeroBytes = 0,
 		deltaStoredBytes = 0,
+		deltaRawChosen = 0,
+		deltaXorChosen = 0,
+		deltaTransposed = 0,
+		deltaTransposedBytes = 0,
 	}
 end
 
@@ -174,6 +214,16 @@ local Batcher = {}
 
 function Batcher.registerFixedSize(id: number, size: number)
 	packetFixedSizes[id] = size
+end
+
+function Batcher.registerCompressionProfile(id: number, profile: string)
+	if profile == "text" then
+		packetCompressionProfiles[id] = COMPRESSION_TEXT
+	elseif profile == "bitpacked" then
+		packetCompressionProfiles[id] = COMPRESSION_BITPACKED
+	else
+		packetCompressionProfiles[id] = COMPRESSION_GENERAL
+	end
 end
 
 export type BatchingConfig = {
@@ -294,6 +344,8 @@ local function reserveExactBufferSizeClass(): boolean
 end
 
 local function releaseExactBuffer(b: buffer)
+	batchCompressionProfiles[b] = nil
+	batchTransposeShapes[b] = nil
 	local size = buffer.len(b)
 	if size > EXACT_BUFFER_POOL_MAX_BUFFER_SIZE then
 		debugStats.exactBufferPoolRejectedBySizeCap += 1
@@ -349,11 +401,12 @@ local function releaseQueuedBatches(batches: { buffer }?)
 	table.clear(batches)
 end
 
-local function readReliableHeader(b: buffer): (number, boolean, boolean)
+local function readReliableHeader(b: buffer): (number, boolean, boolean, boolean)
 	local header = buffer.readu16(b, 0)
 	return bit32.band(header, RELIABLE_COUNT_MASK),
 		bit32.band(header, RELIABLE_TRACKED_FLAG) ~= 0,
-		bit32.band(header, RELIABLE_DELTA_FLAG) ~= 0
+		bit32.band(header, RELIABLE_DELTA_FLAG) ~= 0,
+		bit32.band(header, RELIABLE_TRANSPOSED_FLAG) ~= 0
 end
 
 local function writeReliableHeader(b: buffer, itemCount: number, flags: number)
@@ -438,9 +491,122 @@ local function xorBufferInPlace(current: buffer, previous: buffer, len: number, 
 	return zeroBytes
 end
 
+local function countXorZeroBytes(current: buffer, previous: buffer, len: number): number
+	local zeroBytes = 0
+	local wordStart = 2
+	if len <= wordStart then
+		return zeroBytes
+	end
+
+	local wordEnd = ((len - wordStart) // 4) * 4 + wordStart
+
+	for offset = wordStart, wordEnd - 4, 4 do
+		local encoded = bit32.bxor(buffer.readu32(current, offset), buffer.readu32(previous, offset))
+		if encoded == 0 then
+			zeroBytes += 4
+		else
+			zeroBytes += countZeroBytesInWord(encoded)
+		end
+	end
+
+	for offset = wordEnd, len - 1 do
+		if bit32.bxor(buffer.readu8(current, offset), buffer.readu8(previous, offset)) == 0 then
+			zeroBytes += 1
+		end
+	end
+
+	return zeroBytes
+end
+
+local function transposePayloads(batch: buffer, shape: TransposeShape, scratch: buffer): boolean
+	local matrixLen = shape.width * shape.rows
+	if shape.offset + matrixLen > buffer.len(batch) or matrixLen > buffer.len(scratch) then
+		return false
+	end
+
+	for column = 0, shape.width - 1 do
+		local target = column * shape.rows
+		for row = 0, shape.rows - 1 do
+			local source = shape.offset + row * shape.width + column
+			buffer.writeu8(scratch, target + row, buffer.readu8(batch, source))
+		end
+	end
+
+	buffer.copy(batch, shape.offset, scratch, 0, matrixLen)
+	return true
+end
+
+local function restoreTransposedPayloads(batch: buffer, shape: TransposeShape, scratch: buffer): boolean
+	local matrixLen = shape.width * shape.rows
+	if shape.offset + matrixLen > buffer.len(batch) or matrixLen > buffer.len(scratch) then
+		return false
+	end
+
+	for column = 0, shape.width - 1 do
+		local source = shape.offset + column * shape.rows
+		for row = 0, shape.rows - 1 do
+			local target = row * shape.width + column
+			buffer.writeu8(scratch, target, buffer.readu8(batch, source + row))
+		end
+	end
+
+	buffer.copy(batch, shape.offset, scratch, 0, matrixLen)
+	return true
+end
+
+local function readTransposeShape(batch: buffer, logicalLen: number): TransposeShape?
+	if
+		logicalLen < 5
+		or logicalLen > buffer.len(batch)
+		or bit32.band(buffer.readu16(batch, 0), RELIABLE_COUNT_MASK) ~= 1
+	then
+		return nil
+	end
+
+	if buffer.readu8(batch, 2) ~= RELIABLE_RUN_MARKER then
+		return nil
+	end
+
+	local packetId = buffer.readu8(batch, 3)
+	local rows: number
+	local offset: number
+	if packetId == RELIABLE_LONG_RUN_MARKER then
+		if logicalLen < 7 then
+			return nil
+		end
+		packetId = buffer.readu8(batch, 4)
+		rows = buffer.readu16(batch, 5)
+		offset = 7
+	else
+		rows = buffer.readu8(batch, 4)
+		offset = 5
+	end
+
+	-- The sender only sets this flag for bitpacked runs. Rechecking the local
+	-- profile table here makes decode depend on packet registration order
+	if rows < 2 then
+		return nil
+	end
+
+	local matrixLen = logicalLen - offset
+	if matrixLen <= 0 or matrixLen % rows ~= 0 then
+		return nil
+	end
+
+	return {
+		offset = offset,
+		width = matrixLen // rows,
+		rows = rows,
+	}
+end
+
 local function encodeReliableDelta(entry: DeltaEntry?, batch: buffer): DeltaEntry
 	local len = buffer.len(batch)
 	local itemCount = readReliableHeader(batch)
+	local compressionProfile = batchCompressionProfiles[batch] or COMPRESSION_GENERAL
+	local transposeShape = batchTransposeShapes[batch]
+	batchCompressionProfiles[batch] = nil
+	batchTransposeShapes[batch] = nil
 
 	debugStats.deltaInputBytes += len
 
@@ -454,17 +620,57 @@ local function encodeReliableDelta(entry: DeltaEntry?, batch: buffer): DeltaEntr
 	local scratch = getDeltaBuffer(entry.scratch, len)
 	buffer.copy(scratch, 0, batch, 0, len)
 
-	local zeroBytes = xorBufferInPlace(batch, entry.previous, len, debugGcEnabled)
+	local zeroBytes: number
+	if compressionProfile == COMPRESSION_TEXT then
+		zeroBytes = countXorZeroBytes(batch, entry.previous, len)
+	else
+		zeroBytes =
+			xorBufferInPlace(batch, entry.previous, len, debugGcEnabled or compressionProfile == COMPRESSION_BITPACKED)
+	end
+
 	if debugGcEnabled then
 		debugStats.deltaZeroBytes += zeroBytes
 	end
-	writeReliableHeader(batch, itemCount, bit32.bor(RELIABLE_TRACKED_FLAG, RELIABLE_DELTA_FLAG))
+
+	local useRaw = compressionProfile == COMPRESSION_TEXT
+		and zeroBytes < math.floor((len - 2) * TEXT_DELTA_MIN_ZERO_RATIO)
+
+	if useRaw then
+		writeReliableHeader(batch, itemCount, RELIABLE_TRACKED_FLAG)
+		debugStats.deltaRawChosen += 1
+	else
+		if compressionProfile == COMPRESSION_TEXT then
+			if zeroBytes == len - 2 then
+				buffer.fill(batch, 2, 0, len - 2)
+			else
+				xorBufferInPlace(batch, entry.previous, len, false)
+			end
+		end
+
+		local flags = bit32.bor(RELIABLE_TRACKED_FLAG, RELIABLE_DELTA_FLAG)
+		local transposeBytes = if transposeShape then transposeShape.width * transposeShape.rows else 0
+		if
+			compressionProfile == COMPRESSION_BITPACKED
+			and transposeShape
+			and transposeBytes >= BITPACKED_TRANSPOSE_MIN_BYTES
+			and zeroBytes >= math.floor(transposeBytes * BITPACKED_TRANSPOSE_MIN_ZERO_RATIO)
+			and zeroBytes < len - 2
+			and transposePayloads(batch, transposeShape, entry.previous)
+		then
+			flags = bit32.bor(flags, RELIABLE_TRANSPOSED_FLAG)
+			debugStats.deltaTransposed += 1
+			debugStats.deltaTransposedBytes += transposeBytes
+		end
+
+		writeReliableHeader(batch, itemCount, flags)
+		debugStats.deltaEncoded += 1
+		debugStats.deltaXorChosen += 1
+	end
 
 	entry.scratch = entry.previous
 	entry.previous = scratch
 	entry.len = len
 	debugStats.deltaStoredBytes += len
-	debugStats.deltaEncoded += 1
 
 	return entry
 end
@@ -475,7 +681,7 @@ local function decodeReliableDelta(entry: DeltaEntry?, batch: buffer): (DeltaEnt
 		return entry, true
 	end
 
-	local itemCount, isTracked, isDelta = readReliableHeader(batch)
+	local itemCount, isTracked, isDelta, isTransposed = readReliableHeader(batch)
 
 	if not isTracked then
 		return entry, true
@@ -492,10 +698,20 @@ local function decodeReliableDelta(entry: DeltaEntry?, batch: buffer): (DeltaEnt
 		return entry, false
 	end
 
+	local scratch = getDeltaBuffer(entry.scratch, len)
+	if isTransposed then
+		-- Delta history buffers keep their capacity when a later batch is
+		-- smaller, so shape parsing must use the stored logical length
+		local shape = readTransposeShape(entry.previous, entry.len)
+		if not shape or not restoreTransposedPayloads(batch, shape, scratch) then
+			debugStats.deltaSkipped += 1
+			return entry, false
+		end
+	end
+
 	xorBufferInPlace(batch, entry.previous, len, false)
 	writeReliableHeader(batch, itemCount, 0)
 
-	local scratch = getDeltaBuffer(entry.scratch, len)
 	buffer.copy(scratch, 0, batch, 0, len)
 	entry.scratch = entry.previous
 	entry.previous = scratch
@@ -596,6 +812,49 @@ local function measureReliableRun(b: buffer, runStart: number, limit: number): (
 	return packetId, runCount, runEnd, payloadBytes, normalHeaderBytes
 end
 
+local function reliableGroupHeaderSize(runCount: number): number
+	return if runCount <= RELIABLE_SHORT_RUN_MAX
+		then RELIABLE_SHORT_GROUP_HEADER_SIZE
+		else RELIABLE_LONG_GROUP_HEADER_SIZE
+end
+
+local function measureBitpackedTransposeShape(stream: Stream): TransposeShape?
+	local packetId, runCount, runEnd, _, normalHeaderBytes = measureReliableRun(stream.b, 2, stream.cursor)
+	if
+		not packetId
+		or runCount < BITPACKED_TRANSPOSE_MIN_ROWS
+		or runEnd ~= stream.cursor
+		or packetCompressionProfiles[packetId] ~= COMPRESSION_BITPACKED
+		or normalHeaderBytes <= reliableGroupHeaderSize(runCount)
+	then
+		return nil
+	end
+
+	local cursor = 2
+	local width: number? = nil
+	while cursor < runEnd do
+		local parsedPacketId, _, payloadLen, nextCursor, _ = readReliableEntry(stream.b, cursor, runEnd)
+		if not parsedPacketId or parsedPacketId ~= packetId then
+			return nil
+		end
+		if width and payloadLen ~= width then
+			return nil
+		end
+		width = payloadLen
+		cursor = nextCursor
+	end
+
+	if not width or width <= 0 then
+		return nil
+	end
+
+	return {
+		offset = 2 + reliableGroupHeaderSize(runCount),
+		width = width,
+		rows = runCount,
+	}
+end
+
 local function measureReliableCompaction(stream: Stream)
 	local cursor = 2
 	local limit = stream.cursor
@@ -612,12 +871,13 @@ local function measureReliableCompaction(stream: Stream)
 			return stream.count, stream.cursor, 0, 0, 0, stream.count
 		end
 
-		if normalHeaderBytes > RELIABLE_GROUP_HEADER_SIZE then
+		local groupHeaderBytes = reliableGroupHeaderSize(runCount)
+		if normalHeaderBytes > groupHeaderBytes then
 			itemCount += 1
-			compactedSize += RELIABLE_GROUP_HEADER_SIZE + payloadBytes
+			compactedSize += groupHeaderBytes + payloadBytes
 			groupedRuns += 1
 			groupedPackets += runCount
-			groupedHeaderBytesSaved += normalHeaderBytes - RELIABLE_GROUP_HEADER_SIZE
+			groupedHeaderBytesSaved += normalHeaderBytes - groupHeaderBytes
 		else
 			itemCount += runCount
 			compactedSize += runEnd - cursor
@@ -640,9 +900,16 @@ local function copyReliableGroupedRun(
 	runCount: number
 )
 	buffer.writeu8(out, writeCursor, RELIABLE_RUN_MARKER)
-	buffer.writeu8(out, writeCursor + 1, packetId)
-	buffer.writeu16(out, writeCursor + 2, runCount)
-	writeCursor += RELIABLE_GROUP_HEADER_SIZE
+	if runCount <= RELIABLE_SHORT_RUN_MAX then
+		buffer.writeu8(out, writeCursor + 1, packetId)
+		buffer.writeu8(out, writeCursor + 2, runCount)
+		writeCursor += RELIABLE_SHORT_GROUP_HEADER_SIZE
+	else
+		buffer.writeu8(out, writeCursor + 1, RELIABLE_LONG_RUN_MARKER)
+		buffer.writeu8(out, writeCursor + 2, packetId)
+		buffer.writeu16(out, writeCursor + 3, runCount)
+		writeCursor += RELIABLE_LONG_GROUP_HEADER_SIZE
+	end
 
 	local cursor = runStart
 	while cursor < runEnd do
@@ -675,7 +942,7 @@ local function writeReliableCompacted(stream: Stream, out: buffer, itemCount: nu
 			return
 		end
 
-		if normalHeaderBytes > RELIABLE_GROUP_HEADER_SIZE then
+		if normalHeaderBytes > reliableGroupHeaderSize(runCount) then
 			writeCursor = copyReliableGroupedRun(stream.b, out, writeCursor, cursor, runEnd, packetId, runCount)
 		else
 			local runSize = runEnd - cursor
@@ -699,6 +966,7 @@ local function commitStream(stream: Stream, reliable: boolean, seqCounter: numbe
 	local groupedPackets = 0
 	local groupedHeaderBytesSaved = 0
 	local ungroupedPackets = 0
+	local compressionProfile = COMPRESSION_GENERAL
 
 	if reliable then
 		itemCount, exactSize, groupedRuns, groupedPackets, groupedHeaderBytesSaved, ungroupedPackets =
@@ -726,6 +994,20 @@ local function commitStream(stream: Stream, reliable: boolean, seqCounter: numbe
 	recordCommit(reliable, exactSize)
 
 	if reliable then
+		local payloadBytes = math.max(exactSize - 2, 1)
+		if stream.textBytes * 4 >= payloadBytes * 3 then
+			compressionProfile = COMPRESSION_TEXT
+		elseif stream.bitpackedBytes * 4 >= payloadBytes * 3 then
+			compressionProfile = COMPRESSION_BITPACKED
+		end
+		batchCompressionProfiles[exactBuffer] = compressionProfile
+		if compressionProfile == COMPRESSION_BITPACKED then
+			local transposeShape = measureBitpackedTransposeShape(stream)
+			if transposeShape then
+				batchTransposeShapes[exactBuffer] = transposeShape
+			end
+		end
+
 		debugStats.groupedRuns += groupedRuns
 		debugStats.groupedPackets += groupedPackets
 		debugStats.groupedHeaderBytesSaved += groupedHeaderBytesSaved
@@ -736,6 +1018,8 @@ local function commitStream(stream: Stream, reliable: boolean, seqCounter: numbe
 	-- to avoid re-allocation when the load is stable across frames.
 	stream.count = 0
 	stream.cursor = reliable and 2 or 4
+	stream.textBytes = 0
+	stream.bitpackedBytes = 0
 
 	return exactBuffer, nextSeq
 end
@@ -788,6 +1072,14 @@ local function allocateInStream(
 
 	stream.cursor += entrySize
 	stream.count += 1
+	if reliable then
+		local compressionProfile = packetCompressionProfiles[packetId] or COMPRESSION_GENERAL
+		if compressionProfile == COMPRESSION_TEXT then
+			stream.textBytes += size
+		elseif compressionProfile == COMPRESSION_BITPACKED then
+			stream.bitpackedBytes += size
+		end
+	end
 
 	return stream.b, offset + 1, seqCounter
 end
@@ -819,16 +1111,29 @@ function Batcher.processBatch(b: buffer, sender: Player?, dispatch: DispatchFn)
 		cursor += 1
 
 		if id == RELIABLE_RUN_MARKER then
-			if cursor + 3 > bufLen then
+			if cursor + 2 > bufLen then
 				Batcher.recordDebugGc("receiveDecode", gcStart)
 				return
 			end
 
 			local runPacketId = buffer.readu8(b, cursor)
-			local runCount = buffer.readu16(b, cursor + 1)
-			cursor += 3
+			local runCount: number
 
-			if runCount == 0 then
+			if runPacketId == RELIABLE_LONG_RUN_MARKER then
+				if cursor + 4 > bufLen then
+					Batcher.recordDebugGc("receiveDecode", gcStart)
+					return
+				end
+
+				runPacketId = buffer.readu8(b, cursor + 1)
+				runCount = buffer.readu16(b, cursor + 2)
+				cursor += 4
+			else
+				runCount = buffer.readu8(b, cursor + 1)
+				cursor += 2
+			end
+
+			if runPacketId == 0 or runCount == 0 then
 				Batcher.recordDebugGc("receiveDecode", gcStart)
 				return
 			end
@@ -970,7 +1275,7 @@ function Batcher.allocateForPlayer(player: Player, packetId: number, size: numbe
 	if reliable then
 		local stream = clientReliableStreams[player]
 		if not stream then
-			stream = { b = buffer.create(INITIAL_WORKING_SIZE), cursor = 2, count = 0 }
+			stream = newStream(2)
 			clientReliableStreams[player] = stream
 		end
 		local batches = clientReliableBatches[player]
@@ -984,7 +1289,7 @@ function Batcher.allocateForPlayer(player: Player, packetId: number, size: numbe
 	else
 		local stream = clientUnreliableStreams[player]
 		if not stream then
-			stream = { b = buffer.create(INITIAL_WORKING_SIZE), cursor = 4, count = 0 }
+			stream = newStream(4)
 			clientUnreliableStreams[player] = stream
 		end
 		local batches = clientUnreliableBatches[player]
@@ -1047,9 +1352,6 @@ local function flush()
 	drainExactBufferReleaseQueue()
 
 	if IS_SERVER then
-		local reliableRemote = Bridge.getReliable()
-		local unreliableRemote = Bridge.getUnreliable()
-
 		for player, stream in clientReliableStreams do
 			local exact, _ = commitStream(stream, true)
 			local batches = clientReliableBatches[player]
@@ -1063,7 +1365,7 @@ local function flush()
 				while i <= #batches do
 					local batch = batches[i]
 					encodeServerReliableDelta(player, batch)
-					reliableRemote:FireClient(player, batch)
+					Bridge.sendToClient(true, player, batch)
 					deferExactBufferRelease(batch)
 					sentThisFrame += 1
 					table.remove(batches, i)
@@ -1074,7 +1376,7 @@ local function flush()
 				end
 			elseif exact then
 				encodeServerReliableDelta(player, exact)
-				reliableRemote:FireClient(player, exact)
+				Bridge.sendToClient(true, player, exact)
 				deferExactBufferRelease(exact)
 			end
 		end
@@ -1094,7 +1396,7 @@ local function flush()
 				local i = 1
 				while i <= #batches do
 					local batch = batches[i]
-					unreliableRemote:FireClient(player, batch)
+					Bridge.sendToClient(false, player, batch)
 					deferExactBufferRelease(batch)
 					sentThisFrame += 1
 					table.remove(batches, i)
@@ -1104,7 +1406,7 @@ local function flush()
 					end
 				end
 			elseif exact then
-				unreliableRemote:FireClient(player, exact)
+				Bridge.sendToClient(false, player, exact)
 				deferExactBufferRelease(exact)
 			end
 		end
@@ -1118,7 +1420,7 @@ local function flush()
 		local i = 1
 		while i <= #broadcastReliableBatches do
 			local batch = broadcastReliableBatches[i]
-			reliableRemote:FireAllClients(batch)
+			Bridge.sendToAllClients(true, batch)
 			deferExactBufferRelease(batch)
 			sentThisFrame += 1
 			table.remove(broadcastReliableBatches, i)
@@ -1138,7 +1440,7 @@ local function flush()
 		while i <= #serverReliableBatches do
 			local batch = serverReliableBatches[i]
 			encodeClientReliableDelta(batch)
-			Bridge.getReliable():FireServer(batch)
+			Bridge.sendToServer(true, batch)
 			deferExactBufferRelease(batch)
 			sentThisFrame += 1
 			table.remove(serverReliableBatches, i)
@@ -1158,7 +1460,7 @@ local function flush()
 		local sentThisFrameU = 0
 		while i <= #serverUnreliableBatches do
 			local batch = serverUnreliableBatches[i]
-			Bridge.getUnreliable():FireServer(batch)
+			Bridge.sendToServer(false, batch)
 			deferExactBufferRelease(batch)
 			sentThisFrameU += 1
 			table.remove(serverUnreliableBatches, i)

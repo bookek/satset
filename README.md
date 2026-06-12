@@ -15,37 +15,33 @@
 
 > *"Sat set, sampai."* means "Swiftly done."
 
-Satset is a buffer-backed networking library for [Roblox](https://roblox.com). It handles packet serialization, batching, rate limiting, and state sync. The public API covers stateless events (Packets) and bitmask-tracked state (Channels).
+Satset is a buffer-backed networking library for [Roblox](https://roblox.com). It handles packet serialization, batching, rate limiting, and state sync. The public API covers stateless events (Packets) and bitmask-tracked state (Channels). Packets can also target explicit server-owned Groups.
 
 Satset keeps packet data in Luau `buffer` objects until the API boundary. Packet listeners receive decoded tables. Channel subscribers receive reconstructed state tables.
 
 # Performance Benchmarks
 
-The benchmark suite in `benchmark/` compares Satset with native Roblox remotes and community networking libraries. It sends 200 events per frame for 10 seconds per payload. The tables report Roblox `Stats.DataSendKbps` p50 values normalized to a 60 FPS baseline.
+The benchmark suite in `benchmarks/` compares Satset with native Roblox remotes and community networking libraries. Each row runs 600 frames with 200 events per frame. The report includes normalized bandwidth, visible GC movement, submitted wire bytes, workload duration, and drain time.
 
 ## Latest Full Run
 
-Lower normalized bandwidth is better. The latest full Studio run uses one Satset runtime path.
+The latest report has separate static and moving runs. Static repeats one payload. Moving changes values by frame and event slot.
 
-| Payload | **Satset** rank | Winner | **Satset** Kbps (p50) | Notes |
-| :--- | ---: | :--- | ---: | :--- |
-| Vectors | 1 / 10 | Satset | 2.51 | 120.2K / 120.2K received |
-| Booleans | 1 / 10 | Satset | 2.36 | 120.2K / 120.2K received |
-| Mixed | 2 / 10 | Warp | 2.32 | Warp leads by about 3.6% |
-| Entities | 1 / 10 | Satset | 2.64 | 120.2K / 120.2K received |
-| SingleValue | 2 / 10 | Warp | 2.28 | Warp leads by about 3.8% |
-| Strings | 1 / 10 valid rows | Satset | 3.28 | ByteNet stopped after 8 frames |
+| Variant | **Satset** bandwidth wins | Other winner |
+| :--- | ---: | :--- |
+| Static | 5 / 6 | Warp leads Entities |
+| Moving | 5 / 6 | Packet leads Strings |
 
-Satset completed all payload rows at 601 frames, 60 FPS minimum, and zero packet loss. Reliable delta counters matched on both sides: `deltaEncoded == deltaDecoded == 600`.
+Satset completed every row at 120,000 sent and received events. The moving run is the better reference for changing game state; the static run shows the best case for repeated-data compression.
 
-Raw data is in [benchmark-result.json](benchmark/benchmark-result.json).
+Read the full [benchmark report](benchmarks/Benchmarks.md) for per-library GC, wire shape, duration, drain, FPS, and completion data. Raw Studio output is in [moving-benchmark.json](benchmarks/moving-benchmark.json) and [static-benchmark.json](benchmarks/static-benchmark.json).
 
 # Documentation
 
 Technical documentation lives in the `docs/` directory:
 
 - **[Architecture & Getting Started](docs/guide/getting-started.md)**: High-level overview and initialization.
-- **[API Reference](docs/api/satset.md)**: `Satset` namespace, packets, channels, guards, and types.
+- **[API Reference](docs/api/satset.md)**: `Satset` namespace, packets, groups, channels, guards, and types.
 - **[Development Patterns](docs/guide/development-patterns.md)**: Design rules and performance constraints.
 - **[Security & Guard](docs/guide/security.md)**: Documentation on the token bucket rate limiting implementation.
 - **[Serialization Types](docs/api/types.md)**: Available data types for buffer-backed schemas.
@@ -53,6 +49,8 @@ Technical documentation lives in the `docs/` directory:
 # Contributing
 
 Before opening a pull request, read the **[Contribution Guide](CONTRIBUTING.md)** and **[Development Patterns](docs/guide/development-patterns.md)**.
+
+Run the transport contract test with `lune run tests/transport.luau`.
 
 # Features
 
@@ -63,11 +61,14 @@ Satset has two public networking surfaces:
 - **Packets (Stateless)**: One-off events like character actions or effects. Satset batches them every frame.
 - **Channels (Stateful)**: State sync for fixed-size schemas. Channels write state into a buffer, mark dirty fields with a bitmask, and send changed bytes between keyframes.
 
+Groups are a server-owned audience for Packets. They do not change the Packet
+or Channel model.
+
 ## Implementation Details
 
 - **Buffer-backed batching**: Outgoing payloads are encoded into Luau buffers and committed as exact-size buffers before transport.
 - **Reliable run grouping**: Same-packet reliable runs share one packet id and one run count.
-- **Reliable delta encoding**: Direct reliable traffic tracks the previous batch and XORs same-size batches. Broadcast reliable traffic stays raw.
+- **Adaptive reliable delta**: Direct reliable traffic tracks the previous same-size batch. General payloads use XOR, text can stay raw when XOR is not useful, and eligible bitpacked payloads can transpose their delta bytes. Broadcast reliable traffic stays raw.
 - **Nested structs**: Use `Satset.struct(schema)` to build reusable type objects.
 - **ByteNet-style aliases**: `string`, `uint8`, `float64`, and related names map to Satset's shorthand types.
 - **Packet dispatch**: Incoming batches are decoded in place. Each packet listener receives a decoded table.
@@ -85,6 +86,7 @@ The following diagram shows how data flows through Satset's internal modules, fr
 flowchart TB
     subgraph API["Public API"]
         DP["definePacket()"]
+        DG["defineGroup()"]
         DC["defineChannel()"]
         ST["struct()"]
     end
@@ -100,10 +102,12 @@ flowchart TB
         BT["Batcher"]
         GD["Guard"]
         BR["Bridge"]
+        TR["Transport interface"]
     end
 
     subgraph Networking
         PK["Packet"]
+        GR["Group"]
         CH["Channel"]
     end
 
@@ -113,7 +117,9 @@ flowchart TB
     end
 
     DP --> PK
+    DG --> GR
     DC --> CH
+    GR -->|"current members"| PK
 
     PK -->|"calculateSize(schema, data)"| SR
     ST -->|"compile nested"| SC
@@ -127,9 +133,10 @@ flowchart TB
     CH -->|"encodeDelta(bitmask)"| BT
 
     BT -->|"flush, group, delta"| BR
+    TR -.->|"optional injection"| BR
 
-    BR --> RE
-    BR --> URE
+    BR -->|"default transport"| RE
+    BR -->|"default transport"| URE
 
     RE -->|"incoming payload"| GD
     URE -->|"incoming payload"| GD
@@ -150,14 +157,15 @@ For a detailed step-by-step walkthrough of a packet's lifecycle, see the [Archit
 Add Satset to your `wally.toml`:
 
 ```toml
-Satset = "protheeuz/satset@0.4.0"
+Satset = "protheeuz/satset@0.4.1"
 ```
 
 Then run `wally install`.
 
 ## Initialization
 
-Satset must be started once on both the **Server** and **Client** before defining any packets or channels.
+Satset must be started once on both the **Server** and **Client** before defining
+packets, groups, or channels.
 
 ```luau
 -- In your main Server/Client entry point
@@ -206,14 +214,20 @@ return {
 **Server Usage:**
 
 ```luau
+local Satset = require(game:GetService("ReplicatedStorage").Packages.Satset)
 local Packets = require(path.to.Shared.Packets)
  
 -- Sending to specific client
 Packets.Damage:fireClient(player, { targetId = 123, amount = 50, critical = true })
+
+-- One encode, then fanout through each member's packet stream
+local RedTeam = Satset.defineGroup("RedTeam")
+RedTeam:add(player)
+Packets.Damage:fireGroup(RedTeam, { targetId = 123, amount = 50, critical = true })
  
 -- Listening to client events
-Packets.Damage:listen(function(data, sender)
-    print(sender.Name .. " dealt " .. data.amount .. " damage!")
+Packets.Damage:listenServer(function(player, data)
+    print(player.Name .. " dealt " .. data.amount .. " damage!")
 end)
 ```
 

@@ -1,6 +1,6 @@
 # Introduction
 
-**Satset** is a buffer-backed networking library for Roblox. It provides stateless packets, stateful channels, schema-based serialization, and server-side rate limiting.
+**Satset** is a buffer-backed networking library for Roblox. It provides stateless packets, server-owned packet groups, stateful channels, schema-based serialization, and server-side rate limiting.
 
 ## Why Satset?
 
@@ -9,6 +9,8 @@ Roblox's native `RemoteEvent` system can become expensive for high-frequency dat
 - **Buffer-backed serialization**: Uses Luau `buffer` for compact binary payloads.
 - **Automatic batching**: Queues packet fires and commits them during `PostSimulation`.
 - **Stateful channels**: Syncs state changes through bitmask-based dirty fields and periodic keyframes.
+- **Server-owned groups**: Sends one packet payload to an explicit set of players.
+- **Replaceable packet transport**: Keeps Roblox remotes as the default while allowing tests to inject a small transport implementation.
 - **Guard and sanitization**: Applies server-side token buckets, buffer bounds checks, and float sanitization.
 - **Plain Luau API**: Works without a code generation step.
 

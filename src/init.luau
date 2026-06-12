@@ -5,10 +5,12 @@
 local Batcher = require(script.Core.Batcher)
 local Bridge = require(script.Core.Bridge)
 local Channel = require(script.Networking.Channel)
+local Group = require(script.Networking.Group)
 local Guard = require(script.Core.Guard)
 local Packet = require(script.Networking.Packet)
 local SchemaCompiler = require(script.Serialization.SchemaCompiler)
 local Serializer = require(script.Serialization.Serializer)
+local Transport = require(script.Core.Transport)
 local Types = require(script.Types)
 
 local Players = game:GetService("Players")
@@ -38,6 +40,7 @@ Satset.Version = VERSION
 Satset.Types = Types
 Satset.definePacket = Packet.definePacket
 Satset.defineChannel = Channel.defineChannel
+Satset.defineGroup = Group.defineGroup
 
 --[[
 	Wraps a schema table into a reusable Type object.
@@ -58,6 +61,7 @@ Satset.struct = function(schema: { [string]: Types.Type<any> }): Types.Type<{ [s
 			return Serializer.calculateSize(compiled, value)
 		end,
 		isFixed = compiled.fixedSize ~= nil,
+		compressionProfile = compiled.compressionProfile,
 	}
 end
 
@@ -65,7 +69,10 @@ end
 export type SatsetConfig = {
 	guard: any?,
 	batching: any?,
+	transport: Transport.Transport?,
 }
+
+export type PacketTransport = Transport.Transport
 
 --[[
 	Start the networking engine. 
@@ -82,7 +89,7 @@ function Satset.start(config: SatsetConfig?)
 	_initialized = true
 
 	local context = if IS_SERVER then "Server" else "Client"
-	print(`[Satset v{VERSION}] Initializing on {context}`)
+	print(`[Satset v{VERSION}] Initializing on {context} >ᴗ<`)
 
 	local cfg: SatsetConfig = config or {} :: SatsetConfig
 
@@ -92,7 +99,7 @@ function Satset.start(config: SatsetConfig?)
 	end
 
 	-- We initialize the bridge first to ensure remotes are ready.
-	Bridge.init()
+	Bridge.init(cfg.transport)
 
 	-- The batcher hooks into PostSimulation to flush outgoing data.
 	Batcher.init()
@@ -117,10 +124,11 @@ function Satset.start(config: SatsetConfig?)
 		Players.PlayerRemoving:Connect(function(player)
 			_guard:removePlayer(player)
 			Batcher.removePlayer(player)
+			Group._removePlayer(player)
 		end)
 
 		-- Reliable packet listener.
-		Bridge.getReliable().OnServerEvent:Connect(function(player, payload)
+		Bridge.onServer(true, function(player, payload)
 			if typeof(payload) ~= "buffer" then
 				return -- Malformed data
 			end
@@ -138,7 +146,7 @@ function Satset.start(config: SatsetConfig?)
 		end)
 
 		-- Unreliable packet listener.
-		Bridge.getUnreliable().OnServerEvent:Connect(function(player, payload)
+		Bridge.onServer(false, function(player, payload)
 			if not _guard:consume(player) then
 				return
 			end
@@ -173,7 +181,7 @@ function Satset.start(config: SatsetConfig?)
 		channelUnreliable = bridgeFolder:WaitForChild(CHANNEL_UNRELIABLE_NAME) :: UnreliableRemoteEvent
 
 		-- Standard reliable packet listener.
-		Bridge.getReliable().OnClientEvent:Connect(function(payload)
+		Bridge.onClient(true, function(payload)
 			if typeof(payload) ~= "buffer" then
 				return
 			end
@@ -187,7 +195,7 @@ function Satset.start(config: SatsetConfig?)
 		end)
 
 		-- Standard unreliable packet listener.
-		Bridge.getUnreliable().OnClientEvent:Connect(function(payload)
+		Bridge.onClient(false, function(payload)
 			if typeof(payload) ~= "buffer" then
 				return
 			end

@@ -36,9 +36,9 @@ State sync is an explicit, bitmask-tracked process.
 
 Reliable packet batches are allowed to change shape before they hit `RemoteEvent`.
 
-Repeated packet ids can become a grouped run. Direct reliable batches with the same byte length can be XORed against the previous batch for that peer. Broadcast reliable traffic stays raw because there is no single receiver state to track.
+Repeated packet ids can become a grouped run. Direct reliable batches with the same byte length are compared with the previous batch for that peer. General payloads use XOR. Text payloads can stay raw when XOR does not produce enough zero bytes. Eligible bitpacked payloads can transpose the XOR result. Broadcast reliable traffic stays raw because there is no single receiver state to track.
 
-Keep the header flags explicit. The high bits of the reliable header carry tracking and delta state; the low 14 bits remain the item count.
+Keep the header flags explicit. The high bits of the reliable header carry tracking, delta, and transpose state; the low 13 bits remain the item count.
 
 ## Defensive Buffer Reads
 
@@ -71,7 +71,7 @@ When you modify any part of Satset, use this checklist to make sure related docs
 
 * [ ] Update `docs/api/types.md` with the new type signature and size.
 * [ ] If the type has security implications (sanitization, bounds checks), update `docs/guide/security.md`.
-* [ ] Run the benchmark suite and update `benchmark/Benchmarks.md` if performance characteristics change.
+* [ ] Run the benchmark suite and update `benchmarks/Benchmarks.md` if performance characteristics change.
 
 ### If you change serialization or buffer handling
 
@@ -86,5 +86,6 @@ When you modify any part of Satset, use this checklist to make sure related docs
 
 ### If you change the benchmark harness
 
-* [ ] Re-run benchmarks in Studio and update `benchmark/Benchmarks.md` with fresh data.
-* [ ] Replace the raw JSON block at the bottom of `Benchmarks.md`.
+* [ ] Re-run benchmarks in Studio and update `benchmarks/Benchmarks.md` with fresh data.
+* [ ] Replace `static-benchmark.json` or `moving-benchmark.json`, matching the configured payload variant.
+* [ ] Check that the report includes bandwidth, GC, wire shape, duration, drain, FPS, and completion data.

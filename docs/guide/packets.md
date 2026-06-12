@@ -9,7 +9,10 @@ When you call `:fireServer()` or `:fireClient()`, Satset queues the encoded payl
 Reliable traffic is committed at the frame flush by default. Direct reliable traffic also gets two wire-format passes before send:
 
 - same-packet runs share one packet id and one run count;
-- same-size batches are XORed against the previous batch for that peer.
+- same-size batches are compared with the previous batch for that peer;
+- general payloads use XOR delta bytes;
+- text payloads stay raw when XOR does not produce enough zero bytes;
+- eligible bitpacked payloads can transpose the XOR result to group changing bits.
 
 Unreliable traffic still splits around 900 bytes by default. Fixed-size packet schemas omit payload-size headers.
 

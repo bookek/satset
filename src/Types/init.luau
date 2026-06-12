@@ -7,12 +7,15 @@ local Sanitizer = require(script.Parent.Serialization.Sanitizer)
 
 -- [ Types ]
 
+export type CompressionProfile = "general" | "text" | "bitpacked"
+
 export type Type<T> = {
 	read: (b: buffer, cursor: number) -> T,
 	write: (b: buffer, cursor: number, value: T) -> (),
 	size: number,
 	getSize: (value: T) -> number,
 	isFixed: boolean,
+	compressionProfile: CompressionProfile?,
 }
 
 local Types = {}
@@ -145,6 +148,7 @@ Types.string8 = {
 		return 1 + #value
 	end,
 	isFixed = false,
+	compressionProfile = "text",
 }
 
 Types.string16 = {
@@ -165,6 +169,7 @@ Types.string16 = {
 		return 2 + #value
 	end,
 	isFixed = false,
+	compressionProfile = "text",
 }
 
 -- [ Roblox Native Types ]
@@ -505,6 +510,7 @@ function Types.optional(innerType: Type<any>): Type<any>
 			return if value == nil then 1 else 1 + innerType.getSize(value)
 		end,
 		isFixed = false,
+		compressionProfile = innerType.compressionProfile,
 	}
 end
 
@@ -597,19 +603,26 @@ function Types.array(elementType: Type<any>): Type<{ any }>
 				return 2 + math.floor((#value + 7) / 8)
 			end,
 			isFixed = false,
+			compressionProfile = "bitpacked",
 		}
 	elseif elementType == Types.string8 then
 		return {
 			read = function(b: buffer, cursor: number)
 				local bufLen = buffer.len(b)
 				local len = buffer.readu16(b, cursor)
-				local maxPossible = bufLen - cursor - 2
+				local maxPossible = math.floor((bufLen - cursor - 2) / 2)
 				len = math.min(len, math.max(maxPossible, 0))
 				local arr, pos = table.create(len), cursor + 2
 				for i = 1, len do
-					local strLen = buffer.readu8(b, pos)
-					arr[i] = buffer.readstring(b, pos + 1, strLen)
-					pos += 1 + strLen
+					if pos + 2 > bufLen then
+						return {}
+					end
+					local strLen = buffer.readu16(b, pos)
+					if strLen > 255 or pos + 2 + strLen > bufLen then
+						return {}
+					end
+					arr[i] = buffer.readstring(b, pos + 2, strLen)
+					pos += 2 + strLen
 				end
 				return arr
 			end,
@@ -620,20 +633,22 @@ function Types.array(elementType: Type<any>): Type<{ any }>
 				for i = 1, len do
 					local str = value[i]
 					local strLen = #str
-					buffer.writeu8(b, pos, strLen)
-					buffer.writestring(b, pos + 1, str, strLen)
-					pos += 1 + strLen
+					assert(strLen <= 255, "string8 values cannot exceed 255 bytes")
+					buffer.writeu16(b, pos, strLen)
+					buffer.writestring(b, pos + 2, str, strLen)
+					pos += 2 + strLen
 				end
 			end,
 			size = 2,
 			getSize = function(value: { any })
 				local total = 2
 				for i = 1, #value do
-					total += 1 + #value[i]
+					total += 2 + #value[i]
 				end
 				return total
 			end,
 			isFixed = false,
+			compressionProfile = "text",
 		}
 	elseif elementType == Types.string16 then
 		return {
@@ -671,6 +686,7 @@ function Types.array(elementType: Type<any>): Type<{ any }>
 				return total
 			end,
 			isFixed = false,
+			compressionProfile = "text",
 		}
 	elseif elementType == Types.u8 then
 		return {
@@ -729,6 +745,7 @@ function Types.array(elementType: Type<any>): Type<{ any }>
 				return 2 + (#value * 4)
 			end,
 			isFixed = false,
+			compressionProfile = elementType.compressionProfile,
 		}
 	end
 
@@ -804,6 +821,7 @@ function Types.array(elementType: Type<any>): Type<{ any }>
 			return total
 		end,
 		isFixed = false,
+		compressionProfile = elementType.compressionProfile,
 	}
 end
 
@@ -870,6 +888,9 @@ function Types.map(keyType: Type<any>, valueType: Type<any>): Type<{ [any]: any 
 			return total
 		end,
 		isFixed = false,
+		compressionProfile = if keyType.compressionProfile == valueType.compressionProfile
+			then keyType.compressionProfile
+			else nil,
 	}
 end
 

@@ -38,4 +38,4 @@ Types: `feat`, `fix`, `refactor`, `perf`, `docs`, `chore`, `test`, `style`.
 
 ## Benchmarks
 
-If your change touches a hot path (Batcher, Serializer, Bridge), run the benchmark harness in `benchmark/` and include results in your PR description.
+If your change touches a hot path (Batcher, Serializer, Bridge), run the benchmark harness in `benchmarks/` and include results in your PR description.
