@@ -1,6 +1,6 @@
 # [**Satset**](https://github.com/bookek/satset) Networking Benchmarks
 
-**Last updated:** June 12, 2026
+**Last updated:** June 12, 2026 (Satset `v0.4.2`)
 
 The Studio benchmark sends 200 events per frame for 600 frames. A complete row sends and receives 120,000 events. The report keeps Roblox's `Stats.DataSendKbps` unit as Kbps.
 

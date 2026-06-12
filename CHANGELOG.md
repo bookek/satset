@@ -4,6 +4,33 @@ All notable changes to Satset will be documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioned per [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.2] - 2026-06-12
+
+> **Wake up babe, new update just dropped**
+
+This release adds explicit packet audiences and a replaceable packet transport.
+It also revises the reliable wire path using static and moving payload data,
+rather than judging compression from repeated payloads alone.
+
+### Added
+
+- **Server-Owned Groups**: Added `defineGroup()` and `Packet:fireGroup()` for explicit server-managed packet audiences.
+- **Server Listener Helper**: Added `Packet:listenServer()` for handlers that prefer `(player, data)` argument order.
+- **Packet Transport Interface**: Added an optional transport interface for packet tests and future non-RemoteEvent adapters. Roblox remotes remain the default.
+- **Transport Contract Test**: Added a Lune test for packet transport behavior without Roblox Studio.
+- **Benchmark Variants**: Added static and moving payload runs. Moving payloads change by frame and event slot.
+- **Benchmark Metrics**: Added per-library GC, wire bytes, workload duration, drain time, FPS, and completion data.
+
+### Changed
+
+- **Adaptive Reliable Delta**: General payloads use same-size XOR deltas. Text payloads can stay raw when XOR is not useful, while eligible bitpacked payloads can use a transposed delta layout.
+- **Reliable Run Headers**: Repeated packet ids now use a three-byte header for short runs and a five-byte header for long runs.
+- **String Array Encoding**: Added a compact repeated-string layout when it produces fewer bytes than the regular array encoding.
+- **Compression Profiles**: Schemas now carry general, text, or bitpacked hints into the reliable batching path.
+- **Benchmark Report**: Rebuilt the report from `static-benchmark.json` and `moving-benchmark.json`, with separate tables for both payload variants.
+- **Benchmark Directory**: Renamed `benchmark/` to `benchmarks/` and updated documentation links.
+- **Public Documentation**: Updated README and API guides for Groups, packet transport, adaptive delta behavior, current installation, and the latest benchmark data.
+
 ## [0.4.1] - 2026-06-09
 
 This patch fixes how Satset is mapped and packaged. The previous Rojo project
