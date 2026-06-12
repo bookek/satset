@@ -129,13 +129,15 @@ The static result shows how strongly repeated bytes affect Roblox transport comp
 | **Satset** | 3.27 | 32.89 | 2,266.025 | 10.05 | 5.12 | 60 | 120K / 120K |
 | [Warp][warp] | 3.41 | 4,361.43 | 2,166.010 | 10.01 | 4.07 | 60 | 120K / 120K |
 | [QuickNet][quicknet] | 96.51 | 6,090.95 | ~2,267.010 | 10.03 | 9.77 | 60 | 120K / 120K |
-| [ByteNet][bytenet] | skipped | - | - | - | - | - | ByteNet 0.4.6 repeatedly copies its growing buffer while writing strings and cannot finish this workload |
+| [ByteNet][bytenet] | skipped | - | - | - | - | - | - |
 | [NetrayCompile][netray-compile] | 96.54 | 4,200.54 | 2,165.020 | 10.05 | 9.67 | 58 | 120K / 120K |
 | [Zap][zap] | 100.72 | 7,110.43 | 2,267.000 | 10.01 | 9.57 | 60 | 120K / 120K |
 | [Blink][blink] | 100.30 | 8,787.28 | 2,267.000 | 11.84 | 9.85 | 54 | 120K / 120K |
 | [Packet][packet] | 95.89 | 2,217.27 | ~2,266.000 | 10.02 | 9.88 | 60 | 120K / 120K |
 | [BridgeNet2][bridgenet2] | 27,028.97 | 46.60 | ~2,266.000 | 10.17 | 21.75 | 56 | 120K / 120K |
 | Roblox | 108,222.58 | 14.97 | ~2,266.000 | 10.01 | 11.30 | 60 | 120K / 120K |
+
+> NOTE: ByteNet 0.4.6 repeatedly copies its growing buffer while writing strings and cannot finish this workload.
 
 ## Moving Results
 
