@@ -4,7 +4,17 @@ All notable changes to Satset will be documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioned per [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.4.1] - 2026-06-09
+
+This patch fixes how Satset is mapped and packaged. The previous Rojo project
+described a full DataModel, which made the package awkward to mount as a normal
+ModuleScript dependency.
+
+### Changed
+
+- **Rojo Package Root**: Changed `default.project.json` to map `src` directly instead of creating a `DataModel` with a nested `ReplicatedStorage.Satset`.
+- **Wally Package Contents**: Excluded documentation and repository-only files from the published package while keeping `default.project.json`, `src`, and `LICENSE`.
+- **Package Metadata**: Updated the Wally author list and bumped the package version to `0.4.1`.
 
 ## [0.4.0] - 2026-06-03
 
