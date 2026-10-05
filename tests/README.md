@@ -12,6 +12,12 @@ Run the Group fanout scale test with:
 lune run tests/group-fanout.luau
 ```
 
+Run the listener lifecycle and disconnect test with:
+
+```sh
+lune run tests/listeners.luau
+```
+
 The mock models one server and several clients in one process. It tests the
 transport boundary, not Roblox scheduling or RemoteEvent behavior.
 
