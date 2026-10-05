@@ -18,7 +18,7 @@ Starts the networking engine. Call it once on both server and client before defi
 
 ### `Satset.definePacket(config: PacketConfig): Packet`
 
-Defines a new stateless packet. Returns a `Packet` object with `fireServer`, `fireClient`, `fireAllClients`, `fireGroup`, `listen`, and `listenServer` methods.
+Defines a new stateless packet. Returns a `Packet` object with `fireServer`, `fireClient`, `fireAllClients`, `fireAllExcept`, `fireGroup`, `listen`, and `listenServer` methods.
 
 ### `Satset.defineGroup(name: string): Group`
 

@@ -45,6 +45,7 @@ export type Packet = {
 	fireServer: (self: Packet, data: { [string]: any }) -> (),
 	fireClient: (self: Packet, player: Player, data: { [string]: any }) -> (),
 	fireAllClients: (self: Packet, data: { [string]: any }) -> (),
+	fireAllExcept: (self: Packet, exceptPlayer: Player, data: { [string]: any }) -> (),
 	fireGroup: (self: Packet, group: GroupObject, data: { [string]: any }) -> (),
 	listen: (self: Packet, callback: (data: { [string]: any }, sender: Player?) -> ()) -> Connection,
 	listenServer: (self: Packet, callback: (player: Player, data: { [string]: any }) -> ()) -> Connection,
@@ -142,6 +143,45 @@ function Packet.definePacket(config: PacketConfig): Packet
 
 			Batcher.recordDebugGc("send", gcStart)
 		end
+	end
+
+	function self:fireAllExcept(exceptPlayer: Player, data: { [string]: any })
+		assert(IS_SERVER, "[Satset] fireAllExcept can only be called from the server")
+
+		local players = Players:GetPlayers()
+		local firstPlayer: Player? = nil
+		local firstIndex = 0
+
+		for i = 1, #players do
+			local player = players[i]
+			if player ~= exceptPlayer then
+				firstPlayer = player
+				firstIndex = i
+				break
+			end
+		end
+
+		if not firstPlayer then
+			return
+		end
+
+		local gcStart = Batcher.beginDebugGc()
+		local size = compiled.fixedSize or Serializer.calculateSize(compiled, data)
+		Batcher.recordDebugGc("send", gcStart)
+
+		local source, sourceOffset = Batcher.allocateForPlayer(firstPlayer, id, size, def.reliable)
+		gcStart = Batcher.beginDebugGc()
+		Serializer.encodeInto(compiled, data, source, sourceOffset)
+
+		for i = firstIndex + 1, #players do
+			local player = players[i]
+			if player ~= exceptPlayer then
+				local target, targetOffset = Batcher.allocateForPlayer(player, id, size, def.reliable)
+				buffer.copy(target, targetOffset, source, sourceOffset, size)
+			end
+		end
+
+		Batcher.recordDebugGc("send", gcStart)
 	end
 
 	function self:fireGroup(group: GroupObject, data: { [string]: any })
