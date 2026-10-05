@@ -50,7 +50,13 @@ Technical documentation lives in the `docs/` directory:
 
 Before opening a pull request, read the **[Contribution Guide](CONTRIBUTING.md)** and **[Development Patterns](docs/guide/development-patterns.md)**.
 
-Run the transport contract test with `lune run tests/transport.luau`.
+Run the local test suite with:
+
+```sh
+lune run tests/transport.luau
+lune run tests/group-fanout.luau
+lune run tests/schema.luau
+```
 
 # Features
 
