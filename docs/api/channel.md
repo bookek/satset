@@ -26,9 +26,9 @@ type ChannelConfig = {
 - **entityId**: A unique identifier for the entity (e.g., `player.UserId` or a GUID).
 - **initialData**: Optional initial state.
 
-### `:subscribe(callback: (entityId: number, state: table) -> ())`
+### `:subscribe(callback: (entityId: number, state: table) -> ()): Connection`
 
-**Client Only.** Registers a listener for state updates. Subscribers are wrapped in `xpcall`, so one failing callback does not stop the rest.
+**Client Only.** Registers a listener for state updates. Returns a `Connection` with `:Disconnect()` and `:disconnect()` methods. Subscribers are wrapped in `xpcall`.
 
 ## Entity Object
 

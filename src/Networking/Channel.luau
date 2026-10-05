@@ -23,11 +23,18 @@ export type Entity = {
 	destroy: (self: Entity) -> (),
 }
 
+export type Connection = {
+	Disconnect: (self: Connection) -> (),
+	disconnect: (self: Connection) -> (),
+}
+
+type ChannelSubscriber = (entityId: number, state: { [string]: any }) -> ()
+
 export type Channel = {
 	-- Only one side exists at runtime: `create` on the server, `subscribe` on
 	-- the client. Both are optional so neither side claims a method it lacks.
 	create: ((self: Channel, entityId: number, initialData: { [string]: any }?) -> Entity)?,
-	subscribe: ((self: Channel, callback: (entityId: number, state: { [string]: any }) -> ()) -> ())?,
+	subscribe: ((self: Channel, callback: ChannelSubscriber) -> Connection)?,
 }
 
 type EntityData = {
@@ -45,13 +52,43 @@ type ChannelDef = {
 	resyncInterval: number,
 	entities: { [number]: EntityData },
 	lastResync: number,
-	subscribers: { (entityId: number, state: { [string]: any }) -> () },
+	subscribers: { ChannelSubscriber },
+	dispatching: boolean?,
+	pendingCleanup: boolean?,
 	clientState: { [number]: buffer },
 }
 
 local channelRegistry: { [number]: ChannelDef } = {}
 local channelsByName: { [string]: ChannelDef } = {}
 local nextChannelId = 1
+
+local function createChannelConnection(def: ChannelDef, target: ChannelSubscriber): Connection
+	local disconnected = false
+	local connection = {} :: Connection
+
+	function connection:Disconnect()
+		if disconnected then
+			return
+		end
+		disconnected = true
+
+		if def.dispatching then
+			local idx = table.find(def.subscribers, target)
+			if idx then
+				(def.subscribers :: any)[idx] = false
+				def.pendingCleanup = true
+			end
+		else
+			local idx = table.find(def.subscribers, target)
+			if idx then
+				table.remove(def.subscribers, idx)
+			end
+		end
+	end
+
+	connection.disconnect = connection.Disconnect
+	return connection
+end
 
 local Channel = {}
 
@@ -144,8 +181,9 @@ function Channel.defineChannel(config: ChannelConfig): Channel
 			return entity :: any
 		end
 	else
-		function self:subscribe(callback: (entityId: number, state: { [string]: any }) -> ())
+		function self:subscribe(callback: (entityId: number, state: { [string]: any }) -> ()): Connection
 			table.insert(def.subscribers, callback)
+			return createChannelConnection(def, callback)
 		end
 	end
 
@@ -239,10 +277,24 @@ function Channel._applyUpdate(b: buffer)
 		for _, field in def.compiled.fields do
 			state[field.name] = field.type.read(clientBuf, field.offset)
 		end
-		for _, callback in def.subscribers do
-			xpcall(callback, function(err)
-				warn(`[Satset] Channel '{def.name}' subscriber error: {err}`)
-			end, entityId, state)
+		def.dispatching = true
+		for i = 1, #def.subscribers do
+			local callback = def.subscribers[i]
+			if callback then
+				xpcall(callback, function(err)
+					warn(`[Satset] Channel '{def.name}' subscriber error: {err}`)
+				end, entityId, state)
+			end
+		end
+		def.dispatching = false
+
+		if def.pendingCleanup then
+			for i = #def.subscribers, 1, -1 do
+				if not def.subscribers[i] then
+					table.remove(def.subscribers, i)
+				end
+			end
+			def.pendingCleanup = false
 		end
 	end
 end

@@ -26,12 +26,21 @@ export type PacketConfig = {
 	reliable: boolean?,
 }
 
+export type Connection = {
+	Disconnect: (self: Connection) -> (),
+	disconnect: (self: Connection) -> (),
+}
+
+type PacketListener = (data: { [string]: any }, sender: Player?) -> ()
+
 type PacketDef = {
 	id: number,
 	name: string,
 	compiled: SchemaCompiler.CompiledSchema,
 	reliable: boolean,
-	listeners: { (data: { [string]: any }, sender: Player?) -> () },
+	listeners: { PacketListener },
+	dispatching: boolean?,
+	pendingCleanup: boolean?,
 }
 
 export type Packet = {
@@ -39,8 +48,8 @@ export type Packet = {
 	fireClient: (self: Packet, player: Player, data: { [string]: any }) -> (),
 	fireAllClients: (self: Packet, data: { [string]: any }) -> (),
 	fireGroup: (self: Packet, group: GroupObject, data: { [string]: any }) -> (),
-	listen: (self: Packet, callback: (data: { [string]: any }, sender: Player?) -> ()) -> (),
-	listenServer: (self: Packet, callback: (player: Player, data: { [string]: any }) -> ()) -> (),
+	listen: (self: Packet, callback: (data: { [string]: any }, sender: Player?) -> ()) -> Connection,
+	listenServer: (self: Packet, callback: (player: Player, data: { [string]: any }) -> ()) -> Connection,
 }
 
 -- [ State ]
@@ -48,6 +57,34 @@ export type Packet = {
 local packetRegistry: { [number]: PacketDef } = {}
 local packetsByName: { [string]: PacketDef } = {}
 local nextPacketId = 1
+
+local function createConnection(def: PacketDef, target: PacketListener): Connection
+	local disconnected = false
+	local connection = {} :: Connection
+
+	function connection:Disconnect()
+		if disconnected then
+			return
+		end
+		disconnected = true
+
+		if def.dispatching then
+			local idx = table.find(def.listeners, target)
+			if idx then
+				(def.listeners :: any)[idx] = false
+				def.pendingCleanup = true
+			end
+		else
+			local idx = table.find(def.listeners, target)
+			if idx then
+				table.remove(def.listeners, idx)
+			end
+		end
+	end
+
+	connection.disconnect = connection.Disconnect
+	return connection
+end
 
 local Packet = {}
 
@@ -164,18 +201,21 @@ function Packet.definePacket(config: PacketConfig): Packet
 		Batcher.recordDebugGc("send", gcStart)
 	end
 
-	function self:listen(callback: (data: { [string]: any }, sender: Player?) -> ())
+	function self:listen(callback: (data: { [string]: any }, sender: Player?) -> ()): Connection
 		table.insert(def.listeners, callback)
+		return createConnection(def, callback)
 	end
 
-	function self:listenServer(callback: (player: Player, data: { [string]: any }) -> ())
+	function self:listenServer(callback: (player: Player, data: { [string]: any }) -> ()): Connection
 		assert(IS_SERVER, "[Satset] listenServer can only be called from the server")
-		table.insert(def.listeners, function(data, sender)
+		local listener = function(data, sender)
 			callback(sender :: Player, data)
-		end)
+		end
+		table.insert(def.listeners, listener)
+		return createConnection(def, listener)
 	end
 
-	return self :: any
+	return self :: Packet
 end
 
 -- [ Internal API ]
@@ -225,11 +265,25 @@ function Packet._dispatchSingle(
 	local data = decoded :: { [string]: any }
 
 	gcStart = Batcher.beginDebugGc()
-	for _, listener in def.listeners do
-		local success, err = protectedCall(listener, data, sender)
-		if not success then
-			warn(`[Satset] Packet '{def.name}' listener error: {err}`)
+	def.dispatching = true
+	for i = 1, #def.listeners do
+		local listener = def.listeners[i]
+		if listener then
+			local success, err = protectedCall(listener, data, sender)
+			if not success then
+				warn(`[Satset] Packet '{def.name}' listener error: {err}`)
+			end
 		end
+	end
+	def.dispatching = false
+
+	if def.pendingCleanup then
+		for i = #def.listeners, 1, -1 do
+			if not def.listeners[i] then
+				table.remove(def.listeners, i)
+			end
+		end
+		def.pendingCleanup = false
 	end
 	Batcher.recordDebugGc("listenerCall", gcStart)
 
