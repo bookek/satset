@@ -7,6 +7,8 @@ env.Vector3 = roblox.Vector3
 env.Color3 = roblox.Color3
 env.CFrame = roblox.CFrame
 
+local currentPlayers: { any } = {}
+
 env.game = {
 	GetService = function(_, name: string)
 		if name == "RunService" then
@@ -26,7 +28,7 @@ env.game = {
 		elseif name == "Players" then
 			return {
 				GetPlayers = function()
-					return {}
+					return currentPlayers
 				end,
 				PlayerRemoving = {
 					Connect = function()
@@ -253,4 +255,111 @@ subOrder = {}
 ClientChannel._applyUpdate(deltaBuf)
 assert(#subOrder == 0, "subscriber B ran after disconnect")
 
-print("listener leak tests passed")
+do
+	local yantoPlayer: Player = { name = "yanto" } :: any
+	local mukhlisPlayer: Player = { name = "mukhlis" } :: any
+	local bambangPlayer: Player = { name = "bambang" } :: any
+
+	type AllocRecord = {
+		player: Player,
+		id: number,
+		size: number,
+		reliable: boolean,
+		buf: buffer,
+		offset: number,
+	}
+	local allocations: { AllocRecord } = {}
+	local origAllocate = Batcher.allocateForPlayer
+	Batcher.allocateForPlayer = function(player: Player, id: number, size: number, reliable: boolean)
+		local b, offset = origAllocate(player, id, size, reliable)
+		table.insert(allocations, {
+			player = player,
+			id = id,
+			size = size,
+			reliable = reliable,
+			buf = b,
+			offset = offset,
+		})
+		return b, offset
+	end
+
+	local BroadcastReliable = Packet.definePacket({
+		name = "BroadcastReliable",
+		schema = {
+			count = Types.u32,
+		},
+		reliable = true,
+	})
+
+	local BroadcastUnreliable = Packet.definePacket({
+		name = "BroadcastUnreliable",
+		schema = {
+			count = Types.u32,
+		},
+		reliable = false,
+	})
+
+	currentPlayers = { yantoPlayer, mukhlisPlayer, bambangPlayer }
+	allocations = {}
+	BroadcastReliable:fireAllExcept(yantoPlayer, { count = 123 })
+
+	assert(#allocations == 2, "expected exactly 2 allocations")
+	assert(allocations[1].player == mukhlisPlayer, "first allocation was not mukhlis")
+	assert(allocations[2].player == bambangPlayer, "second allocation was not bambang")
+	assert(allocations[1].reliable == true and allocations[2].reliable == true, "reliable flag mismatch")
+	assert(buffer.readu32(allocations[1].buf, allocations[1].offset) == 123, "mukhlis payload mismatch")
+	assert(buffer.readu32(allocations[2].buf, allocations[2].offset) == 123, "bambang payload mismatch")
+
+	allocations = {}
+	BroadcastUnreliable:fireAllExcept(yantoPlayer, { count = 456 })
+	assert(#allocations == 2, "expected exactly 2 allocations for unreliable")
+	assert(allocations[1].player == mukhlisPlayer, "first unreliable allocation was not mukhlis")
+	assert(allocations[2].player == bambangPlayer, "second unreliable allocation was not bambang")
+	assert(allocations[1].reliable == false and allocations[2].reliable == false, "unreliable flag mismatch")
+	assert(buffer.readu32(allocations[1].buf, allocations[1].offset) == 456, "mukhlis unreliable payload mismatch")
+	assert(buffer.readu32(allocations[2].buf, allocations[2].offset) == 456, "bambang unreliable payload mismatch")
+
+	currentPlayers = { mukhlisPlayer, yantoPlayer, bambangPlayer }
+	allocations = {}
+	BroadcastReliable:fireAllExcept(yantoPlayer, { count = 789 })
+	assert(#allocations == 2, "middle exclusion allocation count mismatch")
+	assert(
+		allocations[1].player == mukhlisPlayer and allocations[2].player == bambangPlayer,
+		"middle exclusion recipients mismatch"
+	)
+
+	currentPlayers = { mukhlisPlayer, bambangPlayer, yantoPlayer }
+	allocations = {}
+	BroadcastReliable:fireAllExcept(yantoPlayer, { count = 101 })
+	assert(#allocations == 2, "end exclusion allocation count mismatch")
+	assert(
+		allocations[1].player == mukhlisPlayer and allocations[2].player == bambangPlayer,
+		"end exclusion recipients mismatch"
+	)
+
+	currentPlayers = { yantoPlayer }
+	allocations = {}
+	BroadcastReliable:fireAllExcept(yantoPlayer, { count = 999 })
+	assert(#allocations == 0, "allocation occurred when only exceptPlayer was present")
+
+	currentPlayers = {}
+	allocations = {}
+	BroadcastReliable:fireAllExcept(yantoPlayer, { count = 999 })
+	assert(#allocations == 0, "allocation occurred when player list was empty")
+
+	local ok, err = pcall(function()
+		local clientPacket =
+			luau.load(luau.compile(fs.readFile("src/Networking/Packet.luau")), { environment = clientEnv })()
+		local p = clientPacket.definePacket({
+			name = "ClientTestPacket",
+			schema = { count = Types.u32 },
+		})
+		p:fireAllExcept(yantoPlayer, { count = 1 })
+	end)
+	assert(not ok and string.find(tostring(err), "can only be called from the server"), "client call did not assert")
+
+	Batcher.allocateForPlayer = origAllocate
+	currentPlayers = {}
+end
+
+print("listener leak and fireAllExcept tests passed")

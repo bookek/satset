@@ -18,6 +18,10 @@ Objects returned by `Satset.definePacket`.
 
 Reliable packets share one broadcast batch. Unreliable packets are encoded once, then fanned out into each player's stream with `buffer.copy`, so per-player unreliable sequence numbers are preserved.
 
+### `:fireAllExcept(exceptPlayer: Player, data: table)`
+
+**Server Only.** Queues data for all players except the specified player. Encodes payload once and copies raw bytes to each recipient player stream buffer.
+
 ### `:fireGroup(group: Group, data: table)`
 
 **Server Only.** Queues one encoded payload for every current member of a
