@@ -4,13 +4,14 @@
 local RunService = game:GetService("RunService")
 
 local SchemaCompiler = require(script.Parent.Parent.Serialization.SchemaCompiler)
+local Types = require(script.Parent.Parent.Types)
 
 local IS_SERVER = RunService:IsServer()
 local FULL_MASK: number = 0xFFFFFFFF
 
 export type ChannelConfig = {
 	name: string,
-	schema: { [string]: any },
+	schema: { [string]: Types.Type<any> },
 	unreliable: boolean?, -- default true
 	resyncInterval: number?, -- keyframe cadence, seconds
 }
@@ -20,6 +21,11 @@ export type Entity = {
 	get: (self: Entity, fieldName: string) -> any,
 	getAll: (self: Entity) -> { [string]: any },
 	destroy: (self: Entity) -> (),
+}
+
+export type Channel = {
+	create: (self: Channel, entityId: number, initialData: { [string]: any }?) -> Entity,
+	subscribe: (self: Channel, callback: (entityId: number, state: { [string]: any }) -> ()) -> (),
 }
 
 type EntityData = {
@@ -47,7 +53,7 @@ local nextChannelId = 1
 
 local Channel = {}
 
-function Channel.defineChannel(config: ChannelConfig): any
+function Channel.defineChannel(config: ChannelConfig): Channel
 	local compiled = SchemaCompiler.compile(config.schema)
 
 	-- Channel updates patch bytes by offset, so fields must have fixed sizes.
@@ -141,7 +147,7 @@ function Channel.defineChannel(config: ChannelConfig): any
 		end
 	end
 
-	return self :: any
+	return self :: Channel
 end
 
 local function encodeDelta(def: ChannelDef, entityData: EntityData): buffer?

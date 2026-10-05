@@ -67,8 +67,8 @@ end
 
 -- We use explicit type references to avoid LSP resolution issues with relative requires.
 export type SatsetConfig = {
-	guard: any?,
-	batching: any?,
+	guard: Guard.GuardConfig?,
+	batching: Batcher.BatchingConfig?,
 	transport: Transport.Transport?,
 }
 
