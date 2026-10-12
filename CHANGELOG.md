@@ -4,6 +4,25 @@ All notable changes to Satset will be documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioned per [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-10-12
+
+> **Satset 0.5.0 is here — trick or treat 🎃**
+
+Broadcasts learned manners: skip one player, drop listeners cleanly, and stop hogging the reliable lane.
+
+### Added
+
+- **Packet Fire All Except**: Added `Packet:fireAllExcept()` for broadcasts to everyone minus one player. Works for reliable and unreliable packets with single-serialization fanout.
+- **Listener Disconnect Handles**: `Packet:listen()`, `Packet:listenServer()`, and `Channel:subscribe()` return a `Connection` with `Disconnect()` and `disconnect()`. Disconnecting mid-dispatch is safe, and double disconnect is a no-op.
+- **Schema Test Suite**: Added a Lune suite covering type round-trips, schemas, nested structs, and truncated buffers.
+
+### Changed
+
+- **Unreliable Broadcasts**: `Packet:fireAllClients()` fans unreliable packets out per player instead of forcing them through the reliable stream.
+- **Shared Fanout Copy**: Array broadcasts share one encode-once-copy helper.
+- **Shared Connection Cleanup**: Listener cleanup lives in one module with reentrant dispatch counting.
+- **Listener Protection Docs**: Documented disconnect-during-dispatch behavior in the security guide.
+
 ## [0.4.2] - 2026-06-12
 
 > **Wake up babe, new update just dropped**
