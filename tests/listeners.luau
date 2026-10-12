@@ -96,6 +96,9 @@ coreDir.Bridge = { __module = Bridge }
 local Batcher = origRequire("../src/Core/Batcher")
 coreDir.Batcher = { __module = Batcher }
 
+local CoreConnection = origRequire("../src/Core/Connection")
+coreDir.Connection = { __module = CoreConnection }
+
 scriptTree.Parent = networkingDir
 local Group = origRequire("../src/Networking/Group")
 networkingDir.Group = { __module = Group }
