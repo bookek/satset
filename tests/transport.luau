@@ -19,77 +19,68 @@ end
 
 local network = MockTransport.new()
 local server = Transport.assertValid(network:server())
-local yanto: Player = { name = "yanto" } :: any
-local mukhlis: Player = { name = "mukhlis" } :: any
-local yantoTransport = Transport.assertValid(network:addClient(yanto))
-local mukhlisTransport = Transport.assertValid(network:addClient(mukhlis))
+local alice = { name = "alice" }
+local bob = { name = "bob" }
+local aliceTransport = Transport.assertValid(network:addClient(alice))
+local bobTransport = Transport.assertValid(network:addClient(bob))
 
-type ServerMessage = {
-	player: Player,
-	value: number,
-}
-
-local serverReliable: { ServerMessage } = {}
-local serverUnreliable: { ServerMessage } = {}
+local serverReliable = {}
+local serverUnreliable = {}
 server:onServer(true, function(player, b)
-	table.insert(serverReliable, { player = player, value = valueOf(b) })
+	table.insert(serverReliable, { player, valueOf(b) })
 end)
 server:onServer(false, function(player, b)
-	table.insert(serverUnreliable, { player = player, value = valueOf(b) })
+	table.insert(serverUnreliable, { player, valueOf(b) })
 end)
 
-yantoTransport:sendToServer(true, payload(11))
-mukhlisTransport:sendToServer(false, payload(22))
+aliceTransport:sendToServer(true, payload(11))
+bobTransport:sendToServer(false, payload(22))
 
-assert(serverReliable[1].player == yanto and serverReliable[1].value == 11, "reliable client-to-server routing failed")
-assert(
-	serverUnreliable[1].player == mukhlis and serverUnreliable[1].value == 22,
-	"unreliable client-to-server routing failed"
-)
+assert(serverReliable[1][1] == alice and serverReliable[1][2] == 11, "reliable client-to-server routing failed")
+assert(serverUnreliable[1][1] == bob and serverUnreliable[1][2] == 22, "unreliable client-to-server routing failed")
 
-local yantoReceived: { number } = {}
-local mukhlisReceived: { number } = {}
-local mukhlisUnreliable: { number } = {}
-yantoTransport:onClient(true, function(b)
-	table.insert(yantoReceived, valueOf(b))
+local aliceReceived = {}
+local bobReceived = {}
+local aliceUnreliable = {}
+local bobUnreliable = {}
+aliceTransport:onClient(true, function(b)
+	table.insert(aliceReceived, valueOf(b))
 end)
-local mukhlisConnection = mukhlisTransport:onClient(true, function(b)
-	table.insert(mukhlisReceived, valueOf(b))
+local bobConnection = bobTransport:onClient(true, function(b)
+	table.insert(bobReceived, valueOf(b))
 end)
-mukhlisTransport:onClient(false, function(b)
-	table.insert(mukhlisUnreliable, valueOf(b))
+aliceTransport:onClient(false, function(b)
+	table.insert(aliceUnreliable, valueOf(b))
 end)
-
-local yantoUnreliable: { number } = {}
-yantoTransport:onClient(false, function(b)
-	table.insert(yantoUnreliable, valueOf(b))
+bobTransport:onClient(false, function(b)
+	table.insert(bobUnreliable, valueOf(b))
 end)
 
-server:sendToClient(true, yanto, payload(33))
+server:sendToClient(true, alice, payload(33))
 server:sendToAllClients(true, payload(44))
-server:sendToClient(false, mukhlis, payload(45))
+server:sendToClient(false, bob, payload(45))
 server:sendToAllClients(false, payload(99))
 
-assert(yantoReceived[1] == 33 and yantoReceived[2] == 44, "targeted send or broadcast missed yanto")
-assert(#mukhlisReceived == 1 and mukhlisReceived[1] == 44, "broadcast missed mukhlis")
+assert(aliceReceived[1] == 33 and aliceReceived[2] == 44, "targeted send or broadcast missed alice")
+assert(#bobReceived == 1 and bobReceived[1] == 44, "broadcast missed bob")
 assert(
-	#mukhlisUnreliable == 2 and mukhlisUnreliable[1] == 45 and mukhlisUnreliable[2] == 99,
-	"unreliable send or broadcast missed mukhlis"
+	#bobUnreliable == 2 and bobUnreliable[1] == 45 and bobUnreliable[2] == 99,
+	"unreliable send or broadcast missed bob"
 )
-assert(#yantoUnreliable == 1 and yantoUnreliable[1] == 99, "unreliable broadcast missed yanto")
+assert(#aliceUnreliable == 1 and aliceUnreliable[1] == 99, "unreliable broadcast missed alice")
 
-mukhlisConnection:Disconnect()
-server:sendToClient(true, mukhlis, payload(55))
-assert(#mukhlisReceived == 1, "disconnected listener still received data")
+bobConnection:Disconnect()
+server:sendToClient(true, bob, payload(55))
+assert(#bobReceived == 1, "disconnected listener still received data")
 
-network:removeClient(mukhlis)
+network:removeClient(bob)
 local ok = pcall(function()
-	server:sendToClient(true, mukhlis, payload(66))
+	server:sendToClient(true, bob, payload(66))
 end)
 assert(not ok, "removed mock player still received a targeted send")
 
 local removedClientOk = pcall(function()
-	mukhlisTransport:sendToServer(true, payload(77))
+	bobTransport:sendToServer(true, payload(77))
 end)
 assert(not removedClientOk, "removed mock player still sent data")
 
