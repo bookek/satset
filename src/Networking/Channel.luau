@@ -24,8 +24,10 @@ export type Entity = {
 }
 
 export type Channel = {
-	create: (self: Channel, entityId: number, initialData: { [string]: any }?) -> Entity,
-	subscribe: (self: Channel, callback: (entityId: number, state: { [string]: any }) -> ()) -> (),
+	-- Only one side exists at runtime: `create` on the server, `subscribe` on
+	-- the client. Both are optional so neither side claims a method it lacks.
+	create: ((self: Channel, entityId: number, initialData: { [string]: any }?) -> Entity)?,
+	subscribe: ((self: Channel, callback: (entityId: number, state: { [string]: any }) -> ()) -> ())?,
 }
 
 type EntityData = {
