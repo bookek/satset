@@ -3,8 +3,8 @@
 
 local RunService = game:GetService("RunService")
 
-local SchemaCompiler = require(script.Parent.Parent.Serialization.SchemaCompiler)
 local CoreConnection = require(script.Parent.Parent.Core.Connection)
+local SchemaCompiler = require(script.Parent.Parent.Serialization.SchemaCompiler)
 local Types = require(script.Parent.Parent.Types)
 
 local IS_SERVER = RunService:IsServer()
