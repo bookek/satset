@@ -41,12 +41,16 @@ assert(serverUnreliable[1][1] == bob and serverUnreliable[1][2] == 22, "unreliab
 
 local aliceReceived = {}
 local bobReceived = {}
+local aliceUnreliable = {}
 local bobUnreliable = {}
 aliceTransport:onClient(true, function(b)
 	table.insert(aliceReceived, valueOf(b))
 end)
 local bobConnection = bobTransport:onClient(true, function(b)
 	table.insert(bobReceived, valueOf(b))
+end)
+aliceTransport:onClient(false, function(b)
+	table.insert(aliceUnreliable, valueOf(b))
 end)
 bobTransport:onClient(false, function(b)
 	table.insert(bobUnreliable, valueOf(b))
@@ -55,10 +59,15 @@ end)
 server:sendToClient(true, alice, payload(33))
 server:sendToAllClients(true, payload(44))
 server:sendToClient(false, bob, payload(45))
+server:sendToAllClients(false, payload(99))
 
 assert(aliceReceived[1] == 33 and aliceReceived[2] == 44, "targeted send or broadcast missed alice")
 assert(#bobReceived == 1 and bobReceived[1] == 44, "broadcast missed bob")
-assert(#bobUnreliable == 1 and bobUnreliable[1] == 45, "unreliable targeted send missed bob")
+assert(
+	#bobUnreliable == 2 and bobUnreliable[1] == 45 and bobUnreliable[2] == 99,
+	"unreliable send or broadcast missed bob"
+)
+assert(#aliceUnreliable == 1 and aliceUnreliable[1] == 99, "unreliable broadcast missed alice")
 
 bobConnection:Disconnect()
 server:sendToClient(true, bob, payload(55))
@@ -74,5 +83,11 @@ local removedClientOk = pcall(function()
 	bobTransport:sendToServer(true, payload(77))
 end)
 assert(not removedClientOk, "removed mock player still sent data")
+
+local stats = network:getStats()
+assert(stats.clientToServerSends == 2, "client-to-server send count mismatch")
+assert(stats.targetedSends == 3, "targeted send count mismatch")
+assert(stats.broadcastSends == 2, "broadcast send count mismatch")
+assert(stats.bytesSent == 9, "delivered byte count mismatch")
 
 print("transport tests passed")

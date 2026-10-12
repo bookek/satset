@@ -38,7 +38,7 @@ Types.u8 = {
 	size = 1,
 	getSize = fixedSize(1),
 	isFixed = true,
-}
+} :: Type<number>
 
 Types.u16 = {
 	read = buffer.readu16,
@@ -46,7 +46,7 @@ Types.u16 = {
 	size = 2,
 	getSize = fixedSize(2),
 	isFixed = true,
-}
+} :: Type<number>
 
 Types.u32 = {
 	read = buffer.readu32,
@@ -54,7 +54,7 @@ Types.u32 = {
 	size = 4,
 	getSize = fixedSize(4),
 	isFixed = true,
-}
+} :: Type<number>
 
 Types.i8 = {
 	read = buffer.readi8,
@@ -62,7 +62,7 @@ Types.i8 = {
 	size = 1,
 	getSize = fixedSize(1),
 	isFixed = true,
-}
+} :: Type<number>
 
 Types.i16 = {
 	read = buffer.readi16,
@@ -70,7 +70,7 @@ Types.i16 = {
 	size = 2,
 	getSize = fixedSize(2),
 	isFixed = true,
-}
+} :: Type<number>
 
 Types.i32 = {
 	read = buffer.readi32,
@@ -78,7 +78,7 @@ Types.i32 = {
 	size = 4,
 	getSize = fixedSize(4),
 	isFixed = true,
-}
+} :: Type<number>
 
 Types.f32 = {
 	read = function(b: buffer, cursor: number)
@@ -90,7 +90,7 @@ Types.f32 = {
 	size = 4,
 	getSize = fixedSize(4),
 	isFixed = true,
-}
+} :: Type<number>
 
 Types.f64 = {
 	read = function(b: buffer, cursor: number)
@@ -102,7 +102,7 @@ Types.f64 = {
 	size = 8,
 	getSize = fixedSize(8),
 	isFixed = true,
-}
+} :: Type<number>
 
 Types.bool = {
 	read = function(b: buffer, cursor: number)
@@ -114,7 +114,7 @@ Types.bool = {
 	size = 1,
 	getSize = fixedSize(1),
 	isFixed = true,
-}
+} :: Type<boolean>
 
 Types.u4 = {
 	read = function(b: buffer, cursor: number)
@@ -126,7 +126,7 @@ Types.u4 = {
 	size = 1,
 	getSize = fixedSize(1),
 	isFixed = true,
-}
+} :: Type<number>
 
 -- [ Variable Size Types ]
 
@@ -149,7 +149,7 @@ Types.string8 = {
 	end,
 	isFixed = false,
 	compressionProfile = "text",
-}
+} :: Type<string>
 
 Types.string16 = {
 	read = function(b: buffer, cursor: number)
@@ -170,7 +170,7 @@ Types.string16 = {
 	end,
 	isFixed = false,
 	compressionProfile = "text",
-}
+} :: Type<string>
 
 -- [ Roblox Native Types ]
 
@@ -194,7 +194,7 @@ Types.Vector3 = {
 	size = 12,
 	getSize = fixedSize(12),
 	isFixed = true,
-}
+} :: Type<Vector3>
 
 Types.Vector2 = {
 	read = function(b: buffer, cursor: number)
@@ -207,7 +207,7 @@ Types.Vector2 = {
 	size = 8,
 	getSize = fixedSize(8),
 	isFixed = true,
-}
+} :: Type<Vector2>
 
 Types.Color3 = {
 	read = function(b: buffer, cursor: number)
@@ -224,7 +224,7 @@ Types.Color3 = {
 	size = 3,
 	getSize = fixedSize(3),
 	isFixed = true,
-}
+} :: Type<Color3>
 
 -- [ Specialized Optimization Types ]
 
@@ -308,7 +308,7 @@ Types.f16 = {
 	size = 2,
 	getSize = fixedSize(2),
 	isFixed = true,
-}
+} :: Type<number>
 
 --[[
 	Vector3F16: 6-byte Vector3 using Float16 for each component.
@@ -328,7 +328,7 @@ Types.Vector3F16 = {
 	size = 6,
 	getSize = fixedSize(6),
 	isFixed = true,
-}
+} :: Type<Vector3>
 
 --[[
 	Vector2Quantized: compressed 4-byte Vector2.
@@ -485,7 +485,7 @@ Types.CFrame = {
 	size = 18,
 	getSize = fixedSize(18),
 	isFixed = true,
-}
+} :: Type<CFrame>
 
 -- [ Collection Wrappers ]
 

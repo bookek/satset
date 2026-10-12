@@ -9,6 +9,7 @@ local Types = require(script.Parent.Parent.Types)
 
 local protectedCall: (any, ...any) -> (boolean, ...any) = pcall :: any
 
+local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
 -- [ Constants ]
@@ -110,10 +111,30 @@ function Packet.definePacket(config: PacketConfig): Packet
 		local gcStart = Batcher.beginDebugGc()
 		local size = compiled.fixedSize or Serializer.calculateSize(compiled, data)
 		Batcher.recordDebugGc("send", gcStart)
-		local b, offset = Batcher.allocateForAllPlayers(id, size)
-		gcStart = Batcher.beginDebugGc()
-		Serializer.encodeInto(compiled, data, b, offset)
-		Batcher.recordDebugGc("send", gcStart)
+
+		if def.reliable then
+			local b, offset = Batcher.allocateForAllPlayers(id, size)
+			gcStart = Batcher.beginDebugGc()
+			Serializer.encodeInto(compiled, data, b, offset)
+			Batcher.recordDebugGc("send", gcStart)
+		else
+			local players = Players:GetPlayers()
+			local firstPlayer = players[1]
+			if not firstPlayer then
+				return
+			end
+
+			local source, sourceOffset = Batcher.allocateForPlayer(firstPlayer, id, size, false)
+			gcStart = Batcher.beginDebugGc()
+			Serializer.encodeInto(compiled, data, source, sourceOffset)
+
+			for i = 2, #players do
+				local target, targetOffset = Batcher.allocateForPlayer(players[i], id, size, false)
+				buffer.copy(target, targetOffset, source, sourceOffset, size)
+			end
+
+			Batcher.recordDebugGc("send", gcStart)
+		end
 	end
 
 	function self:fireGroup(group: GroupObject, data: { [string]: any })

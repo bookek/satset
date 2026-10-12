@@ -21,6 +21,15 @@ export type MockNetwork = {
 	server: (self: MockNetwork) -> any,
 	addClient: (self: MockNetwork, player: any) -> any,
 	removeClient: (self: MockNetwork, player: any) -> (),
+	getStats: (self: MockNetwork) -> Stats,
+	resetStats: (self: MockNetwork) -> (),
+}
+
+export type Stats = {
+	targetedSends: number,
+	broadcastSends: number,
+	clientToServerSends: number,
+	bytesSent: number,
 }
 
 local function listenersFor(set: ListenerSet, reliable: boolean): { Listener }
@@ -57,6 +66,12 @@ function MockTransport.new(): MockNetwork
 		unreliable = {},
 	}
 	local clients: { [any]: ClientState } = {}
+	local stats: Stats = {
+		targetedSends = 0,
+		broadcastSends = 0,
+		clientToServerSends = 0,
+		bytesSent = 0,
+	}
 
 	local network = {} :: MockNetwork
 
@@ -68,10 +83,14 @@ function MockTransport.new(): MockNetwork
 			sendToClient = function(_, reliable, player, payload)
 				local client = clients[player]
 				assert(client and client.connected, "unknown mock player")
+				stats.targetedSends += 1
+				stats.bytesSent += buffer.len(payload)
 				emit(listenersFor(client.listeners, reliable), payload)
 			end,
 			sendToAllClients = function(_, reliable, payload)
+				stats.broadcastSends += 1
 				for _, client in clients do
+					stats.bytesSent += buffer.len(payload)
 					emit(listenersFor(client.listeners, reliable), payload)
 				end
 			end,
@@ -99,6 +118,8 @@ function MockTransport.new(): MockNetwork
 		return {
 			sendToServer = function(_, reliable, payload)
 				assert(client.connected, "mock player is disconnected")
+				stats.clientToServerSends += 1
+				stats.bytesSent += buffer.len(payload)
 				emit(listenersFor(serverListeners, reliable), player, payload)
 			end,
 			sendToClient = function()
@@ -123,6 +144,22 @@ function MockTransport.new(): MockNetwork
 			client.connected = false
 			clients[player] = nil
 		end
+	end
+
+	function network:getStats(): Stats
+		return {
+			targetedSends = stats.targetedSends,
+			broadcastSends = stats.broadcastSends,
+			clientToServerSends = stats.clientToServerSends,
+			bytesSent = stats.bytesSent,
+		}
+	end
+
+	function network:resetStats()
+		stats.targetedSends = 0
+		stats.broadcastSends = 0
+		stats.clientToServerSends = 0
+		stats.bytesSent = 0
 	end
 
 	return network
