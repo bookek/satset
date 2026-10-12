@@ -57,6 +57,25 @@ local packetRegistry: { [number]: PacketDef } = {}
 local packetsByName: { [string]: PacketDef } = {}
 local nextPacketId = 1
 
+local function copyEncodedToPlayers(
+	players: { Player },
+	startIndex: number,
+	exceptPlayer: Player?,
+	id: number,
+	size: number,
+	reliable: boolean,
+	source: buffer,
+	sourceOffset: number
+)
+	for i = startIndex, #players do
+		local player = players[i]
+		if player ~= exceptPlayer then
+			local target, targetOffset = Batcher.allocateForPlayer(player, id, size, reliable)
+			buffer.copy(target, targetOffset, source, sourceOffset, size)
+		end
+	end
+end
+
 local Packet = {}
 
 -- [ Public API ]
@@ -136,10 +155,7 @@ function Packet.definePacket(config: PacketConfig): Packet
 			gcStart = Batcher.beginDebugGc()
 			Serializer.encodeInto(compiled, data, source, sourceOffset)
 
-			for i = 2, #players do
-				local target, targetOffset = Batcher.allocateForPlayer(players[i], id, size, false)
-				buffer.copy(target, targetOffset, source, sourceOffset, size)
-			end
+			copyEncodedToPlayers(players, 2, nil, id, size, false, source, sourceOffset)
 
 			Batcher.recordDebugGc("send", gcStart)
 		end
@@ -173,13 +189,7 @@ function Packet.definePacket(config: PacketConfig): Packet
 		gcStart = Batcher.beginDebugGc()
 		Serializer.encodeInto(compiled, data, source, sourceOffset)
 
-		for i = firstIndex + 1, #players do
-			local player = players[i]
-			if player ~= exceptPlayer then
-				local target, targetOffset = Batcher.allocateForPlayer(player, id, size, def.reliable)
-				buffer.copy(target, targetOffset, source, sourceOffset, size)
-			end
-		end
+		copyEncodedToPlayers(players, firstIndex + 1, exceptPlayer, id, size, def.reliable, source, sourceOffset)
 
 		Batcher.recordDebugGc("send", gcStart)
 	end
