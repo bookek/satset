@@ -56,6 +56,7 @@ Run the local test suite with:
 lune run tests/transport.luau
 lune run tests/group-fanout.luau
 lune run tests/listeners.luau
+lune run tests/schema.luau
 ```
 
 # Features
