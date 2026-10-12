@@ -84,4 +84,10 @@ local removedClientOk = pcall(function()
 end)
 assert(not removedClientOk, "removed mock player still sent data")
 
+local stats = network:getStats()
+assert(stats.clientToServerSends == 2, "client-to-server send count mismatch")
+assert(stats.targetedSends == 3, "targeted send count mismatch")
+assert(stats.broadcastSends == 2, "broadcast send count mismatch")
+assert(stats.bytesSent == 9, "delivered byte count mismatch")
+
 print("transport tests passed")
