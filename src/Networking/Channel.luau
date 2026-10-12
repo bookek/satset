@@ -4,6 +4,7 @@
 local RunService = game:GetService("RunService")
 
 local SchemaCompiler = require(script.Parent.Parent.Serialization.SchemaCompiler)
+local CoreConnection = require(script.Parent.Parent.Core.Connection)
 local Types = require(script.Parent.Parent.Types)
 
 local IS_SERVER = RunService:IsServer()
@@ -23,10 +24,7 @@ export type Entity = {
 	destroy: (self: Entity) -> (),
 }
 
-export type Connection = {
-	Disconnect: (self: Connection) -> (),
-	disconnect: (self: Connection) -> (),
-}
+export type Connection = CoreConnection.Connection
 
 type ChannelSubscriber = (entityId: number, state: { [string]: any }) -> ()
 
@@ -53,7 +51,7 @@ type ChannelDef = {
 	entities: { [number]: EntityData },
 	lastResync: number,
 	subscribers: { ChannelSubscriber },
-	dispatching: boolean?,
+	dispatchDepth: number?,
 	pendingCleanup: boolean?,
 	clientState: { [number]: buffer },
 }
@@ -61,34 +59,6 @@ type ChannelDef = {
 local channelRegistry: { [number]: ChannelDef } = {}
 local channelsByName: { [string]: ChannelDef } = {}
 local nextChannelId = 1
-
-local function createChannelConnection(def: ChannelDef, target: ChannelSubscriber): Connection
-	local disconnected = false
-	local connection = {} :: Connection
-
-	function connection:Disconnect()
-		if disconnected then
-			return
-		end
-		disconnected = true
-
-		if def.dispatching then
-			local idx = table.find(def.subscribers, target)
-			if idx then
-				(def.subscribers :: any)[idx] = false
-				def.pendingCleanup = true
-			end
-		else
-			local idx = table.find(def.subscribers, target)
-			if idx then
-				table.remove(def.subscribers, idx)
-			end
-		end
-	end
-
-	connection.disconnect = connection.Disconnect
-	return connection
-end
 
 local Channel = {}
 
@@ -183,7 +153,7 @@ function Channel.defineChannel(config: ChannelConfig): Channel
 	else
 		function self:subscribe(callback: (entityId: number, state: { [string]: any }) -> ()): Connection
 			table.insert(def.subscribers, callback)
-			return createChannelConnection(def, callback)
+			return CoreConnection.create(def.subscribers, callback, def)
 		end
 	end
 
@@ -277,7 +247,8 @@ function Channel._applyUpdate(b: buffer)
 		for _, field in def.compiled.fields do
 			state[field.name] = field.type.read(clientBuf, field.offset)
 		end
-		def.dispatching = true
+		local depth = (def.dispatchDepth or 0) + 1
+		def.dispatchDepth = depth
 		for i = 1, #def.subscribers do
 			local callback = def.subscribers[i]
 			if callback then
@@ -286,15 +257,20 @@ function Channel._applyUpdate(b: buffer)
 				end, entityId, state)
 			end
 		end
-		def.dispatching = false
+		depth -= 1
 
-		if def.pendingCleanup then
-			for i = #def.subscribers, 1, -1 do
-				if not def.subscribers[i] then
-					table.remove(def.subscribers, i)
+		if depth == 0 then
+			def.dispatchDepth = nil
+			if def.pendingCleanup then
+				for i = #def.subscribers, 1, -1 do
+					if not def.subscribers[i] then
+						table.remove(def.subscribers, i)
+					end
 				end
+				def.pendingCleanup = false
 			end
-			def.pendingCleanup = false
+		else
+			def.dispatchDepth = depth
 		end
 	end
 end

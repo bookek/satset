@@ -2,6 +2,7 @@
 -- Packet — the public API for stateless, fire-and-forget networking.
 
 local Batcher = require(script.Parent.Parent.Core.Batcher)
+local CoreConnection = require(script.Parent.Parent.Core.Connection)
 local Group = require(script.Parent.Group)
 local SchemaCompiler = require(script.Parent.Parent.Serialization.SchemaCompiler)
 local Serializer = require(script.Parent.Parent.Serialization.Serializer)
@@ -26,10 +27,7 @@ export type PacketConfig = {
 	reliable: boolean?,
 }
 
-export type Connection = {
-	Disconnect: (self: Connection) -> (),
-	disconnect: (self: Connection) -> (),
-}
+export type Connection = CoreConnection.Connection
 
 type PacketListener = (data: { [string]: any }, sender: Player?) -> ()
 
@@ -39,7 +37,7 @@ type PacketDef = {
 	compiled: SchemaCompiler.CompiledSchema,
 	reliable: boolean,
 	listeners: { PacketListener },
-	dispatching: boolean?,
+	dispatchDepth: number?,
 	pendingCleanup: boolean?,
 }
 
@@ -57,34 +55,6 @@ export type Packet = {
 local packetRegistry: { [number]: PacketDef } = {}
 local packetsByName: { [string]: PacketDef } = {}
 local nextPacketId = 1
-
-local function createConnection(def: PacketDef, target: PacketListener): Connection
-	local disconnected = false
-	local connection = {} :: Connection
-
-	function connection:Disconnect()
-		if disconnected then
-			return
-		end
-		disconnected = true
-
-		if def.dispatching then
-			local idx = table.find(def.listeners, target)
-			if idx then
-				(def.listeners :: any)[idx] = false
-				def.pendingCleanup = true
-			end
-		else
-			local idx = table.find(def.listeners, target)
-			if idx then
-				table.remove(def.listeners, idx)
-			end
-		end
-	end
-
-	connection.disconnect = connection.Disconnect
-	return connection
-end
 
 local Packet = {}
 
@@ -203,7 +173,7 @@ function Packet.definePacket(config: PacketConfig): Packet
 
 	function self:listen(callback: (data: { [string]: any }, sender: Player?) -> ()): Connection
 		table.insert(def.listeners, callback)
-		return createConnection(def, callback)
+		return CoreConnection.create(def.listeners, callback, def)
 	end
 
 	function self:listenServer(callback: (player: Player, data: { [string]: any }) -> ()): Connection
@@ -212,7 +182,7 @@ function Packet.definePacket(config: PacketConfig): Packet
 			callback(sender :: Player, data)
 		end
 		table.insert(def.listeners, listener)
-		return createConnection(def, listener)
+		return CoreConnection.create(def.listeners, listener, def)
 	end
 
 	return self :: Packet
@@ -265,7 +235,8 @@ function Packet._dispatchSingle(
 	local data = decoded :: { [string]: any }
 
 	gcStart = Batcher.beginDebugGc()
-	def.dispatching = true
+	local depth = (def.dispatchDepth or 0) + 1
+	def.dispatchDepth = depth
 	for i = 1, #def.listeners do
 		local listener = def.listeners[i]
 		if listener then
@@ -275,15 +246,20 @@ function Packet._dispatchSingle(
 			end
 		end
 	end
-	def.dispatching = false
+	depth -= 1
 
-	if def.pendingCleanup then
-		for i = #def.listeners, 1, -1 do
-			if not def.listeners[i] then
-				table.remove(def.listeners, i)
+	if depth == 0 then
+		def.dispatchDepth = nil
+		if def.pendingCleanup then
+			for i = #def.listeners, 1, -1 do
+				if not def.listeners[i] then
+					table.remove(def.listeners, i)
+				end
 			end
+			def.pendingCleanup = false
 		end
-		def.pendingCleanup = false
+	else
+		def.dispatchDepth = depth
 	end
 	Batcher.recordDebugGc("listenerCall", gcStart)
 
