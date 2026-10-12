@@ -18,6 +18,12 @@ Run the listener lifecycle and disconnect test with:
 lune run tests/listeners.luau
 ```
 
+Run the schema type and serialization test with:
+
+```sh
+lune run tests/schema.luau
+```
+
 The mock models one server and several clients in one process. It tests the
 transport boundary, not Roblox scheduling or RemoteEvent behavior.
 
