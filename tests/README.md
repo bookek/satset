@@ -12,12 +12,6 @@ Run the Group fanout scale test with:
 lune run tests/group-fanout.luau
 ```
 
-Run the schema type and serialization test with:
-
-```sh
-lune run tests/schema.luau
-```
-
 The mock models one server and several clients in one process. It tests the
 transport boundary, not Roblox scheduling or RemoteEvent behavior.
 
