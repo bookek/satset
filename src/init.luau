@@ -73,6 +73,7 @@ export type SatsetConfig = {
 }
 
 export type PacketTransport = Transport.Transport
+export type Connection = Packet.Connection
 
 --[[
 	Start the networking engine. 

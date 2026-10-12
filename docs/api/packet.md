@@ -24,16 +24,16 @@ Reliable packets share one broadcast batch. Unreliable packets are encoded once,
 server-owned [Group](./group.md). An empty group does nothing. A destroyed
 group is rejected.
 
-### `:listen(callback: (data: table, sender: Player?) -> ())`
+### `:listen(callback: (data: table, sender: Player?) -> ()): Connection`
 
-Registers a listener for the packet. Listener calls are wrapped in `pcall`, so an error in one listener does not prevent later listeners from running. Errors are reported through `warn`.
+Registers a listener for the packet. Returns a `Connection` with `:Disconnect()` and `:disconnect()` methods. Listener calls are wrapped in `pcall`. Errors are reported through `warn`.
 
 - **data**: The decoded payload.
 - **sender**: The player who sent the packet (Server only).
 
-### `:listenServer(callback: (player: Player, data: table) -> ())`
+### `:listenServer(callback: (player: Player, data: table) -> ()): Connection`
 
-**Server Only.** Registers a listener with Roblox's server argument order. This is a helper over `listen`; it does not change packet dispatch.
+**Server Only.** Registers a listener with Roblox's server argument order. Returns a `Connection` with `:Disconnect()` and `:disconnect()` methods.
 
 - **player**: The player who sent the packet.
 - **data**: The decoded payload.

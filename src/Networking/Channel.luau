@@ -4,6 +4,7 @@
 local RunService = game:GetService("RunService")
 
 local SchemaCompiler = require(script.Parent.Parent.Serialization.SchemaCompiler)
+local CoreConnection = require(script.Parent.Parent.Core.Connection)
 local Types = require(script.Parent.Parent.Types)
 
 local IS_SERVER = RunService:IsServer()
@@ -23,11 +24,15 @@ export type Entity = {
 	destroy: (self: Entity) -> (),
 }
 
+export type Connection = CoreConnection.Connection
+
+type ChannelSubscriber = (entityId: number, state: { [string]: any }) -> ()
+
 export type Channel = {
 	-- Only one side exists at runtime: `create` on the server, `subscribe` on
 	-- the client. Both are optional so neither side claims a method it lacks.
 	create: ((self: Channel, entityId: number, initialData: { [string]: any }?) -> Entity)?,
-	subscribe: ((self: Channel, callback: (entityId: number, state: { [string]: any }) -> ()) -> ())?,
+	subscribe: ((self: Channel, callback: ChannelSubscriber) -> Connection)?,
 }
 
 type EntityData = {
@@ -45,7 +50,9 @@ type ChannelDef = {
 	resyncInterval: number,
 	entities: { [number]: EntityData },
 	lastResync: number,
-	subscribers: { (entityId: number, state: { [string]: any }) -> () },
+	subscribers: { ChannelSubscriber },
+	dispatchDepth: number?,
+	pendingCleanup: boolean?,
 	clientState: { [number]: buffer },
 }
 
@@ -144,8 +151,9 @@ function Channel.defineChannel(config: ChannelConfig): Channel
 			return entity :: any
 		end
 	else
-		function self:subscribe(callback: (entityId: number, state: { [string]: any }) -> ())
+		function self:subscribe(callback: (entityId: number, state: { [string]: any }) -> ()): Connection
 			table.insert(def.subscribers, callback)
+			return CoreConnection.create(def.subscribers, callback, def)
 		end
 	end
 
@@ -239,10 +247,30 @@ function Channel._applyUpdate(b: buffer)
 		for _, field in def.compiled.fields do
 			state[field.name] = field.type.read(clientBuf, field.offset)
 		end
-		for _, callback in def.subscribers do
-			xpcall(callback, function(err)
-				warn(`[Satset] Channel '{def.name}' subscriber error: {err}`)
-			end, entityId, state)
+		local depth = (def.dispatchDepth or 0) + 1
+		def.dispatchDepth = depth
+		for i = 1, #def.subscribers do
+			local callback = def.subscribers[i]
+			if callback then
+				xpcall(callback, function(err)
+					warn(`[Satset] Channel '{def.name}' subscriber error: {err}`)
+				end, entityId, state)
+			end
+		end
+		depth -= 1
+
+		if depth == 0 then
+			def.dispatchDepth = nil
+			if def.pendingCleanup then
+				for i = #def.subscribers, 1, -1 do
+					if not def.subscribers[i] then
+						table.remove(def.subscribers, i)
+					end
+				end
+				def.pendingCleanup = false
+			end
+		else
+			def.dispatchDepth = depth
 		end
 	end
 end

@@ -2,6 +2,7 @@
 -- Packet — the public API for stateless, fire-and-forget networking.
 
 local Batcher = require(script.Parent.Parent.Core.Batcher)
+local CoreConnection = require(script.Parent.Parent.Core.Connection)
 local Group = require(script.Parent.Group)
 local SchemaCompiler = require(script.Parent.Parent.Serialization.SchemaCompiler)
 local Serializer = require(script.Parent.Parent.Serialization.Serializer)
@@ -26,12 +27,18 @@ export type PacketConfig = {
 	reliable: boolean?,
 }
 
+export type Connection = CoreConnection.Connection
+
+type PacketListener = (data: { [string]: any }, sender: Player?) -> ()
+
 type PacketDef = {
 	id: number,
 	name: string,
 	compiled: SchemaCompiler.CompiledSchema,
 	reliable: boolean,
-	listeners: { (data: { [string]: any }, sender: Player?) -> () },
+	listeners: { PacketListener },
+	dispatchDepth: number?,
+	pendingCleanup: boolean?,
 }
 
 export type Packet = {
@@ -39,8 +46,8 @@ export type Packet = {
 	fireClient: (self: Packet, player: Player, data: { [string]: any }) -> (),
 	fireAllClients: (self: Packet, data: { [string]: any }) -> (),
 	fireGroup: (self: Packet, group: GroupObject, data: { [string]: any }) -> (),
-	listen: (self: Packet, callback: (data: { [string]: any }, sender: Player?) -> ()) -> (),
-	listenServer: (self: Packet, callback: (player: Player, data: { [string]: any }) -> ()) -> (),
+	listen: (self: Packet, callback: (data: { [string]: any }, sender: Player?) -> ()) -> Connection,
+	listenServer: (self: Packet, callback: (player: Player, data: { [string]: any }) -> ()) -> Connection,
 }
 
 -- [ State ]
@@ -164,18 +171,21 @@ function Packet.definePacket(config: PacketConfig): Packet
 		Batcher.recordDebugGc("send", gcStart)
 	end
 
-	function self:listen(callback: (data: { [string]: any }, sender: Player?) -> ())
+	function self:listen(callback: (data: { [string]: any }, sender: Player?) -> ()): Connection
 		table.insert(def.listeners, callback)
+		return CoreConnection.create(def.listeners, callback, def)
 	end
 
-	function self:listenServer(callback: (player: Player, data: { [string]: any }) -> ())
+	function self:listenServer(callback: (player: Player, data: { [string]: any }) -> ()): Connection
 		assert(IS_SERVER, "[Satset] listenServer can only be called from the server")
-		table.insert(def.listeners, function(data, sender)
+		local listener = function(data, sender)
 			callback(sender :: Player, data)
-		end)
+		end
+		table.insert(def.listeners, listener)
+		return CoreConnection.create(def.listeners, listener, def)
 	end
 
-	return self :: any
+	return self :: Packet
 end
 
 -- [ Internal API ]
@@ -225,11 +235,31 @@ function Packet._dispatchSingle(
 	local data = decoded :: { [string]: any }
 
 	gcStart = Batcher.beginDebugGc()
-	for _, listener in def.listeners do
-		local success, err = protectedCall(listener, data, sender)
-		if not success then
-			warn(`[Satset] Packet '{def.name}' listener error: {err}`)
+	local depth = (def.dispatchDepth or 0) + 1
+	def.dispatchDepth = depth
+	for i = 1, #def.listeners do
+		local listener = def.listeners[i]
+		if listener then
+			local success, err = protectedCall(listener, data, sender)
+			if not success then
+				warn(`[Satset] Packet '{def.name}' listener error: {err}`)
+			end
 		end
+	end
+	depth -= 1
+
+	if depth == 0 then
+		def.dispatchDepth = nil
+		if def.pendingCleanup then
+			for i = #def.listeners, 1, -1 do
+				if not def.listeners[i] then
+					table.remove(def.listeners, i)
+				end
+			end
+			def.pendingCleanup = false
+		end
+	else
+		def.dispatchDepth = depth
 	end
 	Batcher.recordDebugGc("listenerCall", gcStart)
 

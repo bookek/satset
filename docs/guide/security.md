@@ -42,6 +42,8 @@ User-registered callbacks are protected before Satset calls them. `Packet:listen
 
 One broken game callback does not stop packet or channel dispatch.
 
+Disconnecting inside a listener is safe. `Packet:listen`, `Packet:listenServer`, and `Channel:subscribe` return a `Connection`; calling `Disconnect` mid-dispatch marks the slot and Satset sweeps it after the outermost loop finishes. Every other listener still runs once. Disconnecting twice is a no-op.
+
 ## Declared Schemas
 
 Packets use schemas shared by the server and client. The decoder reads only declared fields; extra table keys are not part of the wire format.
