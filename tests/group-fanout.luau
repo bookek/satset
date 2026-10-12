@@ -76,7 +76,7 @@ for _, reliable in { true, false } do
 end
 
 do
-	-- Broadcast reaches every member on both reliabilities.
+	-- Broadcast reaches every member, reliable and unreliable.
 	for _, reliable in { true, false } do
 		local setup = setupNetwork(3, reliable)
 		setup.server:sendToAllClients(reliable, makePayload())
@@ -89,7 +89,7 @@ do
 end
 
 do
-	-- Removed members stop receiving fanout.
+	-- Removed members receive nothing.
 	local setup = setupNetwork(3, true)
 	setup.members[setup.players[2]] = nil
 	local payload = makePayload()
@@ -103,7 +103,7 @@ do
 end
 
 do
-	-- Empty audience sends nothing and stays healthy.
+	-- Empty audience: no sends, no errors.
 	local setup = setupNetwork(0, false)
 	local payload = makePayload()
 	for player in setup.members do
