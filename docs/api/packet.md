@@ -14,7 +14,9 @@ Objects returned by `Satset.definePacket`.
 
 ### `:fireAllClients(data: table)`
 
-**Server Only.** Queues data for all players.
+**Server Only.** Queues data for all players. An empty server does nothing.
+
+Reliable packets share one broadcast batch. Unreliable packets are encoded once, then fanned out into each player's stream with `buffer.copy`, so per-player unreliable sequence numbers are preserved.
 
 ### `:fireGroup(group: Group, data: table)`
 
