@@ -1,0 +1,163 @@
+{
+  "codec": "zstd CLI",
+  "codecVersion": "*** Zstandard CLI (64-bit) v1.5.7, by Yann Collet ***",
+  "eventsPerFrame": 200,
+  "frames": 600,
+  "note": "Local Zstd is a layout filter, not a replacement for Roblox Stats.DataSendKbps.",
+  "notes": {
+    "bridgenet2": "BridgeNet2 v1.0.0 fires plain Lua tables through RemoteEvent, so there are no library bytes to read. Modeled as u16 count plus u8 per boolean with no packet id; the row describes the model, not observed wire bytes.",
+    "bytenet": "Modeled from the ByteNet v0.4.3 source: [id u8][u16 count][u8 per bool]. The benchmark pins 0.4.6, which has no release tag, so this row is an estimate.",
+    "netray_compile": "NetRay generated coder bitpacks booleans at (count + 7) // 8 after a varUInt value count, inside [u8 0 channel marker][u8 message id][varUInt event count] per frame. Message id 1 belongs to Booleans.",
+    "quicknet": "Modeled as one byte per boolean with u16 count and u8 actionId inside a u16 numCalls frame header. QuickNet docs advertise boolean bitpacking when it would be worth it, but the Studio run observed 207.77 Kbps here, far below every modeled shape, and no final buffer was captured. The model stays byte-per-boolean so the rows stay comparable with the siblings.",
+    "warp": "Warp 1.0.14: bitpacked Schema.array(boolean) behind varUInt(event count), then [id u8][varUInt count][125 packed bytes] per event, whole-frame XOR against the previous frame. Raw B/event matches the Benchmarks.md warp Booleans row."
+  },
+  "payload": "Booleans",
+  "results": [
+    {
+      "compressedBytesPerEvent": 1.1232,
+      "compressedP50PerFrame": 270,
+      "compressedP95PerFrame": 278,
+      "compressedTotal": 134784,
+      "estimate": false,
+      "name": "satset_transposed",
+      "ratio": 0.008842353867348947,
+      "rawBytesPerEvent": 127.025,
+      "rawTotal": 15243000,
+      "savedPercent": 99.1157646132651
+    },
+    {
+      "compressedBytesPerEvent": 1.3477166666666667,
+      "compressedP50PerFrame": 272,
+      "compressedP95PerFrame": 322,
+      "compressedTotal": 161726,
+      "estimate": false,
+      "name": "warp",
+      "ratio": 0.010528213941619144,
+      "rawBytesPerEvent": 128.01,
+      "rawTotal": 15361200,
+      "savedPercent": 98.94717860583808
+    },
+    {
+      "compressedBytesPerEvent": 1.390125,
+      "compressedP50PerFrame": 279,
+      "compressedP95PerFrame": 332,
+      "compressedTotal": 166815,
+      "estimate": false,
+      "name": "satset_varuint",
+      "ratio": 0.010858230814294084,
+      "rawBytesPerEvent": 128.025,
+      "rawTotal": 15363000,
+      "savedPercent": 98.91417691857059
+    },
+    {
+      "compressedBytesPerEvent": 1.3901333333333334,
+      "compressedP50PerFrame": 279,
+      "compressedP95PerFrame": 332,
+      "compressedTotal": 166816,
+      "estimate": false,
+      "name": "satset_separated",
+      "ratio": 0.010858295905747575,
+      "rawBytesPerEvent": 128.025,
+      "rawTotal": 15363000,
+      "savedPercent": 98.91417040942524
+    },
+    {
+      "compressedBytesPerEvent": 1.6740583333333334,
+      "compressedP50PerFrame": 329,
+      "compressedP95PerFrame": 334,
+      "compressedTotal": 200887,
+      "estimate": false,
+      "name": "satset",
+      "ratio": 0.013178967394869776,
+      "rawBytesPerEvent": 127.025,
+      "rawTotal": 15243000,
+      "savedPercent": 98.68210326051302
+    },
+    {
+      "compressedBytesPerEvent": 17.227333333333334,
+      "compressedP50PerFrame": 3440,
+      "compressedP95PerFrame": 3472,
+      "compressedTotal": 2067280,
+      "estimate": false,
+      "name": "netray_compile",
+      "ratio": 0.1356269353907521,
+      "rawBytesPerEvent": 127.02,
+      "rawTotal": 15242400,
+      "savedPercent": 86.43730646092479
+    },
+    {
+      "compressedBytesPerEvent": 21.346291666666666,
+      "compressedP50PerFrame": 4243,
+      "compressedP95PerFrame": 4962,
+      "compressedTotal": 2561555,
+      "estimate": true,
+      "name": "bridgenet2",
+      "ratio": 0.021303684298070526,
+      "rawBytesPerEvent": 1002,
+      "rawTotal": 120240000,
+      "savedPercent": 97.86963157019295
+    },
+    {
+      "compressedBytesPerEvent": 21.521283333333333,
+      "compressedP50PerFrame": 4226,
+      "compressedP95PerFrame": 4925,
+      "compressedTotal": 2582554,
+      "estimate": true,
+      "name": "bytenet",
+      "ratio": 0.021456912595546693,
+      "rawBytesPerEvent": 1003,
+      "rawTotal": 120360000,
+      "savedPercent": 97.85430874044533
+    },
+    {
+      "compressedBytesPerEvent": 21.558408333333333,
+      "compressedP50PerFrame": 4221,
+      "compressedP95PerFrame": 5007,
+      "compressedTotal": 2587009,
+      "estimate": true,
+      "name": "quicknet",
+      "ratio": 0.021493712259432442,
+      "rawBytesPerEvent": 1003.01,
+      "rawTotal": 120361200,
+      "savedPercent": 97.85062877405676
+    },
+    {
+      "compressedBytesPerEvent": 21.589908333333334,
+      "compressedP50PerFrame": 4223,
+      "compressedP95PerFrame": 4960,
+      "compressedTotal": 2590789,
+      "estimate": false,
+      "name": "packet",
+      "ratio": 0.021525332336324362,
+      "rawBytesPerEvent": 1003,
+      "rawTotal": 120360000,
+      "savedPercent": 97.84746676636756
+    },
+    {
+      "compressedBytesPerEvent": 21.589908333333334,
+      "compressedP50PerFrame": 4223,
+      "compressedP95PerFrame": 4960,
+      "compressedTotal": 2590789,
+      "estimate": false,
+      "name": "zap",
+      "ratio": 0.021525332336324362,
+      "rawBytesPerEvent": 1003,
+      "rawTotal": 120360000,
+      "savedPercent": 97.84746676636756
+    },
+    {
+      "compressedBytesPerEvent": 21.589908333333334,
+      "compressedP50PerFrame": 4223,
+      "compressedP95PerFrame": 4960,
+      "compressedTotal": 2590789,
+      "estimate": false,
+      "name": "blink",
+      "ratio": 0.021525332336324362,
+      "rawBytesPerEvent": 1003,
+      "rawTotal": 120360000,
+      "savedPercent": 97.84746676636756
+    }
+  ],
+  "variant": "moving",
+  "zstdLevel": 1
+}
