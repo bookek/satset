@@ -145,7 +145,9 @@ local function recordSend(player: Player, payload: buffer)
 	buffer.copy(bytes, 0, payload, 0, buffer.len(payload))
 
 	local packetId = buffer.readu8(payload, 3)
-	local runCount = if packetId == RELIABLE_LONG_RUN_MARKER then buffer.readu16(payload, 5) else buffer.readu8(payload, 4)
+	local runCount = if packetId == RELIABLE_LONG_RUN_MARKER
+		then buffer.readu16(payload, 5)
+		else buffer.readu8(payload, 4)
 
 	table.insert(captures, {
 		playerName = if player ~= nil then player.name else "broadcast",
@@ -253,10 +255,7 @@ local function assertSameEvents(name: string, bytes: buffer, expected: { any }, 
 		return nil
 	end)
 
-	assert(
-		#received == #expected,
-		`{name}: decoded {#received} events, expected {#expected}`
-	)
+	assert(#received == #expected, `{name}: decoded {#received} events, expected {#expected}`)
 	for index = 1, #expected do
 		local a, b = received[index], expected[index]
 		assert(a.id == b.id and a.x == b.x and a.y == b.y and a.z == b.z, `{name}: event {index} fields drifted`)

@@ -12,7 +12,7 @@ Reliable traffic is committed at the frame flush by default. Direct reliable tra
 - same-size batches are compared with the previous batch for that peer;
 - general payloads use XOR delta bytes;
 - text payloads stay raw when XOR does not produce enough zero bytes;
-- eligible bitpacked payloads can transpose the XOR result to group changing bits.
+- runs over one uniform-width schema can transpose their delta bytes when zero bytes dominate.
 
 Unreliable traffic still splits around 900 bytes by default. Fixed-size packet schemas omit payload-size headers.
 

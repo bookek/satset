@@ -1,9 +1,9 @@
 -- This file is part of the Satset networking library and is licensed under MIT License; see LICENSE.txt for details
 -- Packet — the public API for stateless, fire-and-forget networking.
 
+local Audience = require(script.Parent.Audience)
 local Batcher = require(script.Parent.Parent.Core.Batcher)
 local CoreConnection = require(script.Parent.Parent.Core.Connection)
-local Audience = require(script.Parent.Audience)
 local Group = require(script.Parent.Group)
 local SchemaCompiler = require(script.Parent.Parent.Serialization.SchemaCompiler)
 local Serializer = require(script.Parent.Parent.Serialization.Serializer)

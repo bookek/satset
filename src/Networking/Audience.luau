@@ -72,13 +72,7 @@ end
 	UnreliableRemoteEvent has no FireAllClients), so it walks the player list
 	from the second entry with no exclusion.
 ]]
-function Audience.spreadAll(
-	source: buffer,
-	sourceOffset: number,
-	players: { Player },
-	id: number,
-	size: number
-)
+function Audience.spreadAll(source: buffer, sourceOffset: number, players: { Player }, id: number, size: number)
 	Audience.spreadList(source, sourceOffset, players, 2, nil, id, size, false)
 end
 

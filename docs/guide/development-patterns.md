@@ -36,7 +36,7 @@ State sync is an explicit, bitmask-tracked process.
 
 Reliable packet batches are allowed to change shape before they hit `RemoteEvent`.
 
-Repeated packet ids can become a grouped run. Direct reliable batches with the same byte length are compared with the previous batch for that peer. General payloads use XOR. Text payloads can stay raw when XOR does not produce enough zero bytes. Eligible bitpacked payloads can transpose the XOR result. Broadcast reliable traffic stays raw because there is no single receiver state to track.
+Repeated packet ids can become a grouped run. Direct reliable batches with the same byte length are compared with the previous batch for that peer. General payloads use XOR. Text payloads can stay raw when XOR does not produce enough zero bytes. A run over one uniform-width schema can transpose its delta bytes when zero bytes dominate. Broadcast reliable traffic stays raw because there is no single receiver state to track.
 
 Keep the header flags explicit. The high bits of the reliable header carry tracking, delta, and transpose state; the low 13 bits remain the item count.
 

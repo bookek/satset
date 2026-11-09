@@ -48,6 +48,17 @@ end)
 > [!NOTE]
 > Channels write server-side state into a buffer and mark a bitmask. Client subscribers still receive a normal table, because that is the public API boundary.
 
+## Transport
+
+Channel sync does not share the packet remotes. Bridge creates two dedicated channel remotes (`__SatsetChannelReliable` and `__SatsetChannelUnreliable`) during init and offers them as a `ChannelTransport` pair: `sendChannel(reliable, payload)` plus `onChannel(reliable, callback)`.
+
+`Satset.start()` calls `Channel.mount()` once over the Bridge adapter on both sides:
+
+- the server installs its flush step on `PostSimulation`, after the packet flush, so the two steps run within one simulation step;
+- the client subscribes to both channel remotes and drops payloads that are not buffers before they reach the decoder.
+
+`mount()` is idempotent, so the first mount stays. A host that wants to route channel payloads through its own transport mounts first, and `Satset.start()` keeps that choice.
+
 ## Constraints
 
 - **Fixed-size only**: Channels do not support variable-length types like strings or arrays.
