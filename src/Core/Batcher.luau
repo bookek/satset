@@ -35,9 +35,9 @@ local COMPRESSION_GENERAL = 0
 local COMPRESSION_TEXT = 1
 local COMPRESSION_BITPACKED = 2
 local TEXT_DELTA_MIN_ZERO_RATIO = 0.975
-local BITPACKED_TRANSPOSE_MIN_ROWS = 16
-local BITPACKED_TRANSPOSE_MIN_BYTES = 512
-local BITPACKED_TRANSPOSE_MIN_ZERO_RATIO = 0.25
+local TRANSPOSE_MIN_ROWS = 16
+local TRANSPOSE_MIN_BYTES = 512
+local TRANSPOSE_MIN_ZERO_RATIO = 0.25
 
 type Stream = {
 	b: buffer,
@@ -582,8 +582,8 @@ local function readTransposeShape(batch: buffer, logicalLen: number): TransposeS
 		offset = 5
 	end
 
-	-- The sender only sets this flag for bitpacked runs. Rechecking the local
-	-- profile table here makes decode depend on packet registration order
+	-- The sender flags transposed runs of any profile; decode derives the
+	-- shape from these bytes only and never rechecks the profile table
 	if rows < 2 then
 		return nil
 	end
@@ -624,8 +624,14 @@ local function encodeReliableDelta(entry: DeltaEntry?, batch: buffer): DeltaEntr
 	if compressionProfile == COMPRESSION_TEXT then
 		zeroBytes = countXorZeroBytes(batch, entry.previous, len)
 	else
-		zeroBytes =
-			xorBufferInPlace(batch, entry.previous, len, debugGcEnabled or compressionProfile == COMPRESSION_BITPACKED)
+		-- The transpose gate needs the zero count whenever a shape exists,
+		-- beyond the debug-only and bitpacked counting paths.
+		zeroBytes = xorBufferInPlace(
+			batch,
+			entry.previous,
+			len,
+			debugGcEnabled or compressionProfile == COMPRESSION_BITPACKED or transposeShape ~= nil
+		)
 	end
 
 	if debugGcEnabled then
@@ -650,10 +656,9 @@ local function encodeReliableDelta(entry: DeltaEntry?, batch: buffer): DeltaEntr
 		local flags = bit32.bor(RELIABLE_TRACKED_FLAG, RELIABLE_DELTA_FLAG)
 		local transposeBytes = if transposeShape then transposeShape.width * transposeShape.rows else 0
 		if
-			compressionProfile == COMPRESSION_BITPACKED
-			and transposeShape
-			and transposeBytes >= BITPACKED_TRANSPOSE_MIN_BYTES
-			and zeroBytes >= math.floor(transposeBytes * BITPACKED_TRANSPOSE_MIN_ZERO_RATIO)
+			transposeShape
+			and transposeBytes >= TRANSPOSE_MIN_BYTES
+			and zeroBytes >= math.floor(transposeBytes * TRANSPOSE_MIN_ZERO_RATIO)
 			and zeroBytes < len - 2
 			and transposePayloads(batch, transposeShape, entry.previous)
 		then
@@ -818,13 +823,15 @@ local function reliableGroupHeaderSize(runCount: number): number
 		else RELIABLE_LONG_GROUP_HEADER_SIZE
 end
 
-local function measureBitpackedTransposeShape(stream: Stream): TransposeShape?
+-- Any stream that compacts into one same-id uniform-width run can transpose:
+-- the layout only depends on the run header, which the receiver parses from
+-- the stored bytes too.
+local function measureTransposeShape(stream: Stream): TransposeShape?
 	local packetId, runCount, runEnd, _, normalHeaderBytes = measureReliableRun(stream.b, 2, stream.cursor)
 	if
 		not packetId
-		or runCount < BITPACKED_TRANSPOSE_MIN_ROWS
+		or runCount < TRANSPOSE_MIN_ROWS
 		or runEnd ~= stream.cursor
-		or packetCompressionProfiles[packetId] ~= COMPRESSION_BITPACKED
 		or normalHeaderBytes <= reliableGroupHeaderSize(runCount)
 	then
 		return nil
@@ -1001,11 +1008,9 @@ local function commitStream(stream: Stream, reliable: boolean, seqCounter: numbe
 			compressionProfile = COMPRESSION_BITPACKED
 		end
 		batchCompressionProfiles[exactBuffer] = compressionProfile
-		if compressionProfile == COMPRESSION_BITPACKED then
-			local transposeShape = measureBitpackedTransposeShape(stream)
-			if transposeShape then
-				batchTransposeShapes[exactBuffer] = transposeShape
-			end
+		local transposeShape = measureTransposeShape(stream)
+		if transposeShape then
+			batchTransposeShapes[exactBuffer] = transposeShape
 		end
 
 		debugStats.groupedRuns += groupedRuns
@@ -1100,7 +1105,6 @@ function Batcher.processBatch(b: buffer, sender: Player?, dispatch: DispatchFn)
 
 	local count = bit32.band(buffer.readu16(b, cursor), RELIABLE_COUNT_MASK)
 	cursor += 2
-	-- print(`[Satset Debug] Batch size: {count}`)
 
 	for _ = 1, count do
 		if cursor + 1 > bufLen then
