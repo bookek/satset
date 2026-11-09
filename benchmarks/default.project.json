@@ -19,9 +19,6 @@
 		},
 		"ReplicatedStorage": {
 			"$className": "ReplicatedStorage",
-			"DevPackages": {
-				"$path": "../DevPackages"
-			},
 			"Shared": {
 				"$path": "src/shared",
 				"GetRecieved": {
@@ -38,36 +35,6 @@
 				"$className": "Folder",
 				"Satset": {
 					"$path": "../src"
-				},
-				"Warp": {
-					"$path": "../references/Warp/src"
-				},
-				"Blink": {
-					"$path": "../references/blink/src"
-				},
-				"QuickNet": {
-					"$path": "../references/QuickNet/src/QuickNet.luau",
-					"DataTypes": {
-						"$path": "../references/QuickNet/src/QuickNet/DataTypes.luau"
-					},
-					"Enums": {
-						"$path": "../references/QuickNet/src/QuickNet/Enums.luau"
-					},
-					"EnumsToNativeTypes": {
-						"$path": "src/shared/modes/quicknet/EnumsToNativeTypes.luau"
-					},
-					"Parser": {
-						"$path": "../references/QuickNet/src/QuickNet/Parser.luau"
-					},
-					"Serialize": {
-						"$path": "../references/QuickNet/src/QuickNet/Serialize.luau"
-					},
-					"Types": {
-						"$path": "../references/QuickNet/src/QuickNet/Types.luau"
-					}
-				},
-				"SuphiPacket": {
-					"$path": "../references/5uphi-Packet/Packet"
 				}
 			}
 		}

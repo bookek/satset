@@ -1,8 +1,8 @@
 --!optimize 2
 --!strict
 --@EternityDev
-local BITS: number = 8
-local MAX_VALUE: number = bit32.lshift(1, BITS) - 1
+const BITS: number = 8
+const MAX_VALUE: number = bit32.lshift(1, BITS) - 1
 local hook_fn: (string, number) -> ()
 
 if not shared.__warp_identifier_registry then
@@ -23,7 +23,7 @@ end
 local Identifier = {}
 
 Identifier.on_added = function(fn: (string, number) -> ())
-	fastAssert(hook_fn == nil, ".on_added can only be called once.")
+	assert(hook_fn == nil, ".on_added can only be called once.")
 	hook_fn = fn
 end
 

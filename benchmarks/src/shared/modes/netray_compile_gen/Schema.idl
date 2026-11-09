@@ -1,0 +1,58 @@
+// Satset benchmark schema for NetRay-Compile v0.2.0.
+// Recompiled from the June v0.1.1-cli.1 rounds: six client to server reliable
+// events, one per bench payload shape. Regenerate Server, Client and Types
+// together from this file; bounded-length encodings changed in v0.2.0.
+struct BenchEntity {
+	id: u8,
+	x: u8,
+	y: u8,
+	z: u8,
+	orientation: u8,
+	animation: u8,
+}
+struct BenchMixed {
+	id: u8,
+	health: u8,
+	position: vector,
+	velocity: vector,
+	name: string<32>,
+	isRunning: bool,
+	animation: u8,
+	team: u8,
+}
+event Booleans {
+	From: Client,
+	Type: Reliable,
+	Call: SingleSync,
+	Data: fixedarray<bool, 1000>,
+}
+event Entities {
+	From: Client,
+	Type: Reliable,
+	Call: SingleSync,
+	Data: fixedarray<BenchEntity, 100>,
+}
+event Vectors {
+	From: Client,
+	Type: Reliable,
+	Call: SingleSync,
+	Data: fixedarray<vector, 100>,
+}
+event Strings {
+	From: Client,
+	Type: Reliable,
+	Call: SingleSync,
+	Data: fixedarray<string(8, 32), 100>,
+}
+event Mixed {
+	From: Client,
+	Type: Reliable,
+	Call: SingleSync,
+	Data: BenchMixed,
+}
+event SingleValue {
+	From: Client,
+	Type: Reliable,
+	Call: SingleSync,
+	Data: u8,
+}

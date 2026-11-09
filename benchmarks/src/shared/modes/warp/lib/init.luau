@@ -14,9 +14,9 @@ if game.RunService:IsServer() then
 	end
 end
 
-local Buffer = require(script.Util.Buffer)
-local Client = require(script.Client)
-local Server = require(script.Server)
+local Client = require("@self/Client")
+local Server = require("@self/Server")
+local Buffer = require("@self/Util/Buffer")
 
 --[[
 	@class Remote

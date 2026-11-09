@@ -1,6 +1,6 @@
 -- QuickNet benchmark mode.
 local BenchmarkConfig = require(script.Parent.Parent.BenchmarkConfig)
-local QuickNet = require(game:GetService("ReplicatedStorage").references.QuickNet)
+local QuickNet = require(script.lib.QuickNet)
 local Data = QuickNet.Data
 local BENCHMARK_RATE_LIMIT = 1_000_000
 
@@ -54,6 +54,8 @@ local function getDebugStats(): { [string]: number }
 end
 
 local function wrap(name, event)
+	-- Public rate-limit knob; 1,000,000 sits far above bench demand, so QuickNet
+	-- measures its codec, not its limiter, and no library bytes change.
 	event:SetRateLimit(BENCHMARK_RATE_LIMIT, 1)
 
 	return {

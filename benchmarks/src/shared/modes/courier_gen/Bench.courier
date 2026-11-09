@@ -1,0 +1,11 @@
+-- Satset benchmark schema. One event per bench payload in benchmarks/src/shared/benches,
+-- counts and string spans declared at payload size so R4 numbers match the other rows.
+struct Entity { id: u8, x: u8, y: u8, z: u8, orientation: u8, animation: u8 }
+struct MixedStruct { id: u8, health: u8, position: vector, velocity: vector, name: string(..32), isRunning: bool, animation: u8, team: u8 }
+
+event Booleans from Client { Data: bool[..1000] }
+event Entities from Client { Data: Entity[..100] }
+event Vectors from Client { Data: vector[..100] }
+event Strings from Client { Data: string(..32)[..100] }
+event Mixed from Client { Data: MixedStruct }
+event SingleValue from Client { Data: u8 }

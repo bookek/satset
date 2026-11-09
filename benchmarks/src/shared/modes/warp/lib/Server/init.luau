@@ -3,11 +3,11 @@
 --@EternityDev
 local Server = {}
 
-local Buffer = require(script.Parent.Util.Buffer)
-local Identifier = require(script.Parent.Util.Identifier)
-local Replication = require(script.Parent.Replication)
-local Thread = require(script.Parent.Util.Thread)
-local Xor = require(script.Parent.Util.Xor)
+local Thread = require("./Util/Thread")
+local Buffer = require("./Util/Buffer")
+local Identifier = require("./Util/Identifier")
+local Replication = require("./Replication")
+local Xor = require("./Util/Xor")
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -35,6 +35,9 @@ local queueUnreliableEvent: {
 local eventListeners: { [number]: { Event } } = {}
 local eventSchemas: { [number]: Buffer.SchemaType } = {}
 local players_ready: { Player }, player_bytes: { [Player]: number } = {}, {}
+
+local toClient: { [number]: Xor.Stream } = {}
+local fromClient: { [number]: Xor.Stream } = {}
 
 local pendingInvokes: { [string]: thread } = {}
 local invokeId = 0
@@ -192,6 +195,12 @@ if RunService:IsServer() then
 		if type(b) ~= "buffer" then
 			return
 		end
+		local stream = fromClient[player.UserId]
+		if not stream then
+			stream = Xor.new()
+			fromClient[player.UserId] = stream
+		end
+		local decoded = Xor.decode(stream, b)
 		if not RunService:IsStudio() then
 			local bytes: number = (player_bytes[player] or 0) + math.max(buffer.len(b), 800)
 			if bytes > 8e3 then
@@ -199,8 +208,8 @@ if RunService:IsServer() then
 			end
 			player_bytes[player] = bytes
 		end
+		if not decoded then return end
 
-		local decoded = handleInvokes and Xor.decodeServer(player, b) or b
 		local contents = Buffer.readEvents(decoded, ref, eventSchemas)
 		for _, content in contents do
 			local remote = content[1]
@@ -271,8 +280,13 @@ if RunService:IsServer() then
 			Buffer.writeEvents(writer, content, eventSchemas)
 			do
 				local buf, ref = Buffer.buildWithRefs(writer)
-				local encoded = Xor.encodeServer(player, buf)
 				Buffer.reset(writer)
+				local stream = toClient[player.UserId]
+				if not stream then
+					stream = Xor.new()
+					toClient[player.UserId] = stream
+				end
+				local encoded = Xor.encode(stream, buf)
 				if not ref or #ref == 0 then
 					Event:FireClient(player, encoded)
 				else
@@ -291,10 +305,16 @@ if RunService:IsServer() then
 			do
 				local buf, ref = Buffer.buildWithRefs(writer)
 				Buffer.reset(writer)
+				local stream = toClient[player.UserId]
+				if not stream then
+					stream = Xor.new()
+					toClient[player.UserId] = stream
+				end
+				local encoded = Xor.encode(stream, buf)
 				if not ref or #ref == 0 then
-					UnreliableEvent:FireClient(player, buf)
+					UnreliableEvent:FireClient(player, encoded)
 				else
-					UnreliableEvent:FireClient(player, buf, ref)
+					UnreliableEvent:FireClient(player, encoded, ref)
 				end
 			end
 			player_bytes[player] = 0
@@ -328,7 +348,8 @@ if RunService:IsServer() then
 			table.clear(queueUnreliableEvent[player])
 			queueUnreliableEvent[player] = nil
 		end
-		Xor.remove(player)
+		toClient[player.UserId] = nil
+		fromClient[player.UserId] = nil
 	end)
 	for _, player: Player in ipairs(Players:GetPlayers()) do
 		onAdded(player)

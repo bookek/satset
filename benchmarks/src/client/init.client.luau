@@ -74,6 +74,10 @@ type Benchmark = {
 	ServerDebugStats: { [string]: number }?,
 	Status: string?,
 	SkipReason: string?,
+	PartialReason: string?,
+	ContentCheck: { [string]: number }?,
+	ContentCheckRecieved: { [string]: number }?,
+	ContentMatch: boolean?,
 }
 
 type Results = {
@@ -105,6 +109,12 @@ end
 local function getSkipReason(tool: string, bench: string): string?
 	local skippedCases = BenchmarkConfig.skippedCases
 	local toolCases = skippedCases and skippedCases[tool]
+	return toolCases and toolCases[bench] or nil
+end
+
+local function getPartialReason(tool: string, bench: string): string?
+	local partialCases = BenchmarkConfig.partialCases
+	local toolCases = partialCases and partialCases[tool]
 	return toolCases and toolCases[bench] or nil
 end
 
@@ -393,6 +403,13 @@ local function runBenchmark(tool: string, bench: string): Benchmark
 	local finished = false
 	local startedAt = os.clock()
 
+	-- Content fingerprint for the Strings probe: string count, character sum, and a
+	-- 32-bit mix of the last three bytes of every string (the per-frame digits).
+	local stringsContentCheck = BenchmarkConfig.stringsContentCheck and bench == "Strings"
+	local checkStrings = 0
+	local checkChars = 0
+	local checkTailHash = 0
+
 	local lowerTool = string.lower(tool)
 	local resetDebugStats = getModeHook(event, "resetDebugStats")
 	local getDebugStats = getModeHook(event, "getDebugStats")
@@ -406,10 +423,6 @@ local function runBenchmark(tool: string, bench: string): Benchmark
 	if lowerTool == "roblox" then
 		method = function(d)
 			event:FireServer(d)
-		end
-	elseif lowerTool == "bridgenet2" then
-		method = function(d)
-			event:Fire(d)
 		end
 	elseif lowerTool == "warp" then
 		method = function(d)
@@ -453,6 +466,17 @@ local function runBenchmark(tool: string, bench: string): Benchmark
 
 		for slot = 1, eventsPerFrame do
 			framePayloads[slot] = PayloadVariants.make(bench, data, totalFrames, payloadVariant, slot)
+		end
+
+		if stringsContentCheck then
+			for slot = 1, eventsPerFrame do
+				for _, value in framePayloads[slot] do
+					local d1, d2, d3 = string.byte(value, -3, -1)
+					checkStrings += 1
+					checkChars += #value
+					checkTailHash = (checkTailHash + d1 * 65536 + d2 * 256 + d3) % 4294967296
+				end
+			end
 		end
 
 		local gcBefore = gcinfo()
@@ -510,6 +534,15 @@ local function runBenchmark(tool: string, bench: string): Benchmark
 			sent
 		),
 	}
+
+	if stringsContentCheck then
+		result.ContentCheck = {
+			Packets = sent,
+			Strings = checkStrings,
+			Chars = checkChars,
+			TailHash = checkTailHash,
+		}
+	end
 
 	if lowerTool == "satset" then
 		local debugStats = SatsetBatcher.getDebugStats()
@@ -643,13 +676,54 @@ local function runAll()
 			end
 		end
 	end
+
+	if BenchmarkConfig.stringsContentCheck then
+		local serverContent = ReplicatedStorage.Shared.GetRecieved:InvokeServer("getContentCheck") or {}
+		for tool, result in results.Strings or {} do
+			local firedCheck = result.ContentCheck
+			local gotCheck = serverContent[tool]
+			if firedCheck and gotCheck then
+				result.ContentCheckRecieved = gotCheck
+				result.ContentMatch = firedCheck.Strings == gotCheck.Strings
+					and firedCheck.Chars == gotCheck.Chars
+					and firedCheck.TailHash == gotCheck.TailHash
+				if result.ContentMatch then
+					print(`> {tool} Strings content check passed`)
+				else
+					warn(
+						`[Satset Benchmark] {tool} Strings content mismatch: fired {firedCheck.Strings} strings / {firedCheck.Chars} chars / hash {firedCheck.TailHash}, received {gotCheck.Strings} / {gotCheck.Chars} / {gotCheck.TailHash}`
+					)
+				end
+			end
+		end
+	end
+
+	-- A declared tool ships a guard that sheds load by design, so its shortfall is a
+	-- recorded partial, not a broken adapter. The row carries relay's own refusal
+	-- counters from GetDiagnostics; an undeclared shortfall still ends the run.
+	local relayDiagnostics
 	for bench, tools in results do
 		for tool, result in tools do
-			if result.Status ~= "skipped" and result.Sent ~= result.Recieve then
-				error(
-					`[Satset Benchmark] {tool} {bench} sent {result.Sent} events but received {result.Recieve}. This result is invalid.`
-				)
+			if result.Status == "skipped" or result.Sent == result.Recieve then
+				continue
 			end
+
+			local partialReason = getPartialReason(tool, bench)
+			if partialReason then
+				relayDiagnostics = relayDiagnostics
+					or ReplicatedStorage.Shared.GetRecieved:InvokeServer("getRelayServerDiagnostics")
+				result.Status = "partial"
+				result.PartialReason = partialReason
+				result.ServerDebugStats = relayDiagnostics
+				warn(
+					`[Satset Benchmark] {tool} {bench} partial: sent {result.Sent} events, received {result.Recieve}. {partialReason}`
+				)
+				continue
+			end
+
+			error(
+				`[Satset Benchmark] {tool} {bench} sent {result.Sent} events but received {result.Recieve}. This result is invalid.`
+			)
 		end
 	end
 

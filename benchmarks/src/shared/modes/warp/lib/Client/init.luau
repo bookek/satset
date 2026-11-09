@@ -3,16 +3,18 @@
 --@EternityDev
 local Client = {}
 
-local Buffer = require(script.Parent.Util.Buffer)
-local Replication = require(script.Parent.Replication)
-local Thread = require(script.Parent.Util.Thread)
-local Xor = require(script.Parent.Util.Xor)
+local Thread = require("./Util/Thread")
+local Buffer = require("./Util/Buffer")
+local Replication = require("./Replication")
+local Xor = require("./Util/Xor")
 
 local RunService = game:GetService("RunService")
 local Event: RemoteEvent = script.Parent:WaitForChild("Event") :: RemoteEvent
 local UnreliableEvent: UnreliableRemoteEvent = script.Parent:WaitForChild("UnreliableEvent") :: UnreliableRemoteEvent
 local deltaT: number, cycle: number = 0, 1 / 61
 local writer: Buffer.Writer = Buffer.createWriter()
+local toServer: Xor.Stream = Xor.new()
+local fromServer: Xor.Stream = Xor.new()
 
 type Connection = {
 	Connected: boolean,
@@ -51,7 +53,7 @@ end
 --@remoteName string
 --@fn function
 -- Connect to an event to receive incoming data from the server.
-Client.Connect = function(remoteName: string, fn: (Player, ...any?) -> ...any?): Connection
+Client.Connect = function(remoteName: string, fn: (...any?) -> ...any?): Connection
 	local id = Replication.get_id[remoteName]
 	if not id then
 		warn(`[Warp]: ".Connect"::"{remoteName}" does not exist, likely its not registered on the server yet.`)
@@ -168,10 +170,9 @@ end
 
 if RunService:IsClient() then
 	local function processIncoming(b: buffer, ref: { Instance }?, handleInvokes: boolean)
-		if type(b) ~= "buffer" then
-			return
-		end
-		local decoded: buffer = handleInvokes and Xor.decodeClient(b) or b
+		if type(b) ~= "buffer" then return end
+		local decoded = Xor.decode(fromServer, b)
+		if not decoded then return end
 		local contents = Buffer.readEvents(decoded, ref, eventSchemas)
 		for _, content in contents do
 			local remote = content[1]
@@ -218,9 +219,7 @@ if RunService:IsClient() then
 
 	RunService.PostSimulation:Connect(function(d: number)
 		deltaT += d
-		if deltaT < cycle then
-			return
-		end
+		if deltaT < cycle then return end
 		deltaT = 0
 
 		--reliable
@@ -228,8 +227,8 @@ if RunService:IsClient() then
 			Buffer.writeEvents(writer, queueEvent, eventSchemas)
 			do
 				local buf, ref = Buffer.buildWithRefs(writer)
-				local encoded = Xor.encodeClient(buf)
 				Buffer.reset(writer)
+				local encoded = Xor.encode(toServer, buf)
 				if not ref or #ref == 0 then
 					Event:FireServer(encoded)
 				else
@@ -244,10 +243,11 @@ if RunService:IsClient() then
 			do
 				local buf, ref = Buffer.buildWithRefs(writer)
 				Buffer.reset(writer)
+				local encoded = Xor.encode(toServer, buf)
 				if not ref or #ref == 0 then
-					UnreliableEvent:FireServer(buf)
+					UnreliableEvent:FireServer(encoded)
 				else
-					UnreliableEvent:FireServer(buf, ref)
+					UnreliableEvent:FireServer(encoded, ref)
 				end
 			end
 			table.clear(queueUnreliableEvent)

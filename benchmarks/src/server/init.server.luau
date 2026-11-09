@@ -168,6 +168,11 @@ end
 
 -- Track received counts per bench per tool for loss calculation.
 local received = {}
+-- Content fingerprint per tool for the Strings probe: string count, character sum,
+-- and a 32-bit mix of the last three bytes of every string (the per-frame digits).
+-- Accumulates across the whole session; the Strings bench runs once per tool.
+local contentCheck = {}
+local contentCheckStrings = BenchmarkConfig.stringsContentCheck
 for name, data in Benches do
 	if not isSelected(BenchmarkConfig.selectedBenches, name) then
 		continue
@@ -180,15 +185,25 @@ for name, data in Benches do
 	local function onReceive(tool: string)
 		benchReceived[tool] = 0
 
+		local checks
+		if contentCheckStrings and name == "Strings" then
+			checks = { Strings = 0, Chars = 0, TailHash = 0 }
+			contentCheck[tool] = checks
+		end
+
 		return function(player, value)
+			if checks and type(value) == "table" then
+				for _, text in value do
+					local d1, d2, d3 = string.byte(text, -3, -1)
+					checks.Strings += 1
+					checks.Chars += #text
+					checks.TailHash = (checks.TailHash + d1 * 65536 + d2 * 256 + d3) % 4294967296
+				end
+			end
+
 			benchReceived[tool] += 1
 			if benchReceived[tool] > 1 then
 				return
-			end
-
-			-- ByteNet swaps argument order.
-			if tool == "bytenet" then
-				player, value = value, player
 			end
 
 			if not compareValues(expectedFirstPayload, value) then
@@ -206,19 +221,32 @@ for name, data in Benches do
 			continue
 		end
 
+		local skipReason = BenchmarkConfig.skippedCases
+			and BenchmarkConfig.skippedCases[tool]
+			and BenchmarkConfig.skippedCases[tool][name]
+		if skipReason then
+			continue
+		end
+
 		local lowerTool = string.lower(tool)
 		local event = events[name]
 
+		-- A mode may not implement every bench; a missing event skips that pairing only.
+		if not event then
+			warn(`[bench] {tool} has no {name} event`)
+			continue
+		end
+
 		local callback = onReceive(tool)
 
-		if lowerTool == "roblox" or lowerTool == "packet" then
-			-- roblox and packet use .OnServerEvent
+		if lowerTool == "roblox" then
+			-- roblox uses .OnServerEvent
 			event.OnServerEvent:Connect(callback)
-		elseif lowerTool == "bridgenet2" or lowerTool == "warp" then
-			-- bridgenet2 and warp use standard :Connect()
+		elseif lowerTool == "warp" then
+			-- warp uses standard :Connect()
 			event:Connect(callback)
 		elseif event.listen then
-			-- satset and bytenet use .listen()
+			-- satset uses .listen()
 			event.listen(callback)
 		elseif event.On then -- netray_compile/blink
 			event.On(callback)
@@ -233,6 +261,10 @@ ReplicatedStorage.Shared.GetRecieved.OnServerInvoke = function(_player, action: 
 		return true
 	elseif action == "getSatsetDebugStats" then
 		return SatsetBatcher.getDebugStats()
+	elseif action == "getContentCheck" then
+		return contentCheck
+	elseif action == "getRelayServerDiagnostics" then
+		return Modes.relay.getServerDiagnostics()
 	end
 
 	return received

@@ -1,0 +1,69 @@
+-- Satset benchmark schema. One event per bench payload in benchmarks/src/shared/benches,
+-- declared Reliable like the rest of the roster.
+option ServerOutput = "./Server.luau"
+option ClientOutput = "./Client.luau"
+option TypesOutput = "./Types.luau"
+option BatchUnreliable = true
+option RemoteScope = "BLINKBLOX"
+
+struct Entity {
+	id: u8,
+	x: u8,
+	y: u8,
+	z: u8,
+	orientation: u8,
+	animation: u8
+}
+
+struct MixedStruct {
+	id: u8,
+	health: u8,
+	position: vector,
+	velocity: vector,
+	name: string(0..32),
+	isRunning: boolean,
+	animation: u8,
+	team: u8
+}
+
+event Booleans {
+	From: Client,
+	Type: Reliable,
+	Call: SingleSync,
+	Data: boolean[]
+}
+
+event Entities {
+	From: Client,
+	Type: Reliable,
+	Call: SingleSync,
+	Data: Entity[]
+}
+
+event Vectors {
+	From: Client,
+	Type: Reliable,
+	Call: SingleSync,
+	Data: vector[]
+}
+
+event Strings {
+	From: Client,
+	Type: Reliable,
+	Call: SingleSync,
+	Data: string(0..32)[]
+}
+
+event Mixed {
+	From: Client,
+	Type: Reliable,
+	Call: SingleSync,
+	Data: MixedStruct
+}
+
+event SingleValue {
+	From: Client,
+	Type: Reliable,
+	Call: SingleSync,
+	Data: u8
+}

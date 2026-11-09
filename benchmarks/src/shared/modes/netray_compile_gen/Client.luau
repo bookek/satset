@@ -6,7 +6,7 @@
 -- Name: Client
 -- Purpose: Generated runtime for client networking
 -- Generated-by: NetRay-Compiler
--- Version: 0.1.1
+-- Version: 0.2.0
 
 local Types = require(script.Parent.Types)
 type u8 = typeof(Types.u8)
@@ -21,6 +21,8 @@ type f64 = typeof(Types.f64)
 type NetRoot = typeof(Types.NetClient)
 type NetStats = typeof(Types.NetStats)
 type Connection = typeof(Types.Connection)
+type BenchEntity = typeof(Types.BenchEntity)
+type BenchMixed = typeof(Types.BenchMixed)
 type Net_Booleans_reliable_ClientApi = typeof(Types.Net_Booleans_reliable_ClientApi)
 type Net_Booleans_reliable_ClientEventCallback = typeof(Types.Net_Booleans_reliable_ClientEventCallback)
 type Net_Entities_reliable_ClientApi = typeof(Types.Net_Entities_reliable_ClientApi)
@@ -34,18 +36,28 @@ type Net_Mixed_reliable_ClientEventCallback = typeof(Types.Net_Mixed_reliable_Cl
 type Net_SingleValue_reliable_ClientApi = typeof(Types.Net_SingleValue_reliable_ClientApi)
 type Net_SingleValue_reliable_ClientEventCallback = typeof(Types.Net_SingleValue_reliable_ClientEventCallback)
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Reliable = ReplicatedStorage:WaitForChild("NetRay_RELIABLE") :: RemoteEvent
 local Unreliable = ReplicatedStorage:WaitForChild("NetRay_UNRELIABLE") :: UnreliableRemoteEvent
 local FunctionRemote = ReplicatedStorage:WaitForChild("NetRay_FUNCTION") :: RemoteFunction
 
 local function WithCount(...)
-	return select("#", ...), ...
+    return select("#", ...), ...
 end
 
-local DEFAULT_ARENA_CAPACITY = 65536
+local MAX_BATCH_MESSAGES = math.huge
+local DEFAULT_ARENA_CAPACITY = 256
+local MaxBatchBytes = math.huge
+local MaxUnreliableBytes = math.huge
+local MaxPollingMessages = math.huge
+local MaxDecodeWork = math.huge
+local LastErrorTime = -math.huge
+local function ReportError(message)
+    local now = os.clock()
+    if now - LastErrorTime >= 1 then LastErrorTime = now; warn(message) end
+end
 local create = buffer.create
 local copy = buffer.copy
 local len = buffer.len
@@ -67,115 +79,88 @@ local ERR_TYPE = "E_TYPE"
 local SEGMENT_MARKER_ID = 0
 
 local function VarUIntSize(value)
-	if value < 128 then
-		return 1
-	end
-	if value < 16384 then
-		return 2
-	end
-	if value < 2097152 then
-		return 3
-	end
-	if value < 268435456 then
-		return 4
-	end
-	return 5
+    if value < 128 then return 1 end
+    if value < 16384 then return 2 end
+    if value < 2097152 then return 3 end
+    if value < 268435456 then return 4 end
+    return 5
 end
 
 local function WriteVarUInt(payload, offset, value)
-	if value < 128 then
-		writeu8(payload, offset, value)
-		return offset + 1
-	end
-	if value < 16384 then
-		writeu8(payload, offset, bor(band(value, 127), 128))
-		writeu8(payload, offset + 1, band(rshift(value, 7), 127))
-		return offset + 2
-	end
-	if value < 2097152 then
-		writeu8(payload, offset, bor(band(value, 127), 128))
-		writeu8(payload, offset + 1, bor(band(rshift(value, 7), 127), 128))
-		writeu8(payload, offset + 2, band(rshift(value, 14), 127))
-		return offset + 3
-	end
-	if value < 268435456 then
-		writeu8(payload, offset, bor(band(value, 127), 128))
-		writeu8(payload, offset + 1, bor(band(rshift(value, 7), 127), 128))
-		writeu8(payload, offset + 2, bor(band(rshift(value, 14), 127), 128))
-		writeu8(payload, offset + 3, band(rshift(value, 21), 127))
-		return offset + 4
-	end
-	writeu8(payload, offset, bor(band(value, 127), 128))
-	writeu8(payload, offset + 1, bor(band(rshift(value, 7), 127), 128))
-	writeu8(payload, offset + 2, bor(band(rshift(value, 14), 127), 128))
-	writeu8(payload, offset + 3, bor(band(rshift(value, 21), 127), 128))
-	writeu8(payload, offset + 4, band(rshift(value, 28), 15))
-	return offset + 5
+    if value < 128 then
+        writeu8(payload, offset, value)
+        return offset + 1
+    end
+    if value < 16384 then
+        writeu8(payload, offset, bor(band(value, 127), 128))
+        writeu8(payload, offset + 1, band(rshift(value, 7), 127))
+        return offset + 2
+    end
+    if value < 2097152 then
+        writeu8(payload, offset, bor(band(value, 127), 128))
+        writeu8(payload, offset + 1, bor(band(rshift(value, 7), 127), 128))
+        writeu8(payload, offset + 2, band(rshift(value, 14), 127))
+        return offset + 3
+    end
+    if value < 268435456 then
+        writeu8(payload, offset, bor(band(value, 127), 128))
+        writeu8(payload, offset + 1, bor(band(rshift(value, 7), 127), 128))
+        writeu8(payload, offset + 2, bor(band(rshift(value, 14), 127), 128))
+        writeu8(payload, offset + 3, band(rshift(value, 21), 127))
+        return offset + 4
+    end
+    writeu8(payload, offset, bor(band(value, 127), 128))
+    writeu8(payload, offset + 1, bor(band(rshift(value, 7), 127), 128))
+    writeu8(payload, offset + 2, bor(band(rshift(value, 14), 127), 128))
+    writeu8(payload, offset + 3, bor(band(rshift(value, 21), 127), 128))
+    writeu8(payload, offset + 4, band(rshift(value, 28), 15))
+    return offset + 5
 end
 
 local function ReadVarUInt(payload, payloadLength, offset)
-	local next1 = offset + 1
-	if next1 > payloadLength then
-		error(ERR_BOUNDS)
-	end
-	local b1 = readu8(payload, offset)
-	if b1 < 128 then
-		return b1, next1
-	end
-	local next2 = next1 + 1
-	if next2 > payloadLength then
-		error(ERR_BOUNDS)
-	end
-	local b2 = readu8(payload, next1)
-	local value = band(b1, 127) + lshift(band(b2, 127), 7)
-	if b2 < 128 then
-		return value, next2
-	end
-	local next3 = next2 + 1
-	if next3 > payloadLength then
-		error(ERR_BOUNDS)
-	end
-	local b3 = readu8(payload, next2)
-	value += lshift(band(b3, 127), 14)
-	if b3 < 128 then
-		return value, next3
-	end
-	local next4 = next3 + 1
-	if next4 > payloadLength then
-		error(ERR_BOUNDS)
-	end
-	local b4 = readu8(payload, next3)
-	value += lshift(band(b4, 127), 21)
-	if b4 < 128 then
-		return value, next4
-	end
-	local next5 = next4 + 1
-	if next5 > payloadLength then
-		error(ERR_BOUNDS)
-	end
-	local b5 = readu8(payload, next4)
-	if b5 >= 16 then
-		error(ERR_SCHEMA)
-	end
-	value += lshift(b5, 28)
-	return value, next5
+    local next1 = offset + 1
+    if next1 > payloadLength then error(ERR_BOUNDS) end
+    local b1 = readu8(payload, offset)
+    if b1 < 128 then return b1, next1 end
+    local next2 = next1 + 1
+    if next2 > payloadLength then error(ERR_BOUNDS) end
+    local b2 = readu8(payload, next1)
+    local value = band(b1, 127) + lshift(band(b2, 127), 7)
+    if b2 < 128 then return value, next2 end
+    local next3 = next2 + 1
+    if next3 > payloadLength then error(ERR_BOUNDS) end
+    local b3 = readu8(payload, next2)
+    value += lshift(band(b3, 127), 14)
+    if b3 < 128 then return value, next3 end
+    local next4 = next3 + 1
+    if next4 > payloadLength then error(ERR_BOUNDS) end
+    local b4 = readu8(payload, next3)
+    value += lshift(band(b4, 127), 21)
+    if b4 < 128 then return value, next4 end
+    local next5 = next4 + 1
+    if next5 > payloadLength then error(ERR_BOUNDS) end
+    local b5 = readu8(payload, next4)
+    if b5 >= 16 then error(ERR_SCHEMA) end
+    value += lshift(b5, 28)
+    return value, next5
 end
 
 local function CreateConnection(disconnectFn: () -> ()): Connection
-	local active = true
-	local connection = {} :: any
-	connection.Connected = true
-	function connection:Disconnect()
-		if not active then
-			return
-		end
-		active = false
-		connection.Connected = false
-		disconnectFn()
-	end
-	return connection :: Connection
+    local active = true
+    local connection = {} :: any
+    connection.Connected = true
+    function connection:Disconnect()
+        if not active then
+            return
+        end
+        active = false
+        connection.Connected = false
+        disconnectFn()
+    end
+    return connection :: Connection
 end
 
+local APIs = {}
 local MAX_RELIABLE_ID = 6
 local MAX_UNRELIABLE_ID = 0
 local MAX_FUNCTION_ID = 0
@@ -185,1054 +170,983 @@ local RELIABLE_SKIP = table.create(MAX_RELIABLE_ID)
 local UNRELIABLE_SKIP = table.create(MAX_UNRELIABLE_ID)
 local FUNCTION_DISPATCH = table.create(MAX_FUNCTION_ID)
 
-local RELIABLE_ARENA_CAPACITY = DEFAULT_ARENA_CAPACITY
+local RELIABLE_ARENA_CAPACITY = 0
 local RELIABLE_ARENA = create(RELIABLE_ARENA_CAPACITY)
 local RELIABLE_CURSOR = 0
 local RELIABLE_QUEUE_SIZE = 0
 local RELIABLE_DROPPED = 0
-local RELIABLE_SEGMENT_HEADER_BYTES = 2
-local RELIABLE_SEGMENT_MIN_COUNT = 4
-local RELIABLE_SEGMENT_MIN_TAIL_BYTES = 3
+local RELIABLE_ENDS = {}
+local RELIABLE_IDS = {}
+-- Satset benchmark patch: outgoing wire accounting, June v0.1.1 convention.
 local DebugStats = {
 	clientSendCalls = 0,
 	clientRawBytes = 0,
 }
 
 local function FlushReliable()
-	if RELIABLE_CURSOR == 0 then
-		RELIABLE_QUEUE_SIZE = 0
-		return
-	end
-	local payloadToSend = create(RELIABLE_CURSOR)
-	local payloadOffset = RELIABLE_CURSOR
-	if RELIABLE_QUEUE_SIZE >= RELIABLE_SEGMENT_MIN_COUNT then
-		-- Only scan runs when the batch is large enough to amortize segment headers.
-		local sourceOffset = 0
-		payloadOffset = 0
-		while sourceOffset < RELIABLE_CURSOR do
-			local runStart = sourceOffset
-			local messageId = readu8(RELIABLE_ARENA, sourceOffset)
-			sourceOffset += 1
-			local skip = RELIABLE_SKIP[messageId]
-			local firstBodyEnd = skip(RELIABLE_ARENA, RELIABLE_CURSOR, sourceOffset)
-			local runEnd = firstBodyEnd
-			local runCount = 1
-			if RELIABLE_CURSOR - firstBodyEnd < RELIABLE_SEGMENT_MIN_TAIL_BYTES then
-				-- Remaining bytes cannot fit enough repeated IDs to make segmentation pay off.
-				local tailSize = RELIABLE_CURSOR - runStart
-				if tailSize > 0 then
-					copy(payloadToSend, payloadOffset, RELIABLE_ARENA, runStart, tailSize)
-					payloadOffset += tailSize
-				end
-				break
-			end
-			while runEnd < RELIABLE_CURSOR do
-				local nextMessageId = readu8(RELIABLE_ARENA, runEnd)
-				if nextMessageId ~= messageId then
-					break
-				end
-				local nextBodyStart = runEnd + 1
-				runEnd = skip(RELIABLE_ARENA, RELIABLE_CURSOR, nextBodyStart)
-				runCount += 1
-			end
-			if runCount * 1 > RELIABLE_SEGMENT_HEADER_BYTES + VarUIntSize(runCount) then
-				writeu8(payloadToSend, payloadOffset, SEGMENT_MARKER_ID)
-				payloadOffset += 1
-				writeu8(payloadToSend, payloadOffset, messageId)
-				payloadOffset += 1
-				payloadOffset = WriteVarUInt(payloadToSend, payloadOffset, runCount)
-				local copyCursor = sourceOffset
-				local bodyEnd = firstBodyEnd
-				while true do
-					local bodySize = bodyEnd - copyCursor
-					if bodySize > 0 then
-						copy(payloadToSend, payloadOffset, RELIABLE_ARENA, copyCursor, bodySize)
-						payloadOffset += bodySize
-					end
-					if bodyEnd >= runEnd then
-						break
-					end
-					copyCursor = bodyEnd + 1
-					bodyEnd = skip(RELIABLE_ARENA, RELIABLE_CURSOR, copyCursor)
-				end
-			else
-				local runSize = runEnd - runStart
-				if runSize > 0 then
-					copy(payloadToSend, payloadOffset, RELIABLE_ARENA, runStart, runSize)
-					payloadOffset += runSize
-				end
-			end
-			sourceOffset = runEnd
-		end
-	else
-		-- For tiny batches, a direct copy is cheaper than any merge scan.
-		copy(payloadToSend, 0, RELIABLE_ARENA, 0, RELIABLE_CURSOR)
-	end
-	if payloadOffset < RELIABLE_CURSOR then
-		local compactPayload = create(payloadOffset)
-		copy(compactPayload, 0, payloadToSend, 0, payloadOffset)
-		payloadToSend = compactPayload
-	end
-	DebugStats.clientSendCalls += 1
-	DebugStats.clientRawBytes += len(payloadToSend)
-	Reliable:FireServer(payloadToSend)
-	RELIABLE_CURSOR = 0
-	RELIABLE_QUEUE_SIZE = 0
+    if RELIABLE_QUEUE_SIZE == 0 then return end
+    
+    local outputSize = RELIABLE_CURSOR
+    local index = 1
+    while index <= RELIABLE_QUEUE_SIZE do
+        local last = index
+        local messageId = RELIABLE_IDS[index]
+        while last < RELIABLE_QUEUE_SIZE and RELIABLE_IDS[last + 1] == messageId do last += 1 end
+        local count = last - index + 1
+        local savings = count * 1 - (2 * 1 + VarUIntSize(count))
+        if savings > 0 then outputSize -= savings end
+        index = last + 1
+    end
+    local payloadToSend = create(outputSize)
+    local outputOffset = 0
+    local sourceOffset = 0
+    index = 1
+    while index <= RELIABLE_QUEUE_SIZE do
+        local last = index
+        local messageId = RELIABLE_IDS[index]
+        while last < RELIABLE_QUEUE_SIZE and RELIABLE_IDS[last + 1] == messageId do last += 1 end
+        local count = last - index + 1
+        if count * 1 > 2 * 1 + VarUIntSize(count) then
+            writeu8(payloadToSend, outputOffset, SEGMENT_MARKER_ID)
+            writeu8(payloadToSend, outputOffset + 1, messageId)
+            outputOffset = WriteVarUInt(payloadToSend, outputOffset + 2 * 1, count)
+            for bodyIndex = index, last do
+                local bodyStart = sourceOffset + 1
+                local bodyEnd = RELIABLE_ENDS[bodyIndex]
+                local bodySize = bodyEnd - bodyStart
+                copy(payloadToSend, outputOffset, RELIABLE_ARENA, bodyStart, bodySize)
+                outputOffset += bodySize
+                sourceOffset = bodyEnd
+            end
+        else
+            local runEnd = RELIABLE_ENDS[last]
+            local runSize = runEnd - sourceOffset
+            copy(payloadToSend, outputOffset, RELIABLE_ARENA, sourceOffset, runSize)
+            outputOffset += runSize
+            sourceOffset = runEnd
+        end
+        index = last + 1
+    end
+    DebugStats.clientSendCalls += 1
+    DebugStats.clientRawBytes += len(payloadToSend)
+    Reliable:FireServer(payloadToSend)
+    RELIABLE_CURSOR = 0
+    RELIABLE_QUEUE_SIZE = 0
+    table.clear(RELIABLE_ENDS)
+    table.clear(RELIABLE_IDS)
 end
 
-local UNRELIABLE_ARENA_CAPACITY = DEFAULT_ARENA_CAPACITY
+local UNRELIABLE_ARENA_CAPACITY = 0
 local UNRELIABLE_ARENA = create(UNRELIABLE_ARENA_CAPACITY)
 local UNRELIABLE_CURSOR = 0
 local UNRELIABLE_QUEUE_SIZE = 0
 local UNRELIABLE_DROPPED = 0
-local UNRELIABLE_SEGMENT_HEADER_BYTES = 2
-local UNRELIABLE_SEGMENT_MIN_COUNT = 4
-local UNRELIABLE_SEGMENT_MIN_TAIL_BYTES = 3
-
+local UNRELIABLE_ENDS = {}
+local UNRELIABLE_IDS = {}
 local function FlushUnreliable()
-	if UNRELIABLE_CURSOR == 0 then
-		UNRELIABLE_QUEUE_SIZE = 0
-		return
-	end
-	local payloadToSend = create(UNRELIABLE_CURSOR)
-	local payloadOffset = UNRELIABLE_CURSOR
-	if UNRELIABLE_QUEUE_SIZE >= UNRELIABLE_SEGMENT_MIN_COUNT then
-		-- Only scan runs when the batch is large enough to amortize segment headers.
-		local sourceOffset = 0
-		payloadOffset = 0
-		while sourceOffset < UNRELIABLE_CURSOR do
-			local runStart = sourceOffset
-			local messageId = readu8(UNRELIABLE_ARENA, sourceOffset)
-			sourceOffset += 1
-			local skip = UNRELIABLE_SKIP[messageId]
-			local firstBodyEnd = skip(UNRELIABLE_ARENA, UNRELIABLE_CURSOR, sourceOffset)
-			local runEnd = firstBodyEnd
-			local runCount = 1
-			if UNRELIABLE_CURSOR - firstBodyEnd < UNRELIABLE_SEGMENT_MIN_TAIL_BYTES then
-				-- Remaining bytes cannot fit enough repeated IDs to make segmentation pay off.
-				local tailSize = UNRELIABLE_CURSOR - runStart
-				if tailSize > 0 then
-					copy(payloadToSend, payloadOffset, UNRELIABLE_ARENA, runStart, tailSize)
-					payloadOffset += tailSize
-				end
-				break
-			end
-			while runEnd < UNRELIABLE_CURSOR do
-				local nextMessageId = readu8(UNRELIABLE_ARENA, runEnd)
-				if nextMessageId ~= messageId then
-					break
-				end
-				local nextBodyStart = runEnd + 1
-				runEnd = skip(UNRELIABLE_ARENA, UNRELIABLE_CURSOR, nextBodyStart)
-				runCount += 1
-			end
-			if runCount * 1 > UNRELIABLE_SEGMENT_HEADER_BYTES + VarUIntSize(runCount) then
-				writeu8(payloadToSend, payloadOffset, SEGMENT_MARKER_ID)
-				payloadOffset += 1
-				writeu8(payloadToSend, payloadOffset, messageId)
-				payloadOffset += 1
-				payloadOffset = WriteVarUInt(payloadToSend, payloadOffset, runCount)
-				local copyCursor = sourceOffset
-				local bodyEnd = firstBodyEnd
-				while true do
-					local bodySize = bodyEnd - copyCursor
-					if bodySize > 0 then
-						copy(payloadToSend, payloadOffset, UNRELIABLE_ARENA, copyCursor, bodySize)
-						payloadOffset += bodySize
-					end
-					if bodyEnd >= runEnd then
-						break
-					end
-					copyCursor = bodyEnd + 1
-					bodyEnd = skip(UNRELIABLE_ARENA, UNRELIABLE_CURSOR, copyCursor)
-				end
-			else
-				local runSize = runEnd - runStart
-				if runSize > 0 then
-					copy(payloadToSend, payloadOffset, UNRELIABLE_ARENA, runStart, runSize)
-					payloadOffset += runSize
-				end
-			end
-			sourceOffset = runEnd
-		end
-	else
-		-- For tiny batches, a direct copy is cheaper than any merge scan.
-		copy(payloadToSend, 0, UNRELIABLE_ARENA, 0, UNRELIABLE_CURSOR)
-	end
-	if payloadOffset < UNRELIABLE_CURSOR then
-		local compactPayload = create(payloadOffset)
-		copy(compactPayload, 0, payloadToSend, 0, payloadOffset)
-		payloadToSend = compactPayload
-	end
-	DebugStats.clientSendCalls += 1
-	DebugStats.clientRawBytes += len(payloadToSend)
-	Unreliable:FireServer(payloadToSend)
-	UNRELIABLE_CURSOR = 0
-	UNRELIABLE_QUEUE_SIZE = 0
+    if UNRELIABLE_QUEUE_SIZE == 0 then return end
+    
+    local outputSize = UNRELIABLE_CURSOR
+    local index = 1
+    while index <= UNRELIABLE_QUEUE_SIZE do
+        local last = index
+        local messageId = UNRELIABLE_IDS[index]
+        while last < UNRELIABLE_QUEUE_SIZE and UNRELIABLE_IDS[last + 1] == messageId do last += 1 end
+        local count = last - index + 1
+        local savings = count * 1 - (2 * 1 + VarUIntSize(count))
+        if savings > 0 then outputSize -= savings end
+        index = last + 1
+    end
+    local payloadToSend = create(outputSize)
+    local outputOffset = 0
+    local sourceOffset = 0
+    index = 1
+    while index <= UNRELIABLE_QUEUE_SIZE do
+        local last = index
+        local messageId = UNRELIABLE_IDS[index]
+        while last < UNRELIABLE_QUEUE_SIZE and UNRELIABLE_IDS[last + 1] == messageId do last += 1 end
+        local count = last - index + 1
+        if count * 1 > 2 * 1 + VarUIntSize(count) then
+            writeu8(payloadToSend, outputOffset, SEGMENT_MARKER_ID)
+            writeu8(payloadToSend, outputOffset + 1, messageId)
+            outputOffset = WriteVarUInt(payloadToSend, outputOffset + 2 * 1, count)
+            for bodyIndex = index, last do
+                local bodyStart = sourceOffset + 1
+                local bodyEnd = UNRELIABLE_ENDS[bodyIndex]
+                local bodySize = bodyEnd - bodyStart
+                copy(payloadToSend, outputOffset, UNRELIABLE_ARENA, bodyStart, bodySize)
+                outputOffset += bodySize
+                sourceOffset = bodyEnd
+            end
+        else
+            local runEnd = UNRELIABLE_ENDS[last]
+            local runSize = runEnd - sourceOffset
+            copy(payloadToSend, outputOffset, UNRELIABLE_ARENA, sourceOffset, runSize)
+            outputOffset += runSize
+            sourceOffset = runEnd
+        end
+        index = last + 1
+    end
+    DebugStats.clientSendCalls += 1
+    DebugStats.clientRawBytes += len(payloadToSend)
+    Unreliable:FireServer(payloadToSend)
+    UNRELIABLE_CURSOR = 0
+    UNRELIABLE_QUEUE_SIZE = 0
+    table.clear(UNRELIABLE_ENDS)
+    table.clear(UNRELIABLE_IDS)
 end
 
+do
 local Net_Booleans_reliable_1: Net_Booleans_reliable_ClientApi = {} :: Net_Booleans_reliable_ClientApi
 local MESSAGE_ID_Net_Booleans_reliable_1 = 1
 
 local function Encode_Net_Booleans_reliable_1(data)
-	local prefixSize = 0
-	local varSize = 0
-	local arrayLen_1 = #data
-	if arrayLen_1 > 4294967295 then
-		error(ERR_SCHEMA)
-	end
-	prefixSize += VarUIntSize(arrayLen_1)
-	varSize += ((arrayLen_1 + 7) // 8)
-	local totalSize = 1 + prefixSize + varSize
-	local payload = create(totalSize)
-	writeu8(payload, 0, MESSAGE_ID_Net_Booleans_reliable_1)
-	local prefixOffset = 1
-	local fixedOffset = prefixOffset + prefixSize
-	local varOffset = fixedOffset
-	prefixOffset = WriteVarUInt(payload, prefixOffset, arrayLen_1)
-	local arrayPackedByteCount_5 = ((arrayLen_1 + 7) // 8)
-	local arrayValueIndex_7 = 1
-	for arrayPackedIndex_6 = 1, arrayPackedByteCount_5 do
-		local arrayPackedByte_10 = 0
-		local arrayBitMask_9 = 1
-		for arrayBitIndex_8 = 1, 8 do
-			if arrayValueIndex_7 > arrayLen_1 then
-				break
-			end
-			if data[arrayValueIndex_7] then
-				arrayPackedByte_10 = bor(arrayPackedByte_10, arrayBitMask_9)
-			end
-			arrayValueIndex_7 += 1
-			arrayBitMask_9 = lshift(arrayBitMask_9, 1)
-		end
-		writeu8(payload, varOffset, arrayPackedByte_10)
-		varOffset += 1
-	end
-	return payload
+    local arrayLen_1 = #data
+    if arrayLen_1 ~= 1000 then
+        error(ERR_SCHEMA)
+    end
+    local totalSize = 126
+    if totalSize > MaxBatchBytes then error(ERR_BOUNDS) end
+    local payload = create(totalSize)
+    writeu8(payload, 0, MESSAGE_ID_Net_Booleans_reliable_1)
+    local offset = 1
+    local boolIndex_3 = 1
+    for _ = 1, 1000 // 8 do
+        writeu8(payload, offset,
+            (if data[boolIndex_3] then 1 else 0) +
+            (if data[boolIndex_3 + 1] then 2 else 0) +
+            (if data[boolIndex_3 + 2] then 4 else 0) +
+            (if data[boolIndex_3 + 3] then 8 else 0) +
+            (if data[boolIndex_3 + 4] then 16 else 0) +
+            (if data[boolIndex_3 + 5] then 32 else 0) +
+            (if data[boolIndex_3 + 6] then 64 else 0) +
+            (if data[boolIndex_3 + 7] then 128 else 0)
+        )
+        boolIndex_3 += 8
+        offset += 1
+    end
+    if boolIndex_3 <= 1000 then
+        local boolByte_4, boolMask_5 = 0, 1
+        for boolIndex_3 = boolIndex_3, 1000 do
+            if data[boolIndex_3] then boolByte_4 += boolMask_5 end
+            boolMask_5 *= 2
+        end
+        writeu8(payload, offset, boolByte_4)
+        offset += 1
+    end
+    return payload
 end
 
 local Handler_Net_Booleans_reliable_1: ((data: { boolean }) -> ())? = nil
 local HandlerToken_Net_Booleans_reliable_1 = 0
 
-local function Skip_Net_Booleans_reliable_1(payload, payloadLength, offset)
-	local prefixCursor_1 = offset
-	local arrayCount_2
-	arrayCount_2, prefixCursor_1 = ReadVarUInt(payload, payloadLength, prefixCursor_1)
-	local fixedCursor_3 = prefixCursor_1
-	local varCursor_4 = fixedCursor_3
-	if varCursor_4 > payloadLength then
-		error(ERR_BOUNDS)
-	end
-	local skipArrayPackedByteCount_5 = ((arrayCount_2 + 7) // 8)
-	local skipArrayPackedNext_6 = varCursor_4 + skipArrayPackedByteCount_5
-	if skipArrayPackedNext_6 > payloadLength then
-		error(ERR_BOUNDS)
-	end
-	varCursor_4 = skipArrayPackedNext_6
-	offset = varCursor_4
-	return offset
+local function Skip_Net_Booleans_reliable_1(payload, payloadLength, offset, decodeBudget)
+    decodeBudget = decodeBudget or { remaining = MaxDecodeWork }
+    local skipArrayCount_1 = 1000
+    if skipArrayCount_1 < 1000 then
+        error(ERR_SCHEMA)
+    end
+    decodeBudget.remaining -= skipArrayCount_1
+    if decodeBudget.remaining < 0 then error(ERR_BOUNDS) end
+    local skipArrayFixedNext_3 = offset + 125
+    if skipArrayFixedNext_3 > payloadLength then
+        error(ERR_BOUNDS)
+    end
+    offset = skipArrayFixedNext_3
+    return offset
 end
 
 RELIABLE_SKIP[1] = Skip_Net_Booleans_reliable_1
 
 function Net_Booleans_reliable_1.Fire(data: { boolean }): boolean
-	local __nr_prefixSize = 0
-	local __nr_varSize = 0
-	local arrayLen_1 = #data
-	if arrayLen_1 > 4294967295 then
-		error(ERR_SCHEMA)
-	end
-	__nr_prefixSize += VarUIntSize(arrayLen_1)
-	__nr_varSize += ((arrayLen_1 + 7) // 8)
-	local __nr_totalSize = 1 + __nr_prefixSize + __nr_varSize
-	local __nr_base = RELIABLE_CURSOR
-	local __nr_required = __nr_base + __nr_totalSize
-	if __nr_required > RELIABLE_ARENA_CAPACITY then
-		local nextCapacity = RELIABLE_ARENA_CAPACITY
-		while nextCapacity < __nr_required do
-			nextCapacity *= 2
-		end
-		local nextArena = create(nextCapacity)
-		if RELIABLE_CURSOR > 0 then
-			copy(nextArena, 0, RELIABLE_ARENA, 0, RELIABLE_CURSOR)
-		end
-		RELIABLE_ARENA = nextArena
-		RELIABLE_ARENA_CAPACITY = nextCapacity
-	end
-	RELIABLE_CURSOR = __nr_required
-	local __nr_payload = RELIABLE_ARENA
-	writeu8(__nr_payload, __nr_base, MESSAGE_ID_Net_Booleans_reliable_1)
-	local __nr_prefix = __nr_base + 1
-	local __nr_fixed = __nr_prefix + __nr_prefixSize
-	local __nr_var = __nr_fixed
-	__nr_prefix = WriteVarUInt(__nr_payload, __nr_prefix, arrayLen_1)
-	local arrayPackedByteCount_5 = ((arrayLen_1 + 7) // 8)
-	local arrayValueIndex_7 = 1
-	for arrayPackedIndex_6 = 1, arrayPackedByteCount_5 do
-		local arrayPackedByte_10 = 0
-		local arrayBitMask_9 = 1
-		for arrayBitIndex_8 = 1, 8 do
-			if arrayValueIndex_7 > arrayLen_1 then
-				break
-			end
-			if data[arrayValueIndex_7] then
-				arrayPackedByte_10 = bor(arrayPackedByte_10, arrayBitMask_9)
-			end
-			arrayValueIndex_7 += 1
-			arrayBitMask_9 = lshift(arrayBitMask_9, 1)
-		end
-		writeu8(__nr_payload, __nr_var, arrayPackedByte_10)
-		__nr_var += 1
-	end
-	RELIABLE_QUEUE_SIZE += 1
-	return true
+    local arrayLen_1 = #data
+    if arrayLen_1 ~= 1000 then
+        error(ERR_SCHEMA)
+    end
+    local __nr_totalSize = 126
+    if __nr_totalSize > MaxBatchBytes then RELIABLE_DROPPED += 1; ReportError("NetRay outgoing message exceeds byte limit"); return false end
+    if RELIABLE_QUEUE_SIZE >= MAX_BATCH_MESSAGES or RELIABLE_CURSOR + __nr_totalSize > MaxBatchBytes then FlushReliable() end
+    local __nr_base = RELIABLE_CURSOR
+    local __nr_required = __nr_base + __nr_totalSize
+    if __nr_required > RELIABLE_ARENA_CAPACITY then
+        local nextCapacity = math.max(DEFAULT_ARENA_CAPACITY, RELIABLE_ARENA_CAPACITY)
+        while nextCapacity < __nr_required do
+            nextCapacity *= 2
+        end
+        nextCapacity = math.min(nextCapacity, MaxBatchBytes)
+        local nextArena = create(nextCapacity)
+        if RELIABLE_CURSOR > 0 then
+            copy(nextArena, 0, RELIABLE_ARENA, 0, RELIABLE_CURSOR)
+        end
+        RELIABLE_ARENA = nextArena
+        RELIABLE_ARENA_CAPACITY = nextCapacity
+    end
+    local __nr_payload = RELIABLE_ARENA
+    writeu8(__nr_payload, __nr_base, MESSAGE_ID_Net_Booleans_reliable_1)
+    local __nr_p = __nr_base + 1
+    local boolIndex_3 = 1
+    for _ = 1, 1000 // 8 do
+        writeu8(__nr_payload, __nr_p,
+            (if data[boolIndex_3] then 1 else 0) +
+            (if data[boolIndex_3 + 1] then 2 else 0) +
+            (if data[boolIndex_3 + 2] then 4 else 0) +
+            (if data[boolIndex_3 + 3] then 8 else 0) +
+            (if data[boolIndex_3 + 4] then 16 else 0) +
+            (if data[boolIndex_3 + 5] then 32 else 0) +
+            (if data[boolIndex_3 + 6] then 64 else 0) +
+            (if data[boolIndex_3 + 7] then 128 else 0)
+        )
+        boolIndex_3 += 8
+        __nr_p += 1
+    end
+    if boolIndex_3 <= 1000 then
+        local boolByte_4, boolMask_5 = 0, 1
+        for boolIndex_3 = boolIndex_3, 1000 do
+            if data[boolIndex_3] then boolByte_4 += boolMask_5 end
+            boolMask_5 *= 2
+        end
+        writeu8(__nr_payload, __nr_p, boolByte_4)
+        __nr_p += 1
+    end
+    RELIABLE_CURSOR = __nr_required
+    RELIABLE_QUEUE_SIZE += 1
+    RELIABLE_ENDS[RELIABLE_QUEUE_SIZE] = __nr_required
+    RELIABLE_IDS[RELIABLE_QUEUE_SIZE] = MESSAGE_ID_Net_Booleans_reliable_1
+    return true
 end
 
+APIs[1] = Net_Booleans_reliable_1
+end
+do
 local Net_Entities_reliable_2: Net_Entities_reliable_ClientApi = {} :: Net_Entities_reliable_ClientApi
 local MESSAGE_ID_Net_Entities_reliable_2 = 2
 
 local function Encode_Net_Entities_reliable_2(data)
-	local prefixSize = 0
-	local varSize = 0
-	local arrayLen_1 = #data
-	if arrayLen_1 > 4294967295 then
-		error(ERR_SCHEMA)
-	end
-	prefixSize += VarUIntSize(arrayLen_1)
-	for arrayIndex_2 = 1, arrayLen_1 do
-		varSize += 1
-		varSize += 1
-		varSize += 1
-		varSize += 1
-		varSize += 1
-		varSize += 1
-	end
-	local totalSize = 1 + prefixSize + varSize
-	local payload = create(totalSize)
-	writeu8(payload, 0, MESSAGE_ID_Net_Entities_reliable_2)
-	local prefixOffset = 1
-	local fixedOffset = prefixOffset + prefixSize
-	local varOffset = fixedOffset
-	prefixOffset = WriteVarUInt(payload, prefixOffset, arrayLen_1)
-	for arrayIndex_4 = 1, arrayLen_1 do
-		writeu8(payload, varOffset, data[arrayIndex_4].id)
-		varOffset += 1
-		writeu8(payload, varOffset, data[arrayIndex_4].x)
-		varOffset += 1
-		writeu8(payload, varOffset, data[arrayIndex_4].y)
-		varOffset += 1
-		writeu8(payload, varOffset, data[arrayIndex_4].z)
-		varOffset += 1
-		writeu8(payload, varOffset, data[arrayIndex_4].orientation)
-		varOffset += 1
-		writeu8(payload, varOffset, data[arrayIndex_4].animation)
-		varOffset += 1
-	end
-	return payload
+    local arrayLen_1 = #data
+    if arrayLen_1 ~= 100 then
+        error(ERR_SCHEMA)
+    end
+    local totalSize = 601
+    if totalSize > MaxBatchBytes then error(ERR_BOUNDS) end
+    local payload = create(totalSize)
+    writeu8(payload, 0, MESSAGE_ID_Net_Entities_reliable_2)
+    local offset = 1
+    for arrayIndex_2 = 1, 100 do
+        writeu8(payload, offset, data[arrayIndex_2].id)
+        offset += 1
+        writeu8(payload, offset, data[arrayIndex_2].x)
+        offset += 1
+        writeu8(payload, offset, data[arrayIndex_2].y)
+        offset += 1
+        writeu8(payload, offset, data[arrayIndex_2].z)
+        offset += 1
+        writeu8(payload, offset, data[arrayIndex_2].orientation)
+        offset += 1
+        writeu8(payload, offset, data[arrayIndex_2].animation)
+        offset += 1
+    end
+    return payload
 end
 
-local Handler_Net_Entities_reliable_2: ((data: { { id: u8, x: u8, y: u8, z: u8, orientation: u8, animation: u8 } }) -> ())? =
-	nil
+local Handler_Net_Entities_reliable_2: ((data: { BenchEntity }) -> ())? = nil
 local HandlerToken_Net_Entities_reliable_2 = 0
 
-local function Skip_Net_Entities_reliable_2(payload, payloadLength, offset)
-	local prefixCursor_1 = offset
-	local arrayCount_2
-	arrayCount_2, prefixCursor_1 = ReadVarUInt(payload, payloadLength, prefixCursor_1)
-	local fixedCursor_3 = prefixCursor_1
-	local varCursor_4 = fixedCursor_3
-	if varCursor_4 > payloadLength then
-		error(ERR_BOUNDS)
-	end
-	for skipArrayIndex_5 = 1, arrayCount_2 do
-		local skipNext_6 = varCursor_4 + 1
-		if skipNext_6 > payloadLength then
-			error(ERR_BOUNDS)
-		end
-		varCursor_4 = skipNext_6
-		local skipNext_7 = varCursor_4 + 1
-		if skipNext_7 > payloadLength then
-			error(ERR_BOUNDS)
-		end
-		varCursor_4 = skipNext_7
-		local skipNext_8 = varCursor_4 + 1
-		if skipNext_8 > payloadLength then
-			error(ERR_BOUNDS)
-		end
-		varCursor_4 = skipNext_8
-		local skipNext_9 = varCursor_4 + 1
-		if skipNext_9 > payloadLength then
-			error(ERR_BOUNDS)
-		end
-		varCursor_4 = skipNext_9
-		local skipNext_10 = varCursor_4 + 1
-		if skipNext_10 > payloadLength then
-			error(ERR_BOUNDS)
-		end
-		varCursor_4 = skipNext_10
-		local skipNext_11 = varCursor_4 + 1
-		if skipNext_11 > payloadLength then
-			error(ERR_BOUNDS)
-		end
-		varCursor_4 = skipNext_11
-	end
-	offset = varCursor_4
-	return offset
+local function Skip_Net_Entities_reliable_2(payload, payloadLength, offset, decodeBudget)
+    decodeBudget = decodeBudget or { remaining = MaxDecodeWork }
+    local skipArrayCount_1 = 100
+    if skipArrayCount_1 < 100 then
+        error(ERR_SCHEMA)
+    end
+    decodeBudget.remaining -= skipArrayCount_1
+    if decodeBudget.remaining < 0 then error(ERR_BOUNDS) end
+    local skipArrayFixedNext_3 = offset + 600
+    if skipArrayFixedNext_3 > payloadLength then
+        error(ERR_BOUNDS)
+    end
+    offset = skipArrayFixedNext_3
+    return offset
 end
 
 RELIABLE_SKIP[2] = Skip_Net_Entities_reliable_2
 
-function Net_Entities_reliable_2.Fire(
-	data: { { id: u8, x: u8, y: u8, z: u8, orientation: u8, animation: u8 } }
-): boolean
-	local __nr_prefixSize = 0
-	local __nr_varSize = 0
-	local arrayLen_1 = #data
-	if arrayLen_1 > 4294967295 then
-		error(ERR_SCHEMA)
-	end
-	__nr_prefixSize += VarUIntSize(arrayLen_1)
-	for arrayIndex_2 = 1, arrayLen_1 do
-		__nr_varSize += 1
-		__nr_varSize += 1
-		__nr_varSize += 1
-		__nr_varSize += 1
-		__nr_varSize += 1
-		__nr_varSize += 1
-	end
-	local __nr_totalSize = 1 + __nr_prefixSize + __nr_varSize
-	local __nr_base = RELIABLE_CURSOR
-	local __nr_required = __nr_base + __nr_totalSize
-	if __nr_required > RELIABLE_ARENA_CAPACITY then
-		local nextCapacity = RELIABLE_ARENA_CAPACITY
-		while nextCapacity < __nr_required do
-			nextCapacity *= 2
-		end
-		local nextArena = create(nextCapacity)
-		if RELIABLE_CURSOR > 0 then
-			copy(nextArena, 0, RELIABLE_ARENA, 0, RELIABLE_CURSOR)
-		end
-		RELIABLE_ARENA = nextArena
-		RELIABLE_ARENA_CAPACITY = nextCapacity
-	end
-	RELIABLE_CURSOR = __nr_required
-	local __nr_payload = RELIABLE_ARENA
-	writeu8(__nr_payload, __nr_base, MESSAGE_ID_Net_Entities_reliable_2)
-	local __nr_prefix = __nr_base + 1
-	local __nr_fixed = __nr_prefix + __nr_prefixSize
-	local __nr_var = __nr_fixed
-	__nr_prefix = WriteVarUInt(__nr_payload, __nr_prefix, arrayLen_1)
-	for arrayIndex_4 = 1, arrayLen_1 do
-		writeu8(__nr_payload, __nr_var, data[arrayIndex_4].id)
-		__nr_var += 1
-		writeu8(__nr_payload, __nr_var, data[arrayIndex_4].x)
-		__nr_var += 1
-		writeu8(__nr_payload, __nr_var, data[arrayIndex_4].y)
-		__nr_var += 1
-		writeu8(__nr_payload, __nr_var, data[arrayIndex_4].z)
-		__nr_var += 1
-		writeu8(__nr_payload, __nr_var, data[arrayIndex_4].orientation)
-		__nr_var += 1
-		writeu8(__nr_payload, __nr_var, data[arrayIndex_4].animation)
-		__nr_var += 1
-	end
-	RELIABLE_QUEUE_SIZE += 1
-	return true
+function Net_Entities_reliable_2.Fire(data: { BenchEntity }): boolean
+    local arrayLen_1 = #data
+    if arrayLen_1 ~= 100 then
+        error(ERR_SCHEMA)
+    end
+    local __nr_totalSize = 601
+    if __nr_totalSize > MaxBatchBytes then RELIABLE_DROPPED += 1; ReportError("NetRay outgoing message exceeds byte limit"); return false end
+    if RELIABLE_QUEUE_SIZE >= MAX_BATCH_MESSAGES or RELIABLE_CURSOR + __nr_totalSize > MaxBatchBytes then FlushReliable() end
+    local __nr_base = RELIABLE_CURSOR
+    local __nr_required = __nr_base + __nr_totalSize
+    if __nr_required > RELIABLE_ARENA_CAPACITY then
+        local nextCapacity = math.max(DEFAULT_ARENA_CAPACITY, RELIABLE_ARENA_CAPACITY)
+        while nextCapacity < __nr_required do
+            nextCapacity *= 2
+        end
+        nextCapacity = math.min(nextCapacity, MaxBatchBytes)
+        local nextArena = create(nextCapacity)
+        if RELIABLE_CURSOR > 0 then
+            copy(nextArena, 0, RELIABLE_ARENA, 0, RELIABLE_CURSOR)
+        end
+        RELIABLE_ARENA = nextArena
+        RELIABLE_ARENA_CAPACITY = nextCapacity
+    end
+    local __nr_payload = RELIABLE_ARENA
+    writeu8(__nr_payload, __nr_base, MESSAGE_ID_Net_Entities_reliable_2)
+    local __nr_p = __nr_base + 1
+    for arrayIndex_2 = 1, 100 do
+        writeu8(__nr_payload, __nr_p, data[arrayIndex_2].id)
+        __nr_p += 1
+        writeu8(__nr_payload, __nr_p, data[arrayIndex_2].x)
+        __nr_p += 1
+        writeu8(__nr_payload, __nr_p, data[arrayIndex_2].y)
+        __nr_p += 1
+        writeu8(__nr_payload, __nr_p, data[arrayIndex_2].z)
+        __nr_p += 1
+        writeu8(__nr_payload, __nr_p, data[arrayIndex_2].orientation)
+        __nr_p += 1
+        writeu8(__nr_payload, __nr_p, data[arrayIndex_2].animation)
+        __nr_p += 1
+    end
+    RELIABLE_CURSOR = __nr_required
+    RELIABLE_QUEUE_SIZE += 1
+    RELIABLE_ENDS[RELIABLE_QUEUE_SIZE] = __nr_required
+    RELIABLE_IDS[RELIABLE_QUEUE_SIZE] = MESSAGE_ID_Net_Entities_reliable_2
+    return true
 end
 
+APIs[2] = Net_Entities_reliable_2
+end
+do
 local Net_Vectors_reliable_3: Net_Vectors_reliable_ClientApi = {} :: Net_Vectors_reliable_ClientApi
 local MESSAGE_ID_Net_Vectors_reliable_3 = 3
 
 local function Encode_Net_Vectors_reliable_3(data)
-	local prefixSize = 0
-	local varSize = 0
-	local arrayLen_1 = #data
-	if arrayLen_1 > 4294967295 then
-		error(ERR_SCHEMA)
-	end
-	prefixSize += VarUIntSize(arrayLen_1)
-	for arrayIndex_2 = 1, arrayLen_1 do
-		local vectorValue_4 = data[arrayIndex_2]
-		varSize += 12
-	end
-	local totalSize = 1 + prefixSize + varSize
-	local payload = create(totalSize)
-	writeu8(payload, 0, MESSAGE_ID_Net_Vectors_reliable_3)
-	local prefixOffset = 1
-	local fixedOffset = prefixOffset + prefixSize
-	local varOffset = fixedOffset
-	prefixOffset = WriteVarUInt(payload, prefixOffset, arrayLen_1)
-	for arrayIndex_5 = 1, arrayLen_1 do
-		local vectorValue_6 = data[arrayIndex_5]
-		writef32(payload, varOffset, vectorValue_6.X)
-		varOffset += 4
-		writef32(payload, varOffset, vectorValue_6.Y)
-		varOffset += 4
-		writef32(payload, varOffset, vectorValue_6.Z)
-		varOffset += 4
-	end
-	return payload
+    local prefixSize = 0
+    local varSize = 0
+    local arrayLen_1 = #data
+    if arrayLen_1 ~= 100 then
+        error(ERR_SCHEMA)
+    end
+    for arrayIndex_2 = 1, arrayLen_1 do
+        local vectorValue_4 = data[arrayIndex_2]
+        varSize += 12
+    end
+    local totalSize = 1 + prefixSize + varSize
+    if totalSize > MaxBatchBytes then error(ERR_BOUNDS) end
+    local payload = create(totalSize)
+    writeu8(payload, 0, MESSAGE_ID_Net_Vectors_reliable_3)
+    local prefixOffset = 1
+    local fixedOffset = prefixOffset + prefixSize
+    local varOffset = fixedOffset
+    for arrayIndex_5 = 1, 100 do
+        local vectorValue_6 = data[arrayIndex_5]
+        writef32(payload, varOffset, vectorValue_6.X)
+        varOffset += 4
+        writef32(payload, varOffset, vectorValue_6.Y)
+        varOffset += 4
+        writef32(payload, varOffset, vectorValue_6.Z)
+        varOffset += 4
+    end
+    return payload
 end
 
 local Handler_Net_Vectors_reliable_3: ((data: { Vector3 }) -> ())? = nil
 local HandlerToken_Net_Vectors_reliable_3 = 0
 
-local function Skip_Net_Vectors_reliable_3(payload, payloadLength, offset)
-	local prefixCursor_1 = offset
-	local arrayCount_2
-	arrayCount_2, prefixCursor_1 = ReadVarUInt(payload, payloadLength, prefixCursor_1)
-	local fixedCursor_3 = prefixCursor_1
-	local varCursor_4 = fixedCursor_3
-	if varCursor_4 > payloadLength then
-		error(ERR_BOUNDS)
-	end
-	for skipArrayIndex_5 = 1, arrayCount_2 do
-		local skipVectorNext_6 = varCursor_4 + 12
-		if skipVectorNext_6 > payloadLength then
-			error(ERR_BOUNDS)
-		end
-		varCursor_4 = skipVectorNext_6
-	end
-	offset = varCursor_4
-	return offset
+local function Skip_Net_Vectors_reliable_3(payload, payloadLength, offset, decodeBudget)
+    decodeBudget = decodeBudget or { remaining = MaxDecodeWork }
+    local prefixCursor_1 = offset
+    local fixedCursor_2 = prefixCursor_1
+    local varCursor_3 = fixedCursor_2
+    if varCursor_3 > payloadLength then
+        error(ERR_BOUNDS)
+    end
+    decodeBudget.remaining -= 100
+    if decodeBudget.remaining < 0 then error(ERR_BOUNDS) end
+    for skipArrayIndex_4 = 1, 100 do
+        local skipVectorNext_5 = varCursor_3 + 12
+        if skipVectorNext_5 > payloadLength then
+            error(ERR_BOUNDS)
+        end
+        varCursor_3 = skipVectorNext_5
+    end
+    offset = varCursor_3
+    return offset
 end
 
 RELIABLE_SKIP[3] = Skip_Net_Vectors_reliable_3
 
 function Net_Vectors_reliable_3.Fire(data: { Vector3 }): boolean
-	local __nr_prefixSize = 0
-	local __nr_varSize = 0
-	local arrayLen_1 = #data
-	if arrayLen_1 > 4294967295 then
-		error(ERR_SCHEMA)
-	end
-	__nr_prefixSize += VarUIntSize(arrayLen_1)
-	for arrayIndex_2 = 1, arrayLen_1 do
-		local vectorValue_4 = data[arrayIndex_2]
-		__nr_varSize += 12
-	end
-	local __nr_totalSize = 1 + __nr_prefixSize + __nr_varSize
-	local __nr_base = RELIABLE_CURSOR
-	local __nr_required = __nr_base + __nr_totalSize
-	if __nr_required > RELIABLE_ARENA_CAPACITY then
-		local nextCapacity = RELIABLE_ARENA_CAPACITY
-		while nextCapacity < __nr_required do
-			nextCapacity *= 2
-		end
-		local nextArena = create(nextCapacity)
-		if RELIABLE_CURSOR > 0 then
-			copy(nextArena, 0, RELIABLE_ARENA, 0, RELIABLE_CURSOR)
-		end
-		RELIABLE_ARENA = nextArena
-		RELIABLE_ARENA_CAPACITY = nextCapacity
-	end
-	RELIABLE_CURSOR = __nr_required
-	local __nr_payload = RELIABLE_ARENA
-	writeu8(__nr_payload, __nr_base, MESSAGE_ID_Net_Vectors_reliable_3)
-	local __nr_prefix = __nr_base + 1
-	local __nr_fixed = __nr_prefix + __nr_prefixSize
-	local __nr_var = __nr_fixed
-	__nr_prefix = WriteVarUInt(__nr_payload, __nr_prefix, arrayLen_1)
-	for arrayIndex_5 = 1, arrayLen_1 do
-		local vectorValue_6 = data[arrayIndex_5]
-		writef32(__nr_payload, __nr_var, vectorValue_6.X)
-		__nr_var += 4
-		writef32(__nr_payload, __nr_var, vectorValue_6.Y)
-		__nr_var += 4
-		writef32(__nr_payload, __nr_var, vectorValue_6.Z)
-		__nr_var += 4
-	end
-	RELIABLE_QUEUE_SIZE += 1
-	return true
+    local __nr_prefixSize = 0
+    local __nr_varSize = 0
+    local arrayLen_1 = #data
+    if arrayLen_1 ~= 100 then
+        error(ERR_SCHEMA)
+    end
+    for arrayIndex_2 = 1, arrayLen_1 do
+        local vectorValue_4 = data[arrayIndex_2]
+        __nr_varSize += 12
+    end
+    local __nr_totalSize = 1 + __nr_prefixSize + __nr_varSize
+    if __nr_totalSize > MaxBatchBytes then RELIABLE_DROPPED += 1; ReportError("NetRay outgoing message exceeds byte limit"); return false end
+    if RELIABLE_QUEUE_SIZE >= MAX_BATCH_MESSAGES or RELIABLE_CURSOR + __nr_totalSize > MaxBatchBytes then FlushReliable() end
+    local __nr_base = RELIABLE_CURSOR
+    local __nr_required = __nr_base + __nr_totalSize
+    if __nr_required > RELIABLE_ARENA_CAPACITY then
+        local nextCapacity = math.max(DEFAULT_ARENA_CAPACITY, RELIABLE_ARENA_CAPACITY)
+        while nextCapacity < __nr_required do
+            nextCapacity *= 2
+        end
+        nextCapacity = math.min(nextCapacity, MaxBatchBytes)
+        local nextArena = create(nextCapacity)
+        if RELIABLE_CURSOR > 0 then
+            copy(nextArena, 0, RELIABLE_ARENA, 0, RELIABLE_CURSOR)
+        end
+        RELIABLE_ARENA = nextArena
+        RELIABLE_ARENA_CAPACITY = nextCapacity
+    end
+    local __nr_payload = RELIABLE_ARENA
+    writeu8(__nr_payload, __nr_base, MESSAGE_ID_Net_Vectors_reliable_3)
+    local __nr_prefix = __nr_base + 1
+    local __nr_fixed = __nr_prefix + __nr_prefixSize
+    local __nr_var = __nr_fixed
+    for arrayIndex_5 = 1, 100 do
+        local vectorValue_6 = data[arrayIndex_5]
+        writef32(__nr_payload, __nr_var, vectorValue_6.X)
+        __nr_var += 4
+        writef32(__nr_payload, __nr_var, vectorValue_6.Y)
+        __nr_var += 4
+        writef32(__nr_payload, __nr_var, vectorValue_6.Z)
+        __nr_var += 4
+    end
+    RELIABLE_CURSOR = __nr_required
+    RELIABLE_QUEUE_SIZE += 1
+    RELIABLE_ENDS[RELIABLE_QUEUE_SIZE] = __nr_required
+    RELIABLE_IDS[RELIABLE_QUEUE_SIZE] = MESSAGE_ID_Net_Vectors_reliable_3
+    return true
 end
 
+APIs[3] = Net_Vectors_reliable_3
+end
+do
 local Net_Strings_reliable_4: Net_Strings_reliable_ClientApi = {} :: Net_Strings_reliable_ClientApi
 local MESSAGE_ID_Net_Strings_reliable_4 = 4
 
 local function Encode_Net_Strings_reliable_4(data)
-	local prefixSize = 0
-	local varSize = 0
-	local arrayLen_1 = #data
-	if arrayLen_1 > 4294967295 then
-		error(ERR_SCHEMA)
-	end
-	prefixSize += VarUIntSize(arrayLen_1)
-	for arrayIndex_2 = 1, arrayLen_1 do
-		local stringLen_4 = #data[arrayIndex_2]
-		if stringLen_4 > 4294967295 then
-			error(ERR_SCHEMA)
-		end
-		varSize += VarUIntSize(stringLen_4) + stringLen_4
-	end
-	local totalSize = 1 + prefixSize + varSize
-	local payload = create(totalSize)
-	writeu8(payload, 0, MESSAGE_ID_Net_Strings_reliable_4)
-	local prefixOffset = 1
-	local fixedOffset = prefixOffset + prefixSize
-	local varOffset = fixedOffset
-	prefixOffset = WriteVarUInt(payload, prefixOffset, arrayLen_1)
-	for arrayIndex_5 = 1, arrayLen_1 do
-		local stringLen_6 = #data[arrayIndex_5]
-		varOffset = WriteVarUInt(payload, varOffset, stringLen_6)
-		writestring(payload, varOffset, data[arrayIndex_5])
-		varOffset += stringLen_6
-	end
-	return payload
+    local prefixSize = 0
+    local varSize = 0
+    local arrayLen_1 = #data
+    if arrayLen_1 ~= 100 then
+        error(ERR_SCHEMA)
+    end
+    for arrayIndex_2 = 1, arrayLen_1 do
+        local stringLen_4 = #data[arrayIndex_2]
+        if stringLen_4 < 8 then
+            error(ERR_SCHEMA)
+        end
+        if stringLen_4 > 32 then
+            error(ERR_SCHEMA)
+        end
+        varSize += 1 + stringLen_4
+    end
+    local totalSize = 1 + prefixSize + varSize
+    if totalSize > MaxBatchBytes then error(ERR_BOUNDS) end
+    local payload = create(totalSize)
+    writeu8(payload, 0, MESSAGE_ID_Net_Strings_reliable_4)
+    local prefixOffset = 1
+    local fixedOffset = prefixOffset + prefixSize
+    local varOffset = fixedOffset
+    for arrayIndex_5 = 1, 100 do
+        local stringLen_6 = #data[arrayIndex_5]
+        local stringBase_7 = varOffset
+        writeu8(payload, stringBase_7, (stringLen_6 - 8))
+        writestring(payload, stringBase_7 + 1, data[arrayIndex_5])
+        varOffset = stringBase_7 + 1 + stringLen_6
+    end
+    return payload
 end
 
 local Handler_Net_Strings_reliable_4: ((data: { string }) -> ())? = nil
 local HandlerToken_Net_Strings_reliable_4 = 0
 
-local function Skip_Net_Strings_reliable_4(payload, payloadLength, offset)
-	local prefixCursor_1 = offset
-	local arrayCount_2
-	arrayCount_2, prefixCursor_1 = ReadVarUInt(payload, payloadLength, prefixCursor_1)
-	local fixedCursor_3 = prefixCursor_1
-	local varCursor_4 = fixedCursor_3
-	if varCursor_4 > payloadLength then
-		error(ERR_BOUNDS)
-	end
-	for skipArrayIndex_5 = 1, arrayCount_2 do
-		local skipStringLen_6
-		skipStringLen_6, varCursor_4 = ReadVarUInt(payload, payloadLength, varCursor_4)
-		if skipStringLen_6 > 4294967295 then
-			error(ERR_SCHEMA)
-		end
-		local skipStringNext_7 = varCursor_4 + skipStringLen_6
-		if skipStringNext_7 > payloadLength then
-			error(ERR_BOUNDS)
-		end
-		varCursor_4 = skipStringNext_7
-	end
-	offset = varCursor_4
-	return offset
+local function Skip_Net_Strings_reliable_4(payload, payloadLength, offset, decodeBudget)
+    decodeBudget = decodeBudget or { remaining = MaxDecodeWork }
+    local prefixCursor_1 = offset
+    local fixedCursor_2 = prefixCursor_1
+    local varCursor_3 = fixedCursor_2
+    if varCursor_3 > payloadLength then
+        error(ERR_BOUNDS)
+    end
+    decodeBudget.remaining -= 100
+    if decodeBudget.remaining < 0 then error(ERR_BOUNDS) end
+    for skipArrayIndex_4 = 1, 100 do
+        local lengthNext_7 = varCursor_3 + 1
+        if lengthNext_7 > payloadLength then error(ERR_BOUNDS) end
+        local skipStringLen_5 = readu8(payload, varCursor_3) + 8
+        varCursor_3 = lengthNext_7
+        if skipStringLen_5 < 8 then
+            error(ERR_SCHEMA)
+        end
+        if skipStringLen_5 > 32 then
+            error(ERR_SCHEMA)
+        end
+        local skipStringNext_6 = varCursor_3 + skipStringLen_5
+        if skipStringNext_6 > payloadLength then
+            error(ERR_BOUNDS)
+        end
+        varCursor_3 = skipStringNext_6
+    end
+    offset = varCursor_3
+    return offset
 end
 
 RELIABLE_SKIP[4] = Skip_Net_Strings_reliable_4
 
 function Net_Strings_reliable_4.Fire(data: { string }): boolean
-	local __nr_prefixSize = 0
-	local __nr_varSize = 0
-	local arrayLen_1 = #data
-	if arrayLen_1 > 4294967295 then
-		error(ERR_SCHEMA)
-	end
-	__nr_prefixSize += VarUIntSize(arrayLen_1)
-	for arrayIndex_2 = 1, arrayLen_1 do
-		local stringLen_4 = #data[arrayIndex_2]
-		if stringLen_4 > 4294967295 then
-			error(ERR_SCHEMA)
-		end
-		__nr_varSize += VarUIntSize(stringLen_4) + stringLen_4
-	end
-	local __nr_totalSize = 1 + __nr_prefixSize + __nr_varSize
-	local __nr_base = RELIABLE_CURSOR
-	local __nr_required = __nr_base + __nr_totalSize
-	if __nr_required > RELIABLE_ARENA_CAPACITY then
-		local nextCapacity = RELIABLE_ARENA_CAPACITY
-		while nextCapacity < __nr_required do
-			nextCapacity *= 2
-		end
-		local nextArena = create(nextCapacity)
-		if RELIABLE_CURSOR > 0 then
-			copy(nextArena, 0, RELIABLE_ARENA, 0, RELIABLE_CURSOR)
-		end
-		RELIABLE_ARENA = nextArena
-		RELIABLE_ARENA_CAPACITY = nextCapacity
-	end
-	RELIABLE_CURSOR = __nr_required
-	local __nr_payload = RELIABLE_ARENA
-	writeu8(__nr_payload, __nr_base, MESSAGE_ID_Net_Strings_reliable_4)
-	local __nr_prefix = __nr_base + 1
-	local __nr_fixed = __nr_prefix + __nr_prefixSize
-	local __nr_var = __nr_fixed
-	__nr_prefix = WriteVarUInt(__nr_payload, __nr_prefix, arrayLen_1)
-	for arrayIndex_5 = 1, arrayLen_1 do
-		local stringLen_6 = #data[arrayIndex_5]
-		__nr_var = WriteVarUInt(__nr_payload, __nr_var, stringLen_6)
-		writestring(__nr_payload, __nr_var, data[arrayIndex_5])
-		__nr_var += stringLen_6
-	end
-	RELIABLE_QUEUE_SIZE += 1
-	return true
+    local __nr_prefixSize = 0
+    local __nr_varSize = 0
+    local arrayLen_1 = #data
+    if arrayLen_1 ~= 100 then
+        error(ERR_SCHEMA)
+    end
+    for arrayIndex_2 = 1, arrayLen_1 do
+        local stringLen_4 = #data[arrayIndex_2]
+        if stringLen_4 < 8 then
+            error(ERR_SCHEMA)
+        end
+        if stringLen_4 > 32 then
+            error(ERR_SCHEMA)
+        end
+        __nr_varSize += 1 + stringLen_4
+    end
+    local __nr_totalSize = 1 + __nr_prefixSize + __nr_varSize
+    if __nr_totalSize > MaxBatchBytes then RELIABLE_DROPPED += 1; ReportError("NetRay outgoing message exceeds byte limit"); return false end
+    if RELIABLE_QUEUE_SIZE >= MAX_BATCH_MESSAGES or RELIABLE_CURSOR + __nr_totalSize > MaxBatchBytes then FlushReliable() end
+    local __nr_base = RELIABLE_CURSOR
+    local __nr_required = __nr_base + __nr_totalSize
+    if __nr_required > RELIABLE_ARENA_CAPACITY then
+        local nextCapacity = math.max(DEFAULT_ARENA_CAPACITY, RELIABLE_ARENA_CAPACITY)
+        while nextCapacity < __nr_required do
+            nextCapacity *= 2
+        end
+        nextCapacity = math.min(nextCapacity, MaxBatchBytes)
+        local nextArena = create(nextCapacity)
+        if RELIABLE_CURSOR > 0 then
+            copy(nextArena, 0, RELIABLE_ARENA, 0, RELIABLE_CURSOR)
+        end
+        RELIABLE_ARENA = nextArena
+        RELIABLE_ARENA_CAPACITY = nextCapacity
+    end
+    local __nr_payload = RELIABLE_ARENA
+    writeu8(__nr_payload, __nr_base, MESSAGE_ID_Net_Strings_reliable_4)
+    local __nr_prefix = __nr_base + 1
+    local __nr_fixed = __nr_prefix + __nr_prefixSize
+    local __nr_var = __nr_fixed
+    for arrayIndex_5 = 1, 100 do
+        local stringLen_6 = #data[arrayIndex_5]
+        local stringBase_7 = __nr_var
+        writeu8(__nr_payload, stringBase_7, (stringLen_6 - 8))
+        writestring(__nr_payload, stringBase_7 + 1, data[arrayIndex_5])
+        __nr_var = stringBase_7 + 1 + stringLen_6
+    end
+    RELIABLE_CURSOR = __nr_required
+    RELIABLE_QUEUE_SIZE += 1
+    RELIABLE_ENDS[RELIABLE_QUEUE_SIZE] = __nr_required
+    RELIABLE_IDS[RELIABLE_QUEUE_SIZE] = MESSAGE_ID_Net_Strings_reliable_4
+    return true
 end
 
+APIs[4] = Net_Strings_reliable_4
+end
+do
 local Net_Mixed_reliable_5: Net_Mixed_reliable_ClientApi = {} :: Net_Mixed_reliable_ClientApi
 local MESSAGE_ID_Net_Mixed_reliable_5 = 5
 
 local function Encode_Net_Mixed_reliable_5(data)
-	local totalSize = 1
-	totalSize += 1
-	totalSize += 1
-	local vectorValue_1 = data.position
-	totalSize += 12
-	local vectorValue_2 = data.velocity
-	totalSize += 12
-	local stringLen_3 = #data.name
-	if stringLen_3 > 4294967295 then
-		error(ERR_SCHEMA)
-	end
-	totalSize += VarUIntSize(stringLen_3) + stringLen_3
-	totalSize += 1
-	totalSize += 1
-	totalSize += 1
-	local payload = create(totalSize)
-	writeu8(payload, 0, MESSAGE_ID_Net_Mixed_reliable_5)
-	local offset = 1
-	writeu8(payload, offset, data.id)
-	offset += 1
-	writeu8(payload, offset, data.health)
-	offset += 1
-	local vectorValue_4 = data.position
-	writef32(payload, offset, vectorValue_4.X)
-	offset += 4
-	writef32(payload, offset, vectorValue_4.Y)
-	offset += 4
-	writef32(payload, offset, vectorValue_4.Z)
-	offset += 4
-	local vectorValue_5 = data.velocity
-	writef32(payload, offset, vectorValue_5.X)
-	offset += 4
-	writef32(payload, offset, vectorValue_5.Y)
-	offset += 4
-	writef32(payload, offset, vectorValue_5.Z)
-	offset += 4
-	offset = WriteVarUInt(payload, offset, stringLen_3)
-	writestring(payload, offset, data.name)
-	offset += stringLen_3
-	writeu8(payload, offset, data.isRunning and 1 or 0)
-	offset += 1
-	writeu8(payload, offset, data.animation)
-	offset += 1
-	writeu8(payload, offset, data.team)
-	offset += 1
-	return payload
+    local prefixSize = 0
+    local varSize = 0
+    local vectorValue_1 = data.position
+    varSize += 12
+    local vectorValue_2 = data.velocity
+    varSize += 12
+    local stringLen_3 = #data.name
+    if stringLen_3 > 32 then
+        error(ERR_SCHEMA)
+    end
+    prefixSize += 1
+    varSize += stringLen_3
+    local totalSize = 1 + prefixSize + 5 + varSize
+    if totalSize > MaxBatchBytes then error(ERR_BOUNDS) end
+    local payload = create(totalSize)
+    writeu8(payload, 0, MESSAGE_ID_Net_Mixed_reliable_5)
+    local prefixOffset = 1
+    local fixedOffset = prefixOffset + prefixSize
+    local varOffset = fixedOffset + 5
+    writeu8(payload, fixedOffset, data.id)
+    fixedOffset += 1
+    writeu8(payload, fixedOffset, data.health)
+    fixedOffset += 1
+    local vectorValue_4 = data.position
+    writef32(payload, varOffset, vectorValue_4.X)
+    varOffset += 4
+    writef32(payload, varOffset, vectorValue_4.Y)
+    varOffset += 4
+    writef32(payload, varOffset, vectorValue_4.Z)
+    varOffset += 4
+    local vectorValue_5 = data.velocity
+    writef32(payload, varOffset, vectorValue_5.X)
+    varOffset += 4
+    writef32(payload, varOffset, vectorValue_5.Y)
+    varOffset += 4
+    writef32(payload, varOffset, vectorValue_5.Z)
+    varOffset += 4
+    writeu8(payload, prefixOffset, stringLen_3)
+    prefixOffset += 1
+    writestring(payload, varOffset, data.name)
+    varOffset += stringLen_3
+    writeu8(payload, fixedOffset, data.isRunning and 1 or 0)
+    fixedOffset += 1
+    writeu8(payload, fixedOffset, data.animation)
+    fixedOffset += 1
+    writeu8(payload, fixedOffset, data.team)
+    fixedOffset += 1
+    return payload
 end
 
-local Handler_Net_Mixed_reliable_5: ((
-	data: {
-		id: u8,
-		health: u8,
-		position: Vector3,
-		velocity: Vector3,
-		name: string,
-		isRunning: boolean,
-		animation: u8,
-		team: u8,
-	}
-) -> ())? =
-	nil
+local Handler_Net_Mixed_reliable_5: ((data_id: u8, data_health: u8, data_position: Vector3, data_velocity: Vector3, data_name: string, data_isRunning: boolean, data_animation: u8, data_team: u8) -> ())? = nil
 local HandlerToken_Net_Mixed_reliable_5 = 0
 
-local function Skip_Net_Mixed_reliable_5(payload, payloadLength, offset)
-	local skipNext_1 = offset + 1
-	if skipNext_1 > payloadLength then
-		error(ERR_BOUNDS)
-	end
-	offset = skipNext_1
-	local skipNext_2 = offset + 1
-	if skipNext_2 > payloadLength then
-		error(ERR_BOUNDS)
-	end
-	offset = skipNext_2
-	local skipVectorNext_3 = offset + 12
-	if skipVectorNext_3 > payloadLength then
-		error(ERR_BOUNDS)
-	end
-	offset = skipVectorNext_3
-	local skipVectorNext_4 = offset + 12
-	if skipVectorNext_4 > payloadLength then
-		error(ERR_BOUNDS)
-	end
-	offset = skipVectorNext_4
-	local skipStringLen_5
-	skipStringLen_5, offset = ReadVarUInt(payload, payloadLength, offset)
-	if skipStringLen_5 > 4294967295 then
-		error(ERR_SCHEMA)
-	end
-	local skipStringNext_6 = offset + skipStringLen_5
-	if skipStringNext_6 > payloadLength then
-		error(ERR_BOUNDS)
-	end
-	offset = skipStringNext_6
-	local skipBoolNext_7 = offset + 1
-	if skipBoolNext_7 > payloadLength then
-		error(ERR_BOUNDS)
-	end
-	offset = skipBoolNext_7
-	local skipNext_8 = offset + 1
-	if skipNext_8 > payloadLength then
-		error(ERR_BOUNDS)
-	end
-	offset = skipNext_8
-	local skipNext_9 = offset + 1
-	if skipNext_9 > payloadLength then
-		error(ERR_BOUNDS)
-	end
-	offset = skipNext_9
-	return offset
+local function Skip_Net_Mixed_reliable_5(payload, payloadLength, offset, decodeBudget)
+    local prefixCursor_1 = offset
+    local lengthNext_3 = prefixCursor_1 + 1
+    if lengthNext_3 > payloadLength then error(ERR_BOUNDS) end
+    local stringLen_2 = readu8(payload, prefixCursor_1)
+    prefixCursor_1 = lengthNext_3
+    if stringLen_2 > 32 then
+        error(ERR_SCHEMA)
+    end
+    local fixedCursor_4 = prefixCursor_1
+    local varCursor_5 = fixedCursor_4 + 5
+    if varCursor_5 > payloadLength then
+        error(ERR_BOUNDS)
+    end
+    fixedCursor_4 += 1
+    fixedCursor_4 += 1
+    local skipVectorNext_6 = varCursor_5 + 12
+    if skipVectorNext_6 > payloadLength then
+        error(ERR_BOUNDS)
+    end
+    varCursor_5 = skipVectorNext_6
+    local skipVectorNext_7 = varCursor_5 + 12
+    if skipVectorNext_7 > payloadLength then
+        error(ERR_BOUNDS)
+    end
+    varCursor_5 = skipVectorNext_7
+    local skipStringNext_8 = varCursor_5 + stringLen_2
+    if skipStringNext_8 > payloadLength then
+        error(ERR_BOUNDS)
+    end
+    varCursor_5 = skipStringNext_8
+    fixedCursor_4 += 1
+    fixedCursor_4 += 1
+    fixedCursor_4 += 1
+    offset = varCursor_5
+    return offset
 end
 
 RELIABLE_SKIP[5] = Skip_Net_Mixed_reliable_5
 
-function Net_Mixed_reliable_5.Fire(data: {
-	id: u8,
-	health: u8,
-	position: Vector3,
-	velocity: Vector3,
-	name: string,
-	isRunning: boolean,
-	animation: u8,
-	team: u8,
-}): boolean
-	local __nr_totalSize = 1
-	__nr_totalSize += 1
-	__nr_totalSize += 1
-	local vectorValue_1 = data.position
-	__nr_totalSize += 12
-	local vectorValue_2 = data.velocity
-	__nr_totalSize += 12
-	local stringLen_3 = #data.name
-	if stringLen_3 > 4294967295 then
-		error(ERR_SCHEMA)
-	end
-	__nr_totalSize += VarUIntSize(stringLen_3) + stringLen_3
-	__nr_totalSize += 1
-	__nr_totalSize += 1
-	__nr_totalSize += 1
-	local __nr_base = RELIABLE_CURSOR
-	local __nr_required = __nr_base + __nr_totalSize
-	if __nr_required > RELIABLE_ARENA_CAPACITY then
-		local nextCapacity = RELIABLE_ARENA_CAPACITY
-		while nextCapacity < __nr_required do
-			nextCapacity *= 2
-		end
-		local nextArena = create(nextCapacity)
-		if RELIABLE_CURSOR > 0 then
-			copy(nextArena, 0, RELIABLE_ARENA, 0, RELIABLE_CURSOR)
-		end
-		RELIABLE_ARENA = nextArena
-		RELIABLE_ARENA_CAPACITY = nextCapacity
-	end
-	RELIABLE_CURSOR = __nr_required
-	local __nr_payload = RELIABLE_ARENA
-	writeu8(__nr_payload, __nr_base, MESSAGE_ID_Net_Mixed_reliable_5)
-	local __nr_p = __nr_base + 1
-	writeu8(__nr_payload, __nr_p, data.id)
-	__nr_p += 1
-	writeu8(__nr_payload, __nr_p, data.health)
-	__nr_p += 1
-	local vectorValue_4 = data.position
-	writef32(__nr_payload, __nr_p, vectorValue_4.X)
-	__nr_p += 4
-	writef32(__nr_payload, __nr_p, vectorValue_4.Y)
-	__nr_p += 4
-	writef32(__nr_payload, __nr_p, vectorValue_4.Z)
-	__nr_p += 4
-	local vectorValue_5 = data.velocity
-	writef32(__nr_payload, __nr_p, vectorValue_5.X)
-	__nr_p += 4
-	writef32(__nr_payload, __nr_p, vectorValue_5.Y)
-	__nr_p += 4
-	writef32(__nr_payload, __nr_p, vectorValue_5.Z)
-	__nr_p += 4
-	__nr_p = WriteVarUInt(__nr_payload, __nr_p, stringLen_3)
-	writestring(__nr_payload, __nr_p, data.name)
-	__nr_p += stringLen_3
-	writeu8(__nr_payload, __nr_p, data.isRunning and 1 or 0)
-	__nr_p += 1
-	writeu8(__nr_payload, __nr_p, data.animation)
-	__nr_p += 1
-	writeu8(__nr_payload, __nr_p, data.team)
-	__nr_p += 1
-	RELIABLE_QUEUE_SIZE += 1
-	return true
+function Net_Mixed_reliable_5.Fire(data: BenchMixed): boolean
+    local __nr_prefixSize = 0
+    local __nr_varSize = 0
+    local vectorValue_1 = data.position
+    __nr_varSize += 12
+    local vectorValue_2 = data.velocity
+    __nr_varSize += 12
+    local stringLen_3 = #data.name
+    if stringLen_3 > 32 then
+        error(ERR_SCHEMA)
+    end
+    __nr_prefixSize += 1
+    __nr_varSize += stringLen_3
+    local __nr_totalSize = 1 + __nr_prefixSize + 5 + __nr_varSize
+    if __nr_totalSize > MaxBatchBytes then RELIABLE_DROPPED += 1; ReportError("NetRay outgoing message exceeds byte limit"); return false end
+    if RELIABLE_QUEUE_SIZE >= MAX_BATCH_MESSAGES or RELIABLE_CURSOR + __nr_totalSize > MaxBatchBytes then FlushReliable() end
+    local __nr_base = RELIABLE_CURSOR
+    local __nr_required = __nr_base + __nr_totalSize
+    if __nr_required > RELIABLE_ARENA_CAPACITY then
+        local nextCapacity = math.max(DEFAULT_ARENA_CAPACITY, RELIABLE_ARENA_CAPACITY)
+        while nextCapacity < __nr_required do
+            nextCapacity *= 2
+        end
+        nextCapacity = math.min(nextCapacity, MaxBatchBytes)
+        local nextArena = create(nextCapacity)
+        if RELIABLE_CURSOR > 0 then
+            copy(nextArena, 0, RELIABLE_ARENA, 0, RELIABLE_CURSOR)
+        end
+        RELIABLE_ARENA = nextArena
+        RELIABLE_ARENA_CAPACITY = nextCapacity
+    end
+    local __nr_payload = RELIABLE_ARENA
+    writeu8(__nr_payload, __nr_base, MESSAGE_ID_Net_Mixed_reliable_5)
+    local __nr_prefix = __nr_base + 1
+    local __nr_fixed = __nr_prefix + __nr_prefixSize
+    local __nr_var = __nr_fixed + 5
+    writeu8(__nr_payload, __nr_fixed, data.id)
+    __nr_fixed += 1
+    writeu8(__nr_payload, __nr_fixed, data.health)
+    __nr_fixed += 1
+    local vectorValue_4 = data.position
+    writef32(__nr_payload, __nr_var, vectorValue_4.X)
+    __nr_var += 4
+    writef32(__nr_payload, __nr_var, vectorValue_4.Y)
+    __nr_var += 4
+    writef32(__nr_payload, __nr_var, vectorValue_4.Z)
+    __nr_var += 4
+    local vectorValue_5 = data.velocity
+    writef32(__nr_payload, __nr_var, vectorValue_5.X)
+    __nr_var += 4
+    writef32(__nr_payload, __nr_var, vectorValue_5.Y)
+    __nr_var += 4
+    writef32(__nr_payload, __nr_var, vectorValue_5.Z)
+    __nr_var += 4
+    writeu8(__nr_payload, __nr_prefix, stringLen_3)
+    __nr_prefix += 1
+    writestring(__nr_payload, __nr_var, data.name)
+    __nr_var += stringLen_3
+    writeu8(__nr_payload, __nr_fixed, data.isRunning and 1 or 0)
+    __nr_fixed += 1
+    writeu8(__nr_payload, __nr_fixed, data.animation)
+    __nr_fixed += 1
+    writeu8(__nr_payload, __nr_fixed, data.team)
+    __nr_fixed += 1
+    RELIABLE_CURSOR = __nr_required
+    RELIABLE_QUEUE_SIZE += 1
+    RELIABLE_ENDS[RELIABLE_QUEUE_SIZE] = __nr_required
+    RELIABLE_IDS[RELIABLE_QUEUE_SIZE] = MESSAGE_ID_Net_Mixed_reliable_5
+    return true
 end
 
+APIs[5] = Net_Mixed_reliable_5
+end
+do
 local Net_SingleValue_reliable_6: Net_SingleValue_reliable_ClientApi = {} :: Net_SingleValue_reliable_ClientApi
 local MESSAGE_ID_Net_SingleValue_reliable_6 = 6
 
 local function Encode_Net_SingleValue_reliable_6(data)
-	local totalSize = 2
-	local payload = create(totalSize)
-	writeu8(payload, 0, MESSAGE_ID_Net_SingleValue_reliable_6)
-	local offset = 1
-	local fixedWriteBase_1 = offset
-	writeu8(payload, fixedWriteBase_1, data)
-	return payload
+    local totalSize = 2
+    if totalSize > MaxBatchBytes then error(ERR_BOUNDS) end
+    local payload = create(totalSize)
+    writeu8(payload, 0, MESSAGE_ID_Net_SingleValue_reliable_6)
+    local offset = 1
+    local fixedWriteBase_1 = offset
+    writeu8(payload, fixedWriteBase_1, data)
+    return payload
 end
 
 local Handler_Net_SingleValue_reliable_6: ((data: u8) -> ())? = nil
 local HandlerToken_Net_SingleValue_reliable_6 = 0
 
-local function Skip_Net_SingleValue_reliable_6(payload, payloadLength, offset)
-	local skipNext_1 = offset + 1
-	if skipNext_1 > payloadLength then
-		error(ERR_BOUNDS)
-	end
-	offset = skipNext_1
-	return offset
+local function Skip_Net_SingleValue_reliable_6(payload, payloadLength, offset, decodeBudget)
+    local skipNext_1 = offset + 1
+    if skipNext_1 > payloadLength then
+        error(ERR_BOUNDS)
+    end
+    offset = skipNext_1
+    return offset
 end
 
 RELIABLE_SKIP[6] = Skip_Net_SingleValue_reliable_6
 
 function Net_SingleValue_reliable_6.Fire(data: u8): boolean
-	local __nr_totalSize = 2
-	local __nr_base = RELIABLE_CURSOR
-	local __nr_required = __nr_base + __nr_totalSize
-	if __nr_required > RELIABLE_ARENA_CAPACITY then
-		local nextCapacity = RELIABLE_ARENA_CAPACITY
-		while nextCapacity < __nr_required do
-			nextCapacity *= 2
-		end
-		local nextArena = create(nextCapacity)
-		if RELIABLE_CURSOR > 0 then
-			copy(nextArena, 0, RELIABLE_ARENA, 0, RELIABLE_CURSOR)
-		end
-		RELIABLE_ARENA = nextArena
-		RELIABLE_ARENA_CAPACITY = nextCapacity
-	end
-	RELIABLE_CURSOR = __nr_required
-	local __nr_payload = RELIABLE_ARENA
-	writeu8(__nr_payload, __nr_base, MESSAGE_ID_Net_SingleValue_reliable_6)
-	local __nr_p = __nr_base + 1
-	local fixedWriteBase_1 = __nr_p
-	writeu8(__nr_payload, fixedWriteBase_1, data)
-	RELIABLE_QUEUE_SIZE += 1
-	return true
+    local __nr_totalSize = 2
+    if __nr_totalSize > MaxBatchBytes then RELIABLE_DROPPED += 1; ReportError("NetRay outgoing message exceeds byte limit"); return false end
+    if RELIABLE_QUEUE_SIZE >= MAX_BATCH_MESSAGES or RELIABLE_CURSOR + __nr_totalSize > MaxBatchBytes then FlushReliable() end
+    local __nr_base = RELIABLE_CURSOR
+    local __nr_required = __nr_base + __nr_totalSize
+    if __nr_required > RELIABLE_ARENA_CAPACITY then
+        local nextCapacity = math.max(DEFAULT_ARENA_CAPACITY, RELIABLE_ARENA_CAPACITY)
+        while nextCapacity < __nr_required do
+            nextCapacity *= 2
+        end
+        nextCapacity = math.min(nextCapacity, MaxBatchBytes)
+        local nextArena = create(nextCapacity)
+        if RELIABLE_CURSOR > 0 then
+            copy(nextArena, 0, RELIABLE_ARENA, 0, RELIABLE_CURSOR)
+        end
+        RELIABLE_ARENA = nextArena
+        RELIABLE_ARENA_CAPACITY = nextCapacity
+    end
+    local __nr_payload = RELIABLE_ARENA
+    writeu8(__nr_payload, __nr_base, MESSAGE_ID_Net_SingleValue_reliable_6)
+    local __nr_p = __nr_base + 1
+    local fixedWriteBase_1 = __nr_p
+    writeu8(__nr_payload, fixedWriteBase_1, data)
+    RELIABLE_CURSOR = __nr_required
+    RELIABLE_QUEUE_SIZE += 1
+    RELIABLE_ENDS[RELIABLE_QUEUE_SIZE] = __nr_required
+    RELIABLE_IDS[RELIABLE_QUEUE_SIZE] = MESSAGE_ID_Net_SingleValue_reliable_6
+    return true
 end
 
+APIs[6] = Net_SingleValue_reliable_6
+end
 local function StepReplication()
-	FlushReliable()
-	FlushUnreliable()
+    FlushReliable()
+    FlushUnreliable()
 end
 
 RunService.Heartbeat:Connect(StepReplication)
 
-Reliable.OnClientEvent:Connect(function(payload)
-	if typeof(payload) ~= "buffer" then
-		return
-	end
-	local payloadLength = len(payload)
-	if payloadLength < 1 then
-		return
-	end
-	local offset = 0
-	while offset < payloadLength do
-		local messageId = readu8(payload, offset)
-		offset += 1
-		local segmentCount = 1
-		local dispatch
-		if messageId == SEGMENT_MARKER_ID then
-			if offset >= payloadLength then
-				return
-			end
-			messageId = readu8(payload, offset)
-			offset += 1
-			dispatch = RELIABLE_DISPATCH[messageId]
-			if dispatch == nil then
-				return
-			end
-			segmentCount, offset = ReadVarUInt(payload, payloadLength, offset)
-			if segmentCount < 1 then
-				return
-			end
-		else
-			dispatch = RELIABLE_DISPATCH[messageId]
-			if dispatch == nil then
-				return
-			end
-		end
-		for _segmentIndex = 1, segmentCount do
-			local nextOffset = dispatch(payload, payloadLength, offset)
-			offset = nextOffset
-		end
-	end
+local function ReceiveReliable(payload)
+    if typeof(payload) ~= "buffer" then
+        return
+    end
+    local payloadLength = len(payload)
+    if payloadLength > MaxBatchBytes then return end
+    if payloadLength < 1 then
+        return
+    end
+    local offset = 0
+    local remainingMessages = MAX_BATCH_MESSAGES
+    while offset < payloadLength do
+        local messageId = readu8(payload, offset)
+        offset += 1
+        local segmentCount = 1
+        local dispatch
+        if messageId == SEGMENT_MARKER_ID then
+            if offset >= payloadLength then
+                return
+            end
+            messageId = readu8(payload, offset)
+            offset += 1
+            dispatch = RELIABLE_DISPATCH[messageId]
+            if dispatch == nil then
+                return
+            end
+            segmentCount, offset = ReadVarUInt(payload, payloadLength, offset)
+            if segmentCount < 1 then
+                return
+            end
+        else
+            dispatch = RELIABLE_DISPATCH[messageId]
+            if dispatch == nil then
+                return
+            end
+        end
+        if segmentCount > remainingMessages then return end
+        remainingMessages -= segmentCount
+        for _segmentIndex = 1, segmentCount do
+            local nextOffset = dispatch(payload, payloadLength, offset)
+            if type(nextOffset) ~= "number" then
+                return
+            end
+            if nextOffset < offset or nextOffset > payloadLength then
+                return
+            end
+            offset = nextOffset
+        end
+    end
+end
+Reliable.OnClientEvent:Connect(function(...)
+    local ok, failure = pcall(ReceiveReliable, ...)
+    if not ok then ReportError(failure) end
 end)
 
-Unreliable.OnClientEvent:Connect(function(payload)
-	if typeof(payload) ~= "buffer" then
-		return
-	end
-	local payloadLength = len(payload)
-	if payloadLength < 1 then
-		return
-	end
-	local offset = 0
-	while offset < payloadLength do
-		local messageId = readu8(payload, offset)
-		offset += 1
-		local segmentCount = 1
-		local dispatch
-		if messageId == SEGMENT_MARKER_ID then
-			if offset >= payloadLength then
-				return
-			end
-			messageId = readu8(payload, offset)
-			offset += 1
-			dispatch = UNRELIABLE_DISPATCH[messageId]
-			if dispatch == nil then
-				return
-			end
-			segmentCount, offset = ReadVarUInt(payload, payloadLength, offset)
-			if segmentCount < 1 then
-				return
-			end
-		else
-			dispatch = UNRELIABLE_DISPATCH[messageId]
-			if dispatch == nil then
-				return
-			end
-		end
-		for _segmentIndex = 1, segmentCount do
-			local nextOffset = dispatch(payload, payloadLength, offset)
-			offset = nextOffset
-		end
-	end
+local function ReceiveUnreliable(payload)
+    if typeof(payload) ~= "buffer" then
+        return
+    end
+    local payloadLength = len(payload)
+    if payloadLength > MaxUnreliableBytes then return end
+    if payloadLength < 1 then
+        return
+    end
+    local offset = 0
+    local remainingMessages = MAX_BATCH_MESSAGES
+    while offset < payloadLength do
+        local messageId = readu8(payload, offset)
+        offset += 1
+        local segmentCount = 1
+        local dispatch
+        if messageId == SEGMENT_MARKER_ID then
+            if offset >= payloadLength then
+                return
+            end
+            messageId = readu8(payload, offset)
+            offset += 1
+            dispatch = UNRELIABLE_DISPATCH[messageId]
+            if dispatch == nil then
+                return
+            end
+            segmentCount, offset = ReadVarUInt(payload, payloadLength, offset)
+            if segmentCount < 1 then
+                return
+            end
+        else
+            dispatch = UNRELIABLE_DISPATCH[messageId]
+            if dispatch == nil then
+                return
+            end
+        end
+        if segmentCount > remainingMessages then return end
+        remainingMessages -= segmentCount
+        for _segmentIndex = 1, segmentCount do
+            local nextOffset = dispatch(payload, payloadLength, offset)
+            if type(nextOffset) ~= "number" then
+                return
+            end
+            if nextOffset < offset or nextOffset > payloadLength then
+                return
+            end
+            offset = nextOffset
+        end
+    end
+end
+Unreliable.OnClientEvent:Connect(function(...)
+    local ok, failure = pcall(ReceiveUnreliable, ...)
+    if not ok then ReportError(failure) end
 end)
 
 FunctionRemote.OnClientInvoke = function(payload, ...)
-	if typeof(payload) ~= "buffer" then
-		error(ERR_TYPE)
-	end
-	local payloadLength = len(payload)
-	if payloadLength < 1 then
-		error(ERR_BOUNDS)
-	end
-	local messageId = readu8(payload, 0)
-	local dispatch = FUNCTION_DISPATCH[messageId]
-	if dispatch == nil then
-		error(ERR_SCHEMA)
-	end
-	return dispatch(payload, payloadLength)
+    if typeof(payload) ~= "buffer" then
+        error(ERR_TYPE)
+    end
+    local payloadLength = len(payload)
+    if payloadLength > MaxBatchBytes then error(ERR_BOUNDS) end
+    if payloadLength < 1 then
+        error(ERR_BOUNDS)
+    end
+    local messageId = readu8(payload, 0)
+    local dispatch = FUNCTION_DISPATCH[messageId]
+    if dispatch == nil then
+        error(ERR_SCHEMA)
+    end
+    return dispatch(payload, payloadLength)
 end
 
 local Stats: NetStats = {
-	GetReliableDropped = function()
-		return RELIABLE_DROPPED
-	end,
-	GetUnreliableDropped = function()
-		return UNRELIABLE_DROPPED
-	end,
-	GetReliableQueueSize = function()
-		return RELIABLE_QUEUE_SIZE
-	end,
-	GetUnreliableQueueSize = function()
-		return UNRELIABLE_QUEUE_SIZE
-	end,
+    GetReliableDropped = function() return RELIABLE_DROPPED end,
+    GetUnreliableDropped = function() return UNRELIABLE_DROPPED end,
+    GetReliableQueueSize = function() return RELIABLE_QUEUE_SIZE end,
+    GetUnreliableQueueSize = function() return UNRELIABLE_QUEUE_SIZE end,
 }
 
 local Net = {
-	Booleans = Net_Booleans_reliable_1,
-	Entities = Net_Entities_reliable_2,
-	Vectors = Net_Vectors_reliable_3,
-	Strings = Net_Strings_reliable_4,
-	Mixed = Net_Mixed_reliable_5,
-	SingleValue = Net_SingleValue_reliable_6,
+Booleans = APIs[1],
+Entities = APIs[2],
+Vectors = APIs[3],
+Strings = APIs[4],
+Mixed = APIs[5],
+SingleValue = APIs[6],
 }
 
 Net.StepReplication = StepReplication
 Net.Stats = Stats
+-- Satset benchmark patch: debug stats hook for the benchmark runner, read by
+-- name (clientSendCalls, clientRawBytes), matching the June v0.1.1 surface.
 local NetDebug = Net :: any
 NetDebug.resetDebugStats = function()
 	DebugStats.clientSendCalls = 0

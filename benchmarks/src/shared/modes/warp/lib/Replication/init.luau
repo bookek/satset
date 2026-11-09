@@ -5,8 +5,8 @@ local Replication = {}
 local RunService = game:GetService("RunService")
 local _repl: RemoteEvent = script.Parent:WaitForChild("_repl")
 
-local Buffer = require(script.Parent.Util.Buffer)
-local Identifier = require(script.Parent.Util.Identifier)
+local Buffer = require("./Util/Buffer")
+local Identifier = require("./Util/Identifier")
 
 local identifiers_schema = Buffer.Schema.string
 local warp_identifier_registry = shared.__warp_identifier_registry
@@ -21,9 +21,7 @@ if RunService:IsClient() or RunService:IsRunMode() then
 				return
 			end
 			local contents = Buffer.readRepl(b, identifiers_schema)
-			if #contents == 0 then
-				return
-			end
+			if #contents == 0 then return end
 			for _, content in contents do
 				local id: number, remote: string = content[1], content[2]
 				warp_identifier_registry.cache[remote] = id
@@ -56,10 +54,7 @@ if RunService:IsClient() or RunService:IsRunMode() then
 	--@yield
 	-- wait for the identifiers to be replicated from the server
 	Replication.wait_for_ready = function()
-		if is_ready then
-			return
-		end
-
+		if is_ready then return end
 		local thread = coroutine.running()
 		table.insert(ready_yields, thread)
 		coroutine.yield()
@@ -78,9 +73,7 @@ else
 	end
 
 	local function replicateToAll(content: any, id: number?)
-		if #replication_ready == 0 then
-			return
-		end
+		if #replication_ready == 0 then return end
 
 		if type(content) == "string" and id then
 			pending_replications[content] = id
@@ -96,12 +89,8 @@ else
 				is_scheduled = false
 
 				local count = 0
-				for _ in pending_replications do
-					count += 1
-				end
-				if count == 0 then
-					return
-				end
+				for _ in pending_replications do count += 1 end
+				if count == 0 then return end
 
 				Buffer.writeRepl(writer, pending_replications, count, identifiers_schema)
 				local buf = Buffer.build(writer)
@@ -128,18 +117,14 @@ else
 	Identifier.on_added(replicateToAll)
 
 	_repl.OnServerEvent:Connect(function(player: Player)
-		if table.find(replication_ready, player) then
-			return
-		end
+		if table.find(replication_ready, player) then return end
 		table.insert(replication_ready, player)
 		replicateTo(player)
 	end)
 
 	Replication.remove = function(player: Player)
 		local idx = table.find(replication_ready, player)
-		if not idx then
-			return
-		end
+		if not idx then return end
 		table.remove(replication_ready, idx)
 	end
 end

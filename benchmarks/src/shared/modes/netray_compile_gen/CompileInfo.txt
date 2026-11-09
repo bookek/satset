@@ -1,0 +1,14 @@
+CompilerVersion = 0.2.0
+RemoteScope = "NetRay"
+Validate = Off
+Limit.MaxBatchBytes = "0"
+Limit.MaxBatchMessages = "0"
+Limit.MaxDecodeWork = "0"
+Limit.MaxPollingMessages = "0"
+Limit.MaxUnreliableBytes = "0"
+Limit.ReceiveByteBurst = "0"
+Limit.ReceiveBytesPerSecond = "0"
+Limit.ReceiveCallBurst = "0"
+Limit.ReceiveCallsPerSecond = "0"
+Limit.ReceiveMessageBurst = "0"
+Limit.ReceiveMessagesPerSecond = "0"

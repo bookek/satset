@@ -1,5 +1,7 @@
--- Warp benchmark mode (v1.0.14 API).
+-- Warp benchmark mode (upstream 1.1.0-pre8 API).
 -- Warp uses string identifiers and separate Server/Client constructors that return event objects.
+-- Byte accounting: every Xor packet carries two head bytes (kind + sequence); the instrumentation
+-- in lib/Util/Xor counts them into clientEncodedBytes.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
