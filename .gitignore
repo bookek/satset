@@ -15,7 +15,4 @@ wally.lock
 
 # Sourcemap
 sourcemap.json
-references/
-DevPackages/
 scratch/
-comparison/
