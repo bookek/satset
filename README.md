@@ -29,8 +29,8 @@ The latest report has separate static and moving runs. Static repeats one payloa
 
 | Variant | **Satset** bandwidth wins | Other winner |
 | :--- | ---: | :--- |
-| Static | 5 / 6 | Warp leads Entities |
-| Moving | 5 / 6 | Packet leads Strings |
+| Static | 6 / 6 | - |
+| Moving | 5 / 6 | Zap leads Strings |
 
 Satset completed every row at 120,000 sent and received events. The moving run is the better reference for changing game state; the static run shows the best case for repeated-data compression.
 
@@ -57,6 +57,11 @@ lune run tests/transport.luau
 lune run tests/group-fanout.luau
 lune run tests/listeners.luau
 lune run tests/schema.luau
+lune run tests/batcher-delta.luau
+lune run tests/connection.luau
+lune run tests/channel-server.luau
+lune run tests/channel-client.luau
+lune run tests/wire-golden.luau
 ```
 
 # Features
@@ -75,7 +80,7 @@ or Channel model.
 
 - **Buffer-backed batching**: Outgoing payloads are encoded into Luau buffers and committed as exact-size buffers before transport.
 - **Reliable run grouping**: Same-packet reliable runs share one packet id and one run count.
-- **Adaptive reliable delta**: Direct reliable traffic tracks the previous same-size batch. General payloads use XOR, text can stay raw when XOR is not useful, and eligible bitpacked payloads can transpose their delta bytes. Broadcast reliable traffic stays raw.
+- **Adaptive reliable delta**: Direct reliable traffic tracks the previous same-size batch. General payloads use XOR, text can stay raw when XOR is not useful, and any run that holds one uniform-width schema can transpose its delta bytes when zero bytes dominate. Broadcast reliable traffic stays raw.
 - **Nested structs**: Use `Satset.struct(schema)` to build reusable type objects.
 - **ByteNet-style aliases**: `string`, `uint8`, `float64`, and related names map to Satset's shorthand types.
 - **Packet dispatch**: Incoming batches are decoded in place. Each packet listener receives a decoded table.
@@ -116,11 +121,14 @@ flowchart TB
         PK["Packet"]
         GR["Group"]
         CH["Channel"]
+        AU["Audience"]
     end
 
     subgraph Transport["Wire"]
         RE["RemoteEvent"]
         URE["UnreliableRemoteEvent"]
+        CRE["Channel RemoteEvent"]
+        CURE["Channel UnreliableRemoteEvent"]
     end
 
     DP --> PK
@@ -137,19 +145,25 @@ flowchart TB
 
     PK -->|"allocate stream slot"| BT
     PK -->|"encodeInto(buffer, offset)"| SR
-    CH -->|"encodeDelta(bitmask)"| BT
+    PK -->|"fanout helper"| AU
+    AU -->|"allocate per player"| BT
 
     BT -->|"flush, group, delta"| BR
     TR -.->|"optional injection"| BR
 
+    CH -->|"mounted flush"| BR
+
     BR -->|"default transport"| RE
     BR -->|"default transport"| URE
+    BR -->|"channel adapter"| CRE
+    BR -->|"channel adapter"| CURE
 
     RE -->|"incoming payload"| GD
     URE -->|"incoming payload"| GD
-
     GD -->|"consume(player)"| PK
-    GD -->|"consume(player)"| CH
+
+    CRE -->|"incoming buffer"| CH
+    CURE -->|"incoming buffer"| CH
 
     SN -.->|"bounds + float checks"| SR
     SN -.->|"float checks"| TP
@@ -164,7 +178,7 @@ For a detailed step-by-step walkthrough of a packet's lifecycle, see the [Archit
 Add Satset to your `wally.toml`:
 
 ```toml
-satset = "protheeuz/satset@0.4.2"
+satset = "protheeuz/satset@0.6.0"
 ```
 
 Then run `wally install`.
