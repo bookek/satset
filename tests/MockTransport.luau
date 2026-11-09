@@ -8,8 +8,15 @@ type ListenerSet = {
 	unreliable: { Listener },
 }
 
+-- Adapter shape Channel.mount() consumes; dot-called functions with no self.
+type MockChannelTransport = {
+	sendChannel: (reliable: boolean, payload: any) -> (),
+	onChannel: (reliable: boolean, callback: (payload: any) -> ()) -> Connection,
+}
+
 type ClientState = {
 	listeners: ListenerSet,
+	channel: ListenerSet,
 	connected: boolean,
 }
 
@@ -100,6 +107,23 @@ function MockTransport.new(): MockNetwork
 			onClient = function()
 				error("server transport cannot listen as a client", 2)
 			end,
+			channelTransport = function(): MockChannelTransport
+				return {
+					sendChannel = function(reliable, payload)
+						stats.broadcastSends += 1
+						for _, client in clients do
+							assert(client.connected, "mock player is disconnected")
+							if typeof(payload) == "buffer" then
+								stats.bytesSent += buffer.len(payload)
+							end
+							emit(listenersFor(client.channel, reliable), payload)
+						end
+					end,
+					onChannel = function()
+						error("server transport cannot listen as a client", 2)
+					end,
+				}
+			end,
 		}
 	end
 
@@ -108,6 +132,10 @@ function MockTransport.new(): MockNetwork
 
 		local client: ClientState = {
 			listeners = {
+				reliable = {},
+				unreliable = {},
+			},
+			channel = {
 				reliable = {},
 				unreliable = {},
 			},
@@ -134,6 +162,17 @@ function MockTransport.new(): MockNetwork
 			onClient = function(_, reliable, callback)
 				assert(client.connected, "mock player is disconnected")
 				return connect(listenersFor(client.listeners, reliable), callback)
+			end,
+			channelTransport = function(): MockChannelTransport
+				return {
+					sendChannel = function()
+						error("client transport cannot broadcast", 2)
+					end,
+					onChannel = function(reliable, callback)
+						assert(client.connected, "mock player is disconnected")
+						return connect(listenersFor(client.channel, reliable), callback)
+					end,
+				}
 			end,
 		}
 	end
