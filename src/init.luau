@@ -18,7 +18,7 @@ local RunService = game:GetService("RunService")
 
 -- [ Constants ]
 
-local VERSION = "0.5.0"
+local VERSION = "0.6.0"
 local IS_SERVER = RunService:IsServer()
 
 -- [ State ]

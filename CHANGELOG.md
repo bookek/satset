@@ -4,6 +4,31 @@ All notable changes to Satset will be documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioned per [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-11-09
+
+> **Satset 0.6.0 is here - your entities move, your bandwidth doesn't. monday tried to choke on 7,200 Kbps and satset handed it 430 instead, monday still has no comeback >.<'**
+
+This release opens the transposed delta layout to every uniform-width reliable run,
+moves channel remotes behind a mount API, and rebuilds the benchmark report on a
+twelve-tool roster. In the benchmark, moving entity synchronization drops from
+about 7,200 Kbps p50 to 430 Kbps p50.
+
+### Added
+
+- **Channel Mount API**: Added `Channel.mount(transport)` to attach channel syncing to any send/receive adapter. `Satset.start()` mounts it over the Bridge channel adapter, so the default path stays unchanged.
+- **Wire Format Goldens**: Added `tests/wire-golden.luau` with 15 frozen captures. The test fails on any capture byte change unless the goldens are updated explicitly, which keeps the wire-format record honest across refactors.
+- **Channel, Connection, and Batcher Test Suites**: Added Lune suites for channel mounts on server and client, shared dispatch cleanup, and batcher delta paths.
+- **Channel Remote Remotes Under Bridge**: Bridge now creates and waits for the two dedicated channel remotes during `Bridge.init()`, and `Bridge.channelTransport()` hands the adapter to `Channel.mount()`. Remote names are unchanged, so existing places connect without edits.
+
+### Changed
+
+- **Transposed Delta Layout**: Generalized beyond bitpacked runs. Any reliable run over one uniform-width schema can transpose when transpose bytes reach 512, rows reach 16, and zero bytes cover at least 25% of the transposed region. Decode reads the layout from the run bytes and no longer rechecks the compression profile table, so layouts from earlier versions still decode.
+- **Moving Entity Bandwidth**: The benchmark shows moving `Entities` at 430.19 Kbps p50 where the previous layout needed about 7,200 Kbps. The trade lands on workload duration, which the benchmark report discloses per row.
+- **Shared Listener Dispatch**: Packet listeners and channel subscribers now dispatch through one `Connection.dispatch()` with precomputed error prefixes. Error message text is unchanged.
+- **Audience Module**: Fanout walking (the broadcast slot, player list, member set, and exception handling) moved into `src/Networking/Audience.luau` behind the unchanged Packet surface.
+- **Benchmark Report**: Rebuilt `benchmarks/Benchmarks.md` and the capture JSONs from the November 8, 2026 Studio run: twelve ranked tools with Relay partial rows last, version pins per library, and disclosed run-day vendor patches. Satset holds first place on eleven of twelve bandwidth rows; Zap takes moving Strings.
+- **Public Documentation**: Updated the README architecture diagram (Audience node, dedicated channel remotes), benchmark summary, and local test suite list.
+
 ## [0.5.0] - 2026-10-12
 
 > **Satset 0.5.0 is here — trick or treat 🎃**
