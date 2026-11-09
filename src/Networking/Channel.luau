@@ -26,6 +26,13 @@ export type Entity = {
 
 export type Connection = CoreConnection.Connection
 
+-- Channel consumes a small adapter instead of the full transport surface, so
+-- a host or a test can mount it over any send/receive pair.
+export type ChannelTransport = {
+	sendChannel: (reliable: boolean, payload: buffer) -> (),
+	onChannel: (reliable: boolean, callback: (payload: buffer) -> ()) -> any,
+}
+
 type ChannelSubscriber = (entityId: number, state: { [string]: any }) -> ()
 
 export type Channel = {
@@ -54,6 +61,7 @@ type ChannelDef = {
 	dispatchDepth: number?,
 	pendingCleanup: boolean?,
 	clientState: { [number]: buffer },
+	errorPrefix: string,
 }
 
 local channelRegistry: { [number]: ChannelDef } = {}
@@ -84,6 +92,7 @@ function Channel.defineChannel(config: ChannelConfig): Channel
 		lastResync = 0,
 		subscribers = {},
 		clientState = {},
+		errorPrefix = `[Satset] Channel '{config.name}' subscriber error: `,
 	}
 
 	channelRegistry[id] = def
@@ -247,31 +256,7 @@ function Channel._applyUpdate(b: buffer)
 		for _, field in def.compiled.fields do
 			state[field.name] = field.type.read(clientBuf, field.offset)
 		end
-		local depth = (def.dispatchDepth or 0) + 1
-		def.dispatchDepth = depth
-		for i = 1, #def.subscribers do
-			local callback = def.subscribers[i]
-			if callback then
-				xpcall(callback, function(err)
-					warn(`[Satset] Channel '{def.name}' subscriber error: {err}`)
-				end, entityId, state)
-			end
-		end
-		depth -= 1
-
-		if depth == 0 then
-			def.dispatchDepth = nil
-			if def.pendingCleanup then
-				for i = #def.subscribers, 1, -1 do
-					if not def.subscribers[i] then
-						table.remove(def.subscribers, i)
-					end
-				end
-				def.pendingCleanup = false
-			end
-		else
-			def.dispatchDepth = depth
-		end
+		CoreConnection.dispatch(def.subscribers, def, def.errorPrefix, entityId, state)
 	end
 end
 
@@ -308,6 +293,64 @@ function Channel._flush(): { buffer }
 	end
 
 	return results
+end
+
+-- [ Mounting ]
+
+-- One record for the mounted hooks; the read inside Channel.mount() is the
+-- idempotency check, and the fields hold the transport handles for the
+-- library's lifetime so they cannot be collected while still connected.
+type MountedState = {
+	send: ((reliable: boolean, payload: buffer) -> ())?,
+	flush: any?,
+	reliableReceive: any?,
+	unreliableReceive: any?,
+}
+
+local mountedState: MountedState = {}
+
+--[[
+	Flushes mounted channels and hands each payload to the mounted adapter.
+
+	Runs after the batcher's PostSimulation flush because Channel.mount()
+	connects after Batcher.init().
+]]
+local function flushMountedChannels()
+	local send = mountedState.send
+	if not send then
+		return
+	end
+
+	for _, payload in Channel._flush() do
+		local def = channelRegistry[buffer.readu8(payload, 0)]
+		if def then
+			send(def.unreliable ~= true, payload)
+		end
+	end
+end
+
+--[[ Mounts channel syncing onto a transport adapter, once. Server side
+	installs the flush step; client side subscribes to both channel remotes
+	and drops payloads that are not buffers before they reach the decoder. ]]
+function Channel.mount(transport: ChannelTransport)
+	assert(transport ~= nil, "[Satset] Channel.mount() needs a transport")
+	if mountedState.send or mountedState.reliableReceive or mountedState.unreliableReceive then
+		return
+	end
+
+	if IS_SERVER then
+		mountedState.send = transport.sendChannel
+		mountedState.flush = RunService.PostSimulation:Connect(flushMountedChannels)
+	else
+		local function receiveUpdate(payload: any)
+			if typeof(payload) == "buffer" then
+				Channel._applyUpdate(payload)
+			end
+		end
+
+		mountedState.reliableReceive = transport.onChannel(true, receiveUpdate)
+		mountedState.unreliableReceive = transport.onChannel(false, receiveUpdate)
+	end
 end
 
 function Channel._getRegistry(): { [number]: ChannelDef }

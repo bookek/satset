@@ -1,7 +1,17 @@
 -- This file is part of the Satset networking library and is licensed under MIT License; see LICENSE.txt for details
 -- Bridge owns Satset's RemoteEvent pair.
+-- The dedicated channel remotes live here too; Channel.mount() consumes the
+-- adapter returned by Bridge.channelTransport().
 
 local Transport = require(script.Parent.Transport)
+
+-- Shape of the record Channel.mount() consumes; a structural twin of
+-- Channel.ChannelTransport, since requiring Networking.Channel from Core
+-- would invert the dependency direction.
+export type ChannelTransport = {
+	sendChannel: (reliable: boolean, payload: buffer) -> (),
+	onChannel: (reliable: boolean, callback: (payload: buffer) -> ()) -> Transport.Connection,
+}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -11,10 +21,14 @@ local IS_SERVER = RunService:IsServer()
 local FOLDER_NAME = "__SatsetBridge"
 local RELIABLE_NAME = "__SatsetReliable"
 local UNRELIABLE_NAME = "__SatsetUnreliable"
+local CHANNEL_RELIABLE_NAME = "__SatsetChannelReliable"
+local CHANNEL_UNRELIABLE_NAME = "__SatsetChannelUnreliable"
 local REMOTE_WAIT_TIMEOUT = 10
 
 local reliableRemote: RemoteEvent? = nil
 local unreliableRemote: UnreliableRemoteEvent? = nil
+local channelReliableRemote: RemoteEvent? = nil
+local channelUnreliableRemote: UnreliableRemoteEvent? = nil
 local activeTransport: Transport.Transport? = nil
 local initialized = false
 
@@ -99,10 +113,16 @@ function Bridge.init(injectedTransport: Transport.Transport?)
 		local folder = getServerFolder()
 		reliableRemote = getServerRemote(folder, RELIABLE_NAME, "RemoteEvent") :: RemoteEvent
 		unreliableRemote = getServerRemote(folder, UNRELIABLE_NAME, "UnreliableRemoteEvent") :: UnreliableRemoteEvent
+		channelReliableRemote = getServerRemote(folder, CHANNEL_RELIABLE_NAME, "RemoteEvent") :: RemoteEvent
+		channelUnreliableRemote =
+			getServerRemote(folder, CHANNEL_UNRELIABLE_NAME, "UnreliableRemoteEvent") :: UnreliableRemoteEvent
 	else
 		local folder = waitForBridgeChild(ReplicatedStorage, FOLDER_NAME, "Folder") :: Folder
 		reliableRemote = waitForBridgeChild(folder, RELIABLE_NAME, "RemoteEvent") :: RemoteEvent
 		unreliableRemote = waitForBridgeChild(folder, UNRELIABLE_NAME, "UnreliableRemoteEvent") :: UnreliableRemoteEvent
+		channelReliableRemote = waitForBridgeChild(folder, CHANNEL_RELIABLE_NAME, "RemoteEvent") :: RemoteEvent
+		channelUnreliableRemote =
+			waitForBridgeChild(folder, CHANNEL_UNRELIABLE_NAME, "UnreliableRemoteEvent") :: UnreliableRemoteEvent
 	end
 
 	activeTransport = if injectedTransport then Transport.assertValid(injectedTransport) else createRobloxTransport()
@@ -136,6 +156,53 @@ end
 
 function Bridge.onClient(reliable: boolean, callback: (payload: any) -> ()): Transport.Connection
 	return getTransport():onClient(reliable, callback)
+end
+
+-- [ Dedicated channel remotes ]
+
+local function getChannelRemote(reliable: boolean): RemoteEvent | UnreliableRemoteEvent
+	if not initialized then
+		error("[Satset] Bridge.init() must run before using the transport", 3)
+	end
+
+	if reliable then
+		return channelReliableRemote :: RemoteEvent
+	end
+
+	return channelUnreliableRemote :: UnreliableRemoteEvent
+end
+
+--[[
+	Sends one channel payload to every connected client. Server only; the
+	adapter in Channel.mount decides when this runs.
+]]
+function Bridge.sendChannel(reliable: boolean, payload: buffer)
+	local remote = getChannelRemote(reliable) :: RemoteEvent
+	remote:FireAllClients(payload)
+end
+
+--[[
+	Connects one of the dedicated channel remotes on the client and delivers
+	buffers only, which keeps the decoder away from malformed payloads.
+]]
+function Bridge.onChannel(reliable: boolean, callback: (payload: buffer) -> ()): Transport.Connection
+	local remote = getChannelRemote(reliable)
+	return remote.OnClientEvent:Connect(function(payload)
+		if typeof(payload) == "buffer" then
+			callback(payload)
+		end
+	end)
+end
+
+--[[
+	Channel adapter over the dedicated channel remotes; Channel.mount
+	consumes this record.
+]]
+function Bridge.channelTransport(): ChannelTransport
+	return {
+		sendChannel = Bridge.sendChannel,
+		onChannel = Bridge.onChannel,
+	}
 end
 
 return Bridge

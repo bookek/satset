@@ -3,6 +3,7 @@
 
 local Batcher = require(script.Parent.Parent.Core.Batcher)
 local CoreConnection = require(script.Parent.Parent.Core.Connection)
+local Audience = require(script.Parent.Audience)
 local Group = require(script.Parent.Group)
 local SchemaCompiler = require(script.Parent.Parent.Serialization.SchemaCompiler)
 local Serializer = require(script.Parent.Parent.Serialization.Serializer)
@@ -39,6 +40,7 @@ type PacketDef = {
 	listeners: { PacketListener },
 	dispatchDepth: number?,
 	pendingCleanup: boolean?,
+	errorPrefix: string,
 }
 
 export type Packet = {
@@ -56,25 +58,6 @@ export type Packet = {
 local packetRegistry: { [number]: PacketDef } = {}
 local packetsByName: { [string]: PacketDef } = {}
 local nextPacketId = 1
-
-local function copyEncodedToPlayers(
-	players: { Player },
-	startIndex: number,
-	exceptPlayer: Player?,
-	id: number,
-	size: number,
-	reliable: boolean,
-	source: buffer,
-	sourceOffset: number
-)
-	for i = startIndex, #players do
-		local player = players[i]
-		if player ~= exceptPlayer then
-			local target, targetOffset = Batcher.allocateForPlayer(player, id, size, reliable)
-			buffer.copy(target, targetOffset, source, sourceOffset, size)
-		end
-	end
-end
 
 local Packet = {}
 
@@ -99,6 +82,7 @@ function Packet.definePacket(config: PacketConfig): Packet
 		compiled = compiled,
 		reliable = if config.reliable ~= nil then config.reliable else true,
 		listeners = {},
+		errorPrefix = `[Satset] Packet '{config.name}' listener error: `,
 	}
 
 	if compiled.fixedSize then
@@ -140,7 +124,7 @@ function Packet.definePacket(config: PacketConfig): Packet
 		Batcher.recordDebugGc("send", gcStart)
 
 		if def.reliable then
-			local b, offset = Batcher.allocateForAllPlayers(id, size)
+			local b, offset = Audience.broadcast(id, size)
 			gcStart = Batcher.beginDebugGc()
 			Serializer.encodeInto(compiled, data, b, offset)
 			Batcher.recordDebugGc("send", gcStart)
@@ -155,7 +139,7 @@ function Packet.definePacket(config: PacketConfig): Packet
 			gcStart = Batcher.beginDebugGc()
 			Serializer.encodeInto(compiled, data, source, sourceOffset)
 
-			copyEncodedToPlayers(players, 2, nil, id, size, false, source, sourceOffset)
+			Audience.spreadAll(source, sourceOffset, players, id, size)
 
 			Batcher.recordDebugGc("send", gcStart)
 		end
@@ -165,18 +149,7 @@ function Packet.definePacket(config: PacketConfig): Packet
 		assert(IS_SERVER, "[Satset] fireAllExcept can only be called from the server")
 
 		local players = Players:GetPlayers()
-		local firstPlayer: Player? = nil
-		local firstIndex = 0
-
-		for i = 1, #players do
-			local player = players[i]
-			if player ~= exceptPlayer then
-				firstPlayer = player
-				firstIndex = i
-				break
-			end
-		end
-
+		local firstPlayer, firstIndex = Audience.firstExcept(players, exceptPlayer)
 		if not firstPlayer then
 			return
 		end
@@ -189,7 +162,7 @@ function Packet.definePacket(config: PacketConfig): Packet
 		gcStart = Batcher.beginDebugGc()
 		Serializer.encodeInto(compiled, data, source, sourceOffset)
 
-		copyEncodedToPlayers(players, firstIndex + 1, exceptPlayer, id, size, def.reliable, source, sourceOffset)
+		Audience.spreadList(source, sourceOffset, players, firstIndex + 1, exceptPlayer, id, size, def.reliable)
 
 		Batcher.recordDebugGc("send", gcStart)
 	end
@@ -211,12 +184,7 @@ function Packet.definePacket(config: PacketConfig): Packet
 		gcStart = Batcher.beginDebugGc()
 		Serializer.encodeInto(compiled, data, source, sourceOffset)
 
-		for player in members do
-			if player ~= firstPlayer then
-				local target, targetOffset = Batcher.allocateForPlayer(player, id, size, def.reliable)
-				buffer.copy(target, targetOffset, source, sourceOffset, size)
-			end
-		end
+		Audience.spreadSet(source, sourceOffset, members, firstPlayer, id, size, def.reliable)
 
 		Batcher.recordDebugGc("send", gcStart)
 	end
@@ -285,32 +253,7 @@ function Packet._dispatchSingle(
 	local data = decoded :: { [string]: any }
 
 	gcStart = Batcher.beginDebugGc()
-	local depth = (def.dispatchDepth or 0) + 1
-	def.dispatchDepth = depth
-	for i = 1, #def.listeners do
-		local listener = def.listeners[i]
-		if listener then
-			local success, err = protectedCall(listener, data, sender)
-			if not success then
-				warn(`[Satset] Packet '{def.name}' listener error: {err}`)
-			end
-		end
-	end
-	depth -= 1
-
-	if depth == 0 then
-		def.dispatchDepth = nil
-		if def.pendingCleanup then
-			for i = #def.listeners, 1, -1 do
-				if not def.listeners[i] then
-					table.remove(def.listeners, i)
-				end
-			end
-			def.pendingCleanup = false
-		end
-	else
-		def.dispatchDepth = depth
-	end
+	CoreConnection.dispatch(def.listeners, def, def.errorPrefix, data, sender)
 	Batcher.recordDebugGc("listenerCall", gcStart)
 
 	if needsConsumed and type(consumedBytes) == "number" then

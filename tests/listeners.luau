@@ -103,6 +103,9 @@ scriptTree.Parent = networkingDir
 local Group = origRequire("../src/Networking/Group")
 networkingDir.Group = { __module = Group }
 
+local Audience = origRequire("../src/Networking/Audience")
+networkingDir.Audience = { __module = Audience }
+
 local Packet = origRequire("../src/Networking/Packet")
 
 local PingPacket = Packet.definePacket({
