@@ -10,14 +10,18 @@ Satset is organized into four layers:
 
 | Layer | Modules | Responsibility |
 | :--- | :--- | :--- |
-| **Networking** | `Packet`, `Group`, `Channel` | Public-facing API. Handles definitions, packet audiences, dispatch, and listener registration. |
+| **Networking** | `Packet`, `Group`, `Channel`, `Audience` | Public-facing API. Handles definitions, dispatch, listener registration, and fanout walking. |
 | **Serialization** | `SchemaCompiler`, `Serializer`, `Sanitizer`, `Types` | Converts Luau tables into flat binary buffers and back. |
-| **Core** | `Batcher`, `Guard`, `Bridge`, `Transport` | Frame-level batching, rate limiting, and packet transport. |
+| **Core** | `Batcher`, `Guard`, `Bridge`, `Connection`, `Transport` | Frame-level batching, rate limiting, listener wiring, and packet transport. |
 | **Transport** | `RemoteEvent`, `UnreliableRemoteEvent` | Roblox-native wire protocol. |
 
 `Bridge` uses Roblox remotes by default. Tests may pass a packet transport to
 `Satset.start({ transport = mock })`. The transport boundary carries committed
 buffers only; serialization and batching stay inside Satset.
+
+`Connection` owns listener handles for packets and channels. A disconnect that
+happens while a dispatch walk is running is recorded and cleaned up after the
+walk finishes, so mid-disconnect listeners never fire half-removed state.
 
 ## Packet Lifecycle (Stateless)
 
@@ -80,6 +84,8 @@ sequenceDiagram
 `Packet:fireGroup` resolves the current server-owned membership, encodes the
 payload into the first player's stream, and copies those encoded bytes into the
 remaining member streams. It does not infer audiences from previous sends.
+The first-target choice and the per-player copies belong to the `Audience`
+module, which the other fanout entry points on Packet share.
 
 Each member still uses the normal per-player queue. This keeps reliable delta
 history and unreliable sequence tracking separate for every player.
@@ -88,7 +94,7 @@ history and unreliable sequence tracking separate for every player.
 
 The reliable batch header stores a 13-bit item count plus three flags in the high bits:
 
-- `0x2000`: an XOR delta uses the bitpacked transpose layout;
+- `0x2000`: the run's delta bytes are transposed; the run bytes carry the shape;
 - `0x4000`: the batch is tracked for reliable delta state;
 - `0x8000`: the payload after the header is XOR delta data;
 - `0x1FFF`: count mask.
@@ -116,7 +122,8 @@ Packet id `0` is reserved internally. Fixed-size payloads can be split by the co
 
 Direct same-size batches keep per-peer history. General payloads use XOR.
 Text payloads stay raw when their XOR result does not contain enough zero
-bytes. Eligible bitpacked payloads can transpose the XOR result before send.
+bytes. A run that packs one uniform-width schema can transpose its delta
+bytes when zero bytes dominate the transposed region.
 Broadcast reliable batches stay raw because they do not have one receiver
 history.
 
@@ -133,7 +140,7 @@ Unreliable batches include a sequence number for stale packet detection. If the 
 
 ## Channel Lifecycle (Stateful)
 
-Channels handle state sync for fixed-size schemas. A channel writes entity state into a buffer, marks changed fields in a 32-bit bitmask, and sends the dirty bytes during `PostSimulation`.
+Channels handle state sync for fixed-size schemas. A channel writes entity state into a buffer, marks changed fields in a 32-bit bitmask, and sends the dirty bytes during `PostSimulation`. The flush leaves the channel through the mounted transport: Bridge creates the two dedicated channel remotes during init and hands them out as an adapter, and `Satset.start()` calls `Channel.mount(Bridge.channelTransport())` after the batcher is ready.
 
 ```mermaid
 sequenceDiagram
@@ -159,6 +166,7 @@ sequenceDiagram
         CH->>CH: encodeDelta(entityData)
         Note right of CH: Wire: [u8 channelId][u32 entityId][u32 mask][...dirty bytes]
         CH->>BR: payload buffer
+        Note over CH,BR: flush runs through the mounted channel adapter
         BR->>URE: FireAllClients(deltaBuffer)
     else dirtyMask == 0
         Note right of CH: No changes, nothing sent
