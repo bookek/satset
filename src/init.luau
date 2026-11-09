@@ -21,15 +21,10 @@ local RunService = game:GetService("RunService")
 local VERSION = "0.5.0"
 local IS_SERVER = RunService:IsServer()
 
-local CHANNEL_RELIABLE_NAME = "__SatsetChannelReliable"
-local CHANNEL_UNRELIABLE_NAME = "__SatsetChannelUnreliable"
-
 -- [ State ]
 
 local _initialized = false
 local _guard: any = nil
-local channelReliable: RemoteEvent
-local channelUnreliable: UnreliableRemoteEvent
 
 -- [ Public API ]
 
@@ -76,10 +71,10 @@ export type PacketTransport = Transport.Transport
 export type Connection = Packet.Connection
 
 --[[
-	Start the networking engine. 
-	
-	This handles all the internal wiring, sets up batching, and prepares 
-	dedicated remotes. You should call this once on both the server and 
+	Start the networking engine.
+
+	This configures the batcher, prepares the remotes, and installs the
+	receive paths. You should call this once on both the server and
 	the client before using any packets or channels.
 ]]
 function Satset.start(config: SatsetConfig?)
@@ -105,21 +100,14 @@ function Satset.start(config: SatsetConfig?)
 	-- The batcher hooks into PostSimulation to flush outgoing data.
 	Batcher.init()
 
-	-- Dedicated channel folder for organization.
-	local bridgeFolder = game:GetService("ReplicatedStorage"):FindFirstChild("__SatsetBridge")
+	-- Channel sync mounts after the batcher, so its flush step runs after the
+	-- packet flush within one simulation step. Remotes for channels are
+	-- owned by Bridge and mounted through its channel adapter.
+	Channel.mount(Bridge.channelTransport())
 
 	if IS_SERVER then
 		-- DDoS protection is mandatory on the server.
 		_guard = Guard.new(cfg.guard)
-
-		-- We create dedicated channel remotes to separate stateful traffic.
-		channelReliable = Instance.new("RemoteEvent")
-		channelReliable.Name = CHANNEL_RELIABLE_NAME
-		channelReliable.Parent = bridgeFolder
-
-		channelUnreliable = Instance.new("UnreliableRemoteEvent")
-		channelUnreliable.Name = CHANNEL_UNRELIABLE_NAME
-		channelUnreliable.Parent = bridgeFolder
 
 		-- Cleanup is handled automatically when someone leaves.
 		Players.PlayerRemoving:Connect(function(player)
@@ -158,29 +146,7 @@ function Satset.start(config: SatsetConfig?)
 
 			Packet._dispatchUnreliable(payload, player)
 		end)
-
-		-- The channel flush runs after the normal packet batcher.
-		RunService.PostSimulation:Connect(function()
-			local channelPayloads = Channel._flush()
-			for _, payload in channelPayloads do
-				local channelId = buffer.readu8(payload, 0)
-				local registry = Channel._getRegistry()
-				local def = registry[channelId]
-
-				if def then
-					if def.unreliable then
-						channelUnreliable:FireAllClients(payload)
-					else
-						channelReliable:FireAllClients(payload)
-					end
-				end
-			end
-		end)
 	else
-		-- On the client, we wait for the server to spawn these.
-		channelReliable = bridgeFolder:WaitForChild(CHANNEL_RELIABLE_NAME) :: RemoteEvent
-		channelUnreliable = bridgeFolder:WaitForChild(CHANNEL_UNRELIABLE_NAME) :: UnreliableRemoteEvent
-
 		-- Standard reliable packet listener.
 		Bridge.onClient(true, function(payload)
 			if typeof(payload) ~= "buffer" then
@@ -202,21 +168,6 @@ function Satset.start(config: SatsetConfig?)
 			end
 
 			Packet._dispatchUnreliable(payload, nil)
-		end)
-
-		-- Dedicated channel update listeners.
-		channelReliable.OnClientEvent:Connect(function(payload)
-			if typeof(payload) ~= "buffer" then
-				return
-			end
-			Channel._applyUpdate(payload)
-		end)
-
-		channelUnreliable.OnClientEvent:Connect(function(payload)
-			if typeof(payload) ~= "buffer" then
-				return
-			end
-			Channel._applyUpdate(payload)
 		end)
 	end
 end
