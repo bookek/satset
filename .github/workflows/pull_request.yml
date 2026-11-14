@@ -1,7 +1,11 @@
 name: Pull Request
 
 on:
-  pull_request:
+  # pull_request_target, not pull_request: fork PRs get a read-only
+  # GITHUB_TOKEN under pull_request, so first-interaction and labeler
+  # could not write comments or labels. Neither job checks out or runs
+  # PR code, so the pull_request_target risk does not apply.
+  pull_request_target:
     types: [opened, reopened]
 
 jobs:
