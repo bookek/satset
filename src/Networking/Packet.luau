@@ -108,6 +108,9 @@ function Packet.definePacket(config: PacketConfig): Packet
 
 	function self:fireClient(player: Player, data: { [string]: any })
 		assert(IS_SERVER, "[Satset] fireClient can only be called from the server")
+		-- plain-table mocks in the lune suites reach fireClient; only
+		-- instances get validated further
+		assert(typeof(player) == "Instance" or typeof(player) == "table", "[Satset] fireClient expected a Player")
 		if typeof(player) == "Instance" then
 			assert(player:IsA("Player"), "[Satset] fireClient expected a Player")
 			if player.Parent ~= Players then
