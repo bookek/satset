@@ -108,6 +108,12 @@ function Packet.definePacket(config: PacketConfig): Packet
 
 	function self:fireClient(player: Player, data: { [string]: any })
 		assert(IS_SERVER, "[Satset] fireClient can only be called from the server")
+		if typeof(player) == "Instance" then
+			assert(player:IsA("Player"), "[Satset] fireClient expected a Player")
+			if player.Parent ~= Players then
+				return
+			end
+		end
 		local gcStart = Batcher.beginDebugGc()
 		local size = compiled.fixedSize or Serializer.calculateSize(compiled, data)
 		Batcher.recordDebugGc("send", gcStart)
