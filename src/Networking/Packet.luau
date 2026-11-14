@@ -114,6 +114,8 @@ function Packet.definePacket(config: PacketConfig): Packet
 		if typeof(player) == "Instance" then
 			assert(player:IsA("Player"), "[Satset] fireClient expected a Player")
 			if player.Parent ~= Players then
+				-- silent drop, unlike group.add: a player leaving mid-frame is
+				-- a race, not a caller error
 				return
 			end
 		end
