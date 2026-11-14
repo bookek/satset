@@ -108,6 +108,17 @@ function Packet.definePacket(config: PacketConfig): Packet
 
 	function self:fireClient(player: Player, data: { [string]: any })
 		assert(IS_SERVER, "[Satset] fireClient can only be called from the server")
+		-- plain-table mocks in the lune suites reach fireClient; only
+		-- instances get validated further
+		assert(typeof(player) == "Instance" or typeof(player) == "table", "[Satset] fireClient expected a Player")
+		if typeof(player) == "Instance" then
+			assert(player:IsA("Player"), "[Satset] fireClient expected a Player")
+			if player.Parent ~= Players then
+				-- silent drop, unlike group.add: a player leaving mid-frame is
+				-- a race, not a caller error
+				return
+			end
+		end
 		local gcStart = Batcher.beginDebugGc()
 		local size = compiled.fixedSize or Serializer.calculateSize(compiled, data)
 		Batcher.recordDebugGc("send", gcStart)
