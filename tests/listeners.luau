@@ -368,4 +368,40 @@ do
 	currentPlayers = {}
 end
 
-print("listener leak and fireAllExcept tests passed")
+do
+	-- fireClient guard: non-Player inputs assert, and players outside Players
+	-- drop before allocation so no per-player stream is recreated
+	local roblox = origRequire("@lune/roblox")
+
+	local guardAllocations = 0
+	local origAllocate = Batcher.allocateForPlayer
+	Batcher.allocateForPlayer = function(player: Player, id: number, size: number, reliable: boolean)
+		guardAllocations += 1
+		return origAllocate(player, id, size, reliable)
+	end
+
+	local okNil, errNil = pcall(function()
+		PingPacket:fireClient(nil, { count = 7 })
+	end)
+	assert(not okNil and string.find(tostring(errNil), "expected a Player"), "nil player did not assert")
+
+	local nonPlayer: Player = roblox.Instance.new("Part") :: any
+	local okPart, errPart = pcall(function()
+		PingPacket:fireClient(nonPlayer, { count = 7 })
+	end)
+	assert(not okPart and string.find(tostring(errPart), "expected a Player"), "non-Player instance did not assert")
+
+	local connected: Player = { name = "tukang" } :: any
+	guardAllocations = 0
+	PingPacket:fireClient(connected, { count = 7 })
+	assert(guardAllocations == 1, "connected player did not allocate")
+
+	local leaver: Player = roblox.Instance.new("Player") :: any
+	guardAllocations = 0
+	PingPacket:fireClient(leaver, { count = 7 })
+	assert(guardAllocations == 0, "fireClient allocated a stream for a player outside Players")
+
+	Batcher.allocateForPlayer = origAllocate
+end
+
+print("listener leak, fireAllExcept, and fireClient guard tests passed")
